@@ -251,6 +251,15 @@ Weekly:
     value: 1
     option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 
+# [fork] Pure Fiction
+PureFiction:
+  Team1Preset:
+    value: 1
+    option: [ 1, 2, 3 ]
+  Team2Preset:
+    value: 2
+    option: [ 1, 2, 3 ]
+
 DailyStorage:
   DailyActivity:
     stored: StoredDailyActivity

@@ -2450,6 +2450,53 @@
       }
     }
   },
+  "PureFiction": {
+    "Scheduler": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "NextRun": {
+        "type": "datetime",
+        "value": "2020-01-01 00:00:00",
+        "validate": "datetime"
+      },
+      "Command": {
+        "type": "input",
+        "value": "PureFiction",
+        "display": "hide"
+      },
+      "ServerUpdate": {
+        "type": "input",
+        "value": "04:00",
+        "display": "hide"
+      }
+    },
+    "PureFiction": {
+      "Team1Preset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3
+        ]
+      },
+      "Team2Preset": {
+        "type": "select",
+        "value": 2,
+        "option": [
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  },
   "Daemon": {
     "Daemon": {
       "Enable": {

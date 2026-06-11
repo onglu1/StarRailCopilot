@@ -399,6 +399,17 @@ PLANNER_CHECK = ButtonWrapper(
         ),
     ],
 )
+PURE_FICTION_CHECK = ButtonWrapper(
+    name='PURE_FICTION_CHECK',
+    cn=Button(
+        file='./assets/cn/base/page/PURE_FICTION_CHECK.png',
+        area=(112, 30, 218, 68),
+        search=(92, 10, 238, 88),
+        color=(50, 86, 130),
+        button=(112, 30, 218, 68),
+    ),
+    en=None,
+)
 ROGUE_CHECK = ButtonWrapper(
     name='ROGUE_CHECK',
     share=[
