@@ -64,6 +64,10 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.rogue.rogue import Rogue
         Rogue(config=self.config, device=self.device).run()
 
+    def pure_fiction(self):  # [fork]
+        from tasks.pure_fiction.pure_fiction import PureFiction
+        PureFiction(config=self.config, device=self.device).run()
+
     def ornament(self):
         from tasks.ornament.ornament import Ornament
         Ornament(config=self.config, device=self.device).run()

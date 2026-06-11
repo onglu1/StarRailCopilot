@@ -62,6 +62,10 @@
       "name": "模擬宇宙",
       "help": ""
     },
+    "PureFiction": {
+      "name": "Task.PureFiction.name",
+      "help": "Task.PureFiction.help"
+    },
     "Daemon": {
       "name": "劇情連點器",
       "help": ""
@@ -1345,6 +1349,26 @@
       "7": "7",
       "8": "8",
       "9": "9"
+    }
+  },
+  "PureFiction": {
+    "_info": {
+      "name": "PureFiction._info.name",
+      "help": "PureFiction._info.help"
+    },
+    "Team1Preset": {
+      "name": "PureFiction.Team1Preset.name",
+      "help": "PureFiction.Team1Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "PureFiction.Team2Preset.name",
+      "help": "PureFiction.Team2Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
     }
   },
   "DailyStorage": {

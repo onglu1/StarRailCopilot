@@ -155,6 +155,10 @@ page_menu.link(MENU_GOTO_ASSIGNMENT, destination=page_assignment)
 page_forgotten_hall = Page(FORGOTTEN_HALL_CHECK)
 page_forgotten_hall.link(CLOSE, destination=page_main)
 
+# Pure Fiction  # [fork]
+page_pure_fiction = Page(PURE_FICTION_CHECK)  # [fork]
+page_pure_fiction.link(CLOSE, destination=page_main)  # [fork]
+
 # Rogue, Simulated Universe
 page_rogue = Page(ROGUE_CHECK)
 page_rogue.link(CLOSE, destination=page_main)
