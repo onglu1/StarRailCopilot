@@ -1364,6 +1364,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Equipos candidatos (composición automática)",
+      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
     }
   },
   "MemoryOfChaos": {
@@ -1402,6 +1406,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Equipos candidatos (composición automática)",
+      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
     }
   },
   "ApocalypticShadow": {
@@ -1440,6 +1448,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Equipos candidatos (composición automática)",
+      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
     }
   },
   "Weekly": {

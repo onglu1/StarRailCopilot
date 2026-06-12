@@ -2516,6 +2516,10 @@
           2,
           3
         ]
+      },
+      "CandidateTeams": {
+        "type": "input",
+        "value": ""
       }
     }
   },
@@ -2585,6 +2589,10 @@
           2,
           3
         ]
+      },
+      "CandidateTeams": {
+        "type": "input",
+        "value": ""
       }
     }
   },
@@ -2654,6 +2662,10 @@
           2,
           3
         ]
+      },
+      "CandidateTeams": {
+        "type": "input",
+        "value": ""
       }
     }
   },

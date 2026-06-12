@@ -45,6 +45,18 @@ class AbyssPrep(AbyssNav):
     # ButtonWrapper, the enter button at the bottom right of the prep screen
     ENTER_BUTTON = None
 
+    def _abyss_click_preset(self, preset: int) -> bool:
+        """
+        Click a preset block in the preset tab. Only the top 3 presets are
+        reachable without scrolling, the composer subclass overrides this
+        with a scroll-aware version.
+        """
+        if preset not in PRESET_BLOCK:
+            logger.warning(f'Invalid preset {preset}, fallback to 1')
+            preset = 1
+        self.device.click(PRESET_BLOCK[preset])
+        return True
+
     def abyss_team_filled(self, node_index: int) -> bool:
         """
         Whether the 4 member slots of a team row show character portraits.
@@ -64,9 +76,6 @@ class AbyssPrep(AbyssNav):
             out: PREP_CHECK, with character picker panel open, team applied
         """
         logger.info(f'Set team for node {node_index} with preset {preset}')
-        if preset not in PRESET_BLOCK:
-            logger.warning(f'Invalid preset {preset}, fallback to 1')
-            preset = 1
         slot = self.TEAM_SLOT[node_index]
 
         for trial in range(3):
@@ -102,7 +111,7 @@ class AbyssPrep(AbyssNav):
                     continue
 
             # Apply preset and verify
-            self.device.click(PRESET_BLOCK[preset])
+            self._abyss_click_preset(preset)
             self.device.sleep((0.8, 1.0))
             self.device.screenshot()
             if self.abyss_team_filled(node_index):

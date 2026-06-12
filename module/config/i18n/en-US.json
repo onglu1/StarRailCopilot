@@ -1364,6 +1364,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Candidate presets (auto compose)",
+      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
     }
   },
   "MemoryOfChaos": {
@@ -1402,6 +1406,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Candidate presets (auto compose)",
+      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
     }
   },
   "ApocalypticShadow": {
@@ -1440,6 +1448,10 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    },
+    "CandidateTeams": {
+      "name": "Candidate presets (auto compose)",
+      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
     }
   },
   "Weekly": {

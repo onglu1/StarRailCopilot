@@ -33,6 +33,11 @@ class ApocalypticShadowPrep(ApocalypticShadowUI):
         1: ClickButton((1172, 283, 1218, 330), name='AS_AXIOM_1_SLOT'),
         2: ClickButton((1172, 518, 1218, 565), name='AS_AXIOM_2_SLOT'),
     }
+    # Weakness icons under the boss portrait of each node block
+    WEAKNESS_STRIP = {
+        1: (628, 305, 770, 352),
+        2: (628, 528, 770, 585),
+    }
     ENTER_BUTTON = AS_PREP_GO
 
     def as_stage_enter(self, node: ApocalypticShadowStageNode, skip_first_screenshot=True) -> bool:

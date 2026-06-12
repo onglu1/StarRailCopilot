@@ -174,6 +174,7 @@ class GeneratedConfig:
     PureFiction_RetryExceeded = 'defer'  # defer, give_up
     PureFiction_Team1Preset = 1  # 1, 2, 3
     PureFiction_Team2Preset = 2  # 1, 2, 3
+    PureFiction_CandidateTeams = None
 
     # Group `MemoryOfChaos`
     MemoryOfChaos_ChallengeMode = 'first_clear'  # first_clear, push, sweep, highest_only
@@ -181,6 +182,7 @@ class GeneratedConfig:
     MemoryOfChaos_RetryExceeded = 'defer'  # defer, give_up
     MemoryOfChaos_Team1Preset = 1  # 1, 2, 3
     MemoryOfChaos_Team2Preset = 2  # 1, 2, 3
+    MemoryOfChaos_CandidateTeams = None
 
     # Group `ApocalypticShadow`
     ApocalypticShadow_ChallengeMode = 'first_clear'  # first_clear, push, sweep, highest_only
@@ -188,6 +190,7 @@ class GeneratedConfig:
     ApocalypticShadow_RetryExceeded = 'defer'  # defer, give_up
     ApocalypticShadow_Team1Preset = 1  # 1, 2, 3
     ApocalypticShadow_Team2Preset = 2  # 1, 2, 3
+    ApocalypticShadow_CandidateTeams = None
 
     # Group `Weekly`
     Weekly_Name = 'Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass'  # Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass, Echo_of_War_Glance_of_Twilight, Echo_of_War_Inner_Beast_Battlefield, Echo_of_War_Salutations_of_Ashen_Dreams, Echo_of_War_Borehole_Planet_Past_Nightmares, Echo_of_War_Divine_Seed, Echo_of_War_End_of_the_Eternal_Freeze, Echo_of_War_Destruction_Beginning
