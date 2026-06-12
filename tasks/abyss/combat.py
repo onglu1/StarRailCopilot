@@ -31,7 +31,6 @@ import cv2
 from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.base.utils import rgb2luma
-from module.config.utils import get_server_next_monday_update
 from module.exception import GameStuckError
 from module.logger import logger
 from module.ocr.ocr import Ocr
@@ -81,8 +80,9 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
 
     def abyss_run(self, config_prefix: str):
         """
-        Shared task entry: resume an interrupted dungeon, run challenges by
-        the configured strategy, claim rewards, then schedule the next run.
+        Tool entry: resume an interrupted dungeon, run challenges by the
+        configured strategy, claim rewards, then stop. Not scheduled, runs
+        when started from the tool page.
 
         Args:
             config_prefix: task name in config, e.g. 'PureFiction'
@@ -92,10 +92,13 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
         team2 = int(getattr(self.config, f'{config_prefix}_Team2Preset'))
         mode = getattr(self.config, f'{config_prefix}_ChallengeMode')
         max_retry = int(getattr(self.config, f'{config_prefix}_MaxRetry'))
-        on_exhausted = getattr(self.config, f'{config_prefix}_RetryExceeded')
+        swap = bool(getattr(self.config, f'{config_prefix}_SwapOnRetry', True))
         assigned = int(getattr(self.config, f'{config_prefix}_AssignedStage', 1))
-        # Buff/axiom card selection, only pure fiction exposes the setting
-        self._abyss_effect_select = str(getattr(self.config, f'{config_prefix}_BuffSelect', '1'))
+        # Buff/axiom card selection per node, only pure fiction exposes it
+        self._abyss_effect_select = {
+            1: str(getattr(self.config, f'{config_prefix}_Node1Buff', '1')),
+            2: str(getattr(self.config, f'{config_prefix}_Node2Buff', '1')),
+        }
         logger.attr('ChallengeMode', mode)
 
         # If a previous run died inside a dungeon, finish it first
@@ -106,27 +109,23 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
 
         fought, exhausted = self.abyss_run_challenges(
             mode=mode, team1_preset=team1, team2_preset=team2,
-            max_retry=max_retry, assigned=assigned)
+            max_retry=max_retry, assigned=assigned, swap_on_retry=swap)
         logger.attr('Battles fought', fought)
 
         self.abyss_claim_rewards()
-
-        if exhausted and on_exhausted == 'defer':
-            logger.info('Some stage ran out of retries, try again after the daily reset')
-            self.config.task_delay(server_update=True)
-        else:
-            self.config.task_delay(target=get_server_next_monday_update(
-                self.config.Scheduler_ServerUpdate))
+        if exhausted:
+            logger.info('Stage rounds exhausted without full stars, '
+                        'adjust teams and start again when ready')
         self.ui_goto_main()
 
     def abyss_run_challenges(self, mode='highest', team1_preset=1, team2_preset=2,
-                             max_retry=2, assigned=1) -> tuple:
+                             max_retry=2, assigned=1, swap_on_retry=True) -> tuple:
         """
         The main challenge loop shared by all modes: scan, select a target
         by mode and per-stage round counts, prep, fight, repeat. A failed
         battle leaves the stage unimproved so it gets selected again until
-        its rounds are exhausted; every retry swaps the node order of the
-        two teams.
+        its rounds are exhausted; with swap_on_retry every retry swaps the
+        node order of the two teams.
 
         Returns:
             tuple: (battles_fought, exhausted)
@@ -152,8 +151,7 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
                 return fought, exhausted
             att = attempts.get(target.index, 0)
             logger.hr(f'Challenge {target} (round {att + 1}/{max_retry})', level=1)
-            # Retries swap which team fights which node
-            if att % 2 == 1:
+            if swap_on_retry and att % 2 == 1:
                 logger.info('Retry with team order swapped')
                 t1, t2 = team2_preset, team1_preset
             else:

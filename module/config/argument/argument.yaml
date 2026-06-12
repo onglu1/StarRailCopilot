@@ -250,16 +250,17 @@ PureFiction:
     value: 1
   MaxRetry:
     value: 2
-  RetryExceeded:
-    value: defer
-    option: [ defer, give_up ]
+  SwapOnRetry: true
   Team1Preset:
     value: 1
-    option: [ 1, 2, 3 ]
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
   Team2Preset:
     value: 2
-    option: [ 1, 2, 3 ]
-  BuffSelect:
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+  Node1Buff:
+    value: '1'
+    option: [ '1', '2', '3', random ]
+  Node2Buff:
     value: '1'
     option: [ '1', '2', '3', random ]
 
@@ -271,15 +272,13 @@ MemoryOfChaos:
     value: 1
   MaxRetry:
     value: 2
-  RetryExceeded:
-    value: defer
-    option: [ defer, give_up ]
+  SwapOnRetry: true
   Team1Preset:
     value: 1
-    option: [ 1, 2, 3 ]
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
   Team2Preset:
     value: 2
-    option: [ 1, 2, 3 ]
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
 
 ApocalypticShadow:
   ChallengeMode:
@@ -289,15 +288,13 @@ ApocalypticShadow:
     value: 1
   MaxRetry:
     value: 2
-  RetryExceeded:
-    value: defer
-    option: [ defer, give_up ]
+  SwapOnRetry: true
   Team1Preset:
     value: 1
-    option: [ 1, 2, 3 ]
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
   Team2Preset:
     value: 2
-    option: [ 1, 2, 3 ]
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
 
 Weekly:
   Name:

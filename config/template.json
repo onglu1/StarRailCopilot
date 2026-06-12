@@ -320,55 +320,6 @@
       "DebugMode": false
     }
   },
-  "PureFiction": {
-    "Scheduler": {
-      "Enable": false,
-      "NextRun": "2020-01-01 00:00:00",
-      "Command": "PureFiction",
-      "ServerUpdate": "04:00"
-    },
-    "PureFiction": {
-      "ChallengeMode": "highest",
-      "AssignedStage": 1,
-      "MaxRetry": 2,
-      "RetryExceeded": "defer",
-      "Team1Preset": 1,
-      "Team2Preset": 2,
-      "BuffSelect": 1
-    }
-  },
-  "MemoryOfChaos": {
-    "Scheduler": {
-      "Enable": false,
-      "NextRun": "2020-01-01 00:00:00",
-      "Command": "MemoryOfChaos",
-      "ServerUpdate": "04:00"
-    },
-    "MemoryOfChaos": {
-      "ChallengeMode": "highest",
-      "AssignedStage": 1,
-      "MaxRetry": 2,
-      "RetryExceeded": "defer",
-      "Team1Preset": 1,
-      "Team2Preset": 2
-    }
-  },
-  "ApocalypticShadow": {
-    "Scheduler": {
-      "Enable": false,
-      "NextRun": "2020-01-01 00:00:00",
-      "Command": "ApocalypticShadow",
-      "ServerUpdate": "04:00"
-    },
-    "ApocalypticShadow": {
-      "ChallengeMode": "highest",
-      "AssignedStage": 1,
-      "MaxRetry": 2,
-      "RetryExceeded": "defer",
-      "Team1Preset": 1,
-      "Team2Preset": 2
-    }
-  },
   "Daemon": {
     "Daemon": {
       "Enable": true,
@@ -378,6 +329,38 @@
   "PlannerScan": {
     "PlannerScan": {
       "ResultAdd": false
+    }
+  },
+  "PureFiction": {
+    "PureFiction": {
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
+      "MaxRetry": 2,
+      "SwapOnRetry": true,
+      "Team1Preset": 1,
+      "Team2Preset": 2,
+      "Node1Buff": 1,
+      "Node2Buff": 1
+    }
+  },
+  "MemoryOfChaos": {
+    "MemoryOfChaos": {
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
+      "MaxRetry": 2,
+      "SwapOnRetry": true,
+      "Team1Preset": 1,
+      "Team2Preset": 2
+    }
+  },
+  "ApocalypticShadow": {
+    "ApocalypticShadow": {
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
+      "MaxRetry": 2,
+      "SwapOnRetry": true,
+      "Team1Preset": 1,
+      "Team2Preset": 2
     }
   }
 }

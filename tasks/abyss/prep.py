@@ -10,6 +10,8 @@ the enter button differ, subclasses bind them via class attributes.
 """
 import random
 
+import cv2
+
 from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.base.utils import crop, rgb2luma
@@ -33,6 +35,34 @@ PRESET_BLOCK = {
     2: ClickButton((60, 348, 460, 438), name='PRESET_2'),
     3: ClickButton((60, 520, 460, 610), name='PRESET_3'),
 }
+# Preset rows repeat at a fixed pitch, three rows fit the panel viewport
+PRESET_ROW_PITCH = 172
+PRESET_PANEL = (30, 140, 460, 690)
+
+
+# Strip of the panel used to measure scroll distance. Taken low enough
+# that after a one-row drag it still lands inside the panel viewport
+PRESET_SHIFT_STRIP = (30, 380, 460, 500)
+
+
+def abyss_panel_shift(before_strip, after_image) -> int:
+    """
+    How many pixels the preset panel content moved up between two frames.
+
+    Args:
+        before_strip: crop of the panel at PRESET_SHIFT_STRIP before the drag
+        after_image: the full frame after the drag
+
+    Returns:
+        int: upward shift in pixels, 0 when the strip cannot be located
+    """
+    panel = crop(after_image, PRESET_PANEL, copy=False)
+    res = cv2.matchTemplate(panel, before_strip, cv2.TM_CCOEFF_NORMED)
+    _, max_val, _, max_loc = cv2.minMaxLoc(res)
+    if max_val < 0.60:
+        return 0
+    found_y = PRESET_PANEL[1] + max_loc[1]
+    return PRESET_SHIFT_STRIP[1] - found_y
 
 
 class AbyssPrep(AbyssNav):
@@ -52,20 +82,55 @@ class AbyssPrep(AbyssNav):
     # team slot of an unfocused row only focuses the row, but clicking the
     # slot of an already-focused row acts on the member itself
     _abyss_focused_node = None
-    # Which effect card to equip: '1' / '2' / '3' / 'random'
-    _abyss_effect_select = '1'
+    # {node_index: '1' / '2' / '3' / 'random'}, which effect card to equip
+    _abyss_effect_select = None
+
+    def _abyss_preset_scroll_top(self):
+        for _ in range(2):
+            self.device.swipe((240, 240), (240, 620), name='PRESET_SCROLL_TOP')
+            self.device.sleep((0.4, 0.6))
 
     def _abyss_click_preset(self, preset: int) -> bool:
         """
-        Click a preset block in the preset tab. Only the top 3 presets are
-        reachable without scrolling, the composer subclass overrides this
-        with a scroll-aware version.
+        Click a preset block in the preset tab. The top 3 rows are visible
+        after scrolling to the top, lower presets are reached by dragging
+        row by row, measuring the actual scroll distance from the frames
+        (the list scrolls freely, nominal drag distances drift).
+
+        Pages:
+            in: PREP_CHECK with the preset tab open
         """
-        if preset not in PRESET_BLOCK:
+        if not 1 <= preset <= 12:
             logger.warning(f'Invalid preset {preset}, fallback to 1')
             preset = 1
-        self.device.click(PRESET_BLOCK[preset])
-        return True
+        self._abyss_preset_scroll_top()
+        if preset in PRESET_BLOCK:
+            self.device.click(PRESET_BLOCK[preset])
+            return True
+
+        offset = 0
+        for _ in range(14):
+            target_top = 175 + (preset - 1) * PRESET_ROW_PITCH - offset
+            if target_top <= 520:
+                if target_top < PRESET_PANEL[1]:
+                    logger.warning(f'Preset {preset} scrolled past, list shorter than expected')
+                    break
+                button = ClickButton((60, target_top, 460, target_top + 90), name=f'PRESET_{preset}')
+                self.device.click(button)
+                return True
+            self.device.screenshot()
+            before = crop(self.device.image, PRESET_SHIFT_STRIP, copy=True)
+            self.device.swipe((240, 520), (240, 520 - PRESET_ROW_PITCH), name='PRESET_SCROLL')
+            self.device.sleep((0.5, 0.7))
+            self.device.screenshot()
+            shift = abyss_panel_shift(before, self.device.image)
+            if shift < 8:
+                logger.warning(f'Preset list bottom reached before preset {preset}')
+                break
+            offset += shift
+        logger.warning(f'Cannot reach preset {preset}, fallback to the last visible row')
+        self.device.click(PRESET_BLOCK[3])
+        return False
 
     def abyss_team_filled(self, node_index: int) -> bool:
         """
@@ -136,16 +201,16 @@ class AbyssPrep(AbyssNav):
         logger.warning(f'Failed to fill team of node {node_index}')
         return False
 
-    def _abyss_effect_card(self) -> ClickButton:
+    def _abyss_effect_card(self, node_index: int) -> ClickButton:
         """
-        The configured effect card to click. Card heights vary with their
-        description text, so cards beyond the first are anchored by OCR of
-        the card titles on the left edge of the panel.
+        The configured effect card to click for the node. Card heights vary
+        with their description text, so cards beyond the first are anchored
+        by OCR of the card titles on the left edge of the panel.
 
         Pages:
             in: EQUIP_EFFECT, effect selection screen
         """
-        select = str(self._abyss_effect_select)
+        select = str((self._abyss_effect_select or {}).get(node_index, '1'))
         if select == 'random':
             select = random.choice(['1', '2', '3'])
             logger.info(f'Random effect card: {select}')
@@ -218,7 +283,7 @@ class AbyssPrep(AbyssNav):
                 return
             if self.appear(EQUIP_EFFECT) and interval.reached():
                 if not selected:
-                    self.device.click(self._abyss_effect_card())
+                    self.device.click(self._abyss_effect_card(node_index))
                     selected = True
                     self.device.sleep((0.3, 0.5))
                 self.device.click(EQUIP_EFFECT)
