@@ -121,16 +121,32 @@ def composer_person(name: str) -> str:
     return name
 
 
-def composer_element_of(name: str):
-    """Element of a template name via CharacterList, None when unknown."""
+def _character_of(name: str):
     from tasks.character.keywords import CharacterList
     base = name.split('.')[0]
     if base.startswith(('Stelle', 'Caelum')):
         base = 'Trailblazer' + base[6:]
     for instance in CharacterList.instances.values():
         if instance.name == base:
-            return instance.type_name
+            return instance
     return None
+
+
+def composer_element_of(name: str):
+    """Element of a template name via CharacterList, None when unknown."""
+    character = _character_of(name)
+    return character.type_name if character else None
+
+
+# Paths whose members are damage dealers nearly without exception. Nihility
+# is excluded on purpose: it mixes main DPS (Acheron) with pure supports
+# (Pela, Silver Wolf), undercounting is safer than overcounting
+DPS_PATHS = {'The_Hunt', 'Erudition', 'Destruction'}
+
+
+def composer_is_dps(name: str) -> bool:
+    character = _character_of(name)
+    return character is not None and character.path_name in DPS_PATHS
 
 
 @dataclass
@@ -162,17 +178,25 @@ class PresetTeam:
 
 
 def composer_match_score(team: PresetTeam, weaknesses: set) -> float:
-    """How well a team fits a node: implant > element hit > unknown maybe."""
-    if team.has_implant:
-        return 1.0
+    """
+    How well a team fits a node. Hits are counted per member and a hit by a
+    damage-dealer path weighs double, so a team built around an on-element
+    main DPS beats a team that merely contains an on-element support.
+    Weakness implanting (Firefly etc.) is a floor, not a trump: it
+    guarantees a mid-tier fit but never outranks a real specialist.
+    """
     if not weaknesses:
         # Weakness reading failed, no signal, treat all teams as fitting
-        return 1.0
-    if team.elements & weaknesses:
-        return 1.0
-    if team.has_unknown:
-        return 0.5
-    return 0.0
+        return 2.0
+    hits = 0.0
+    for name, element in team.members:
+        if element and element in weaknesses:
+            hits += 2.0 if composer_is_dps(name) else 1.0
+    if team.has_implant:
+        hits = max(hits, 1.5)
+    elif hits == 0 and team.has_unknown:
+        hits = 0.75
+    return hits
 
 
 def composer_rank_pairs(presets: list, weaknesses: dict) -> list:
@@ -428,6 +452,7 @@ class AbyssComposer(AbyssPrep):
                 continue
             if self.appear(PREP_CHECK, interval=2):
                 self.device.click(slot)
+                self._abyss_focused_node = 1
                 continue
 
     def composer_scroll_top(self):
@@ -567,6 +592,11 @@ class AbyssComposer(AbyssPrep):
                            'fallback to fixed presets')
             return default1, default2
 
+        for rank, (t1, t2) in enumerate(ranked[:5]):
+            match = composer_match_score(t1, weaknesses.get(1, set())) \
+                + composer_match_score(t2, weaknesses.get(2, set()))
+            logger.info(f'  Pair #{rank + 1}: node1=Preset_{t1.index} '
+                        f'node2=Preset_{t2.index} match={match:.2f}')
         attempt = int(self._composer_stage_attempt)
         team1, team2 = ranked[attempt % len(ranked)]
         logger.info(f'Composer pick (attempt {attempt + 1}, {len(ranked)} pairs): '
