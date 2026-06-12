@@ -35,7 +35,7 @@ On live CN game (1280x720), two accounts (one strong, one mid-strength):
 
 ## Known limitations
 
-- **Assets are `cn` only** — I only have a CN client. The OCR keywords are also CN. Happy to adjust the structure if you prefer a different layout for other servers to fill in later.
+- **Assets are `cn` only** — I only have a CN client. The OCR keywords are also CN. Happy to adjust the structure if you prefer a different layout for other servers to fill in later. (GUI i18n texts are filled for all five languages with official localized mode names; this limitation is about image assets and in-game OCR keywords only.)
 - AS star-origin stages (3 nodes / 3 teams, this season's new mode) are detected and skipped, not yet played.
 - MoC scans the currently visible crystals only (the list opens at current progress, which covers normal use).
 
