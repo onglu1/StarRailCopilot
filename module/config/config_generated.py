@@ -173,17 +173,23 @@ class GeneratedConfig:
     Weekly_Team = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9
 
     # Group `PureFiction`
-    PureFiction_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
+    PureFiction_ChallengeMode = 'first_clear'  # first_clear, push, sweep, highest_only
+    PureFiction_MaxRetry = 2
+    PureFiction_RetryExceeded = 'defer'  # defer, give_up
     PureFiction_Team1Preset = 1  # 1, 2, 3
     PureFiction_Team2Preset = 2  # 1, 2, 3
 
     # Group `MemoryOfChaos`
-    MemoryOfChaos_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
+    MemoryOfChaos_ChallengeMode = 'first_clear'  # first_clear, push, sweep, highest_only
+    MemoryOfChaos_MaxRetry = 2
+    MemoryOfChaos_RetryExceeded = 'defer'  # defer, give_up
     MemoryOfChaos_Team1Preset = 1  # 1, 2, 3
     MemoryOfChaos_Team2Preset = 2  # 1, 2, 3
 
     # Group `ApocalypticShadow`
-    ApocalypticShadow_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
+    ApocalypticShadow_ChallengeMode = 'first_clear'  # first_clear, push, sweep, highest_only
+    ApocalypticShadow_MaxRetry = 2
+    ApocalypticShadow_RetryExceeded = 'defer'  # defer, give_up
     ApocalypticShadow_Team1Preset = 1  # 1, 2, 3
     ApocalypticShadow_Team2Preset = 2  # 1, 2, 3
 

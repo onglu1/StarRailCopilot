@@ -1367,8 +1367,20 @@
     "ChallengeMode": {
       "name": "PureFiction.ChallengeMode.name",
       "help": "PureFiction.ChallengeMode.help",
-      "lowest_first": "lowest_first",
+      "first_clear": "first_clear",
+      "push": "push",
+      "sweep": "sweep",
       "highest_only": "highest_only"
+    },
+    "MaxRetry": {
+      "name": "PureFiction.MaxRetry.name",
+      "help": "PureFiction.MaxRetry.help"
+    },
+    "RetryExceeded": {
+      "name": "PureFiction.RetryExceeded.name",
+      "help": "PureFiction.RetryExceeded.help",
+      "defer": "defer",
+      "give_up": "give_up"
     },
     "Team1Preset": {
       "name": "PureFiction.Team1Preset.name",
@@ -1393,8 +1405,20 @@
     "ChallengeMode": {
       "name": "MemoryOfChaos.ChallengeMode.name",
       "help": "MemoryOfChaos.ChallengeMode.help",
-      "lowest_first": "lowest_first",
+      "first_clear": "first_clear",
+      "push": "push",
+      "sweep": "sweep",
       "highest_only": "highest_only"
+    },
+    "MaxRetry": {
+      "name": "MemoryOfChaos.MaxRetry.name",
+      "help": "MemoryOfChaos.MaxRetry.help"
+    },
+    "RetryExceeded": {
+      "name": "MemoryOfChaos.RetryExceeded.name",
+      "help": "MemoryOfChaos.RetryExceeded.help",
+      "defer": "defer",
+      "give_up": "give_up"
     },
     "Team1Preset": {
       "name": "MemoryOfChaos.Team1Preset.name",
@@ -1419,8 +1443,20 @@
     "ChallengeMode": {
       "name": "ApocalypticShadow.ChallengeMode.name",
       "help": "ApocalypticShadow.ChallengeMode.help",
-      "lowest_first": "lowest_first",
+      "first_clear": "first_clear",
+      "push": "push",
+      "sweep": "sweep",
       "highest_only": "highest_only"
+    },
+    "MaxRetry": {
+      "name": "ApocalypticShadow.MaxRetry.name",
+      "help": "ApocalypticShadow.MaxRetry.help"
+    },
+    "RetryExceeded": {
+      "name": "ApocalypticShadow.RetryExceeded.name",
+      "help": "ApocalypticShadow.RetryExceeded.help",
+      "defer": "defer",
+      "give_up": "give_up"
     },
     "Team1Preset": {
       "name": "ApocalypticShadow.Team1Preset.name",

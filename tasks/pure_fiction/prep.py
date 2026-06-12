@@ -54,7 +54,7 @@ class PureFictionPrep(AbyssPrep, PureFictionUI):
                 self.device.click(node.button)
                 interval.reset()
 
-    def pf_prep_stage(self, node: PureFictionStageNode, team1_preset=1, team2_preset=2):
+    def pf_prep_stage(self, node: PureFictionStageNode, team1_preset=1, team2_preset=2) -> bool:
         """
         Full prep flow: enter stage, set teams and buffs for both nodes, enter story.
 
@@ -64,3 +64,4 @@ class PureFictionPrep(AbyssPrep, PureFictionUI):
         """
         self.pf_stage_enter(node)
         self.abyss_prep_teams_and_enter(team1_preset=team1_preset, team2_preset=team2_preset)
+        return True

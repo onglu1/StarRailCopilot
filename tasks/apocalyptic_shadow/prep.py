@@ -65,6 +65,7 @@ class ApocalypticShadowPrep(AbyssPrep, ApocalypticShadowUI):
                 return True
             if timeout.reached():
                 logger.warning(f'{node} prep screen did not open, skip this stage')
+                self.abyss_escape_stray_dialog()
                 return False
             if self.handle_tutorial():
                 continue

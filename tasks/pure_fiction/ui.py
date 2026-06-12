@@ -9,6 +9,7 @@ from tasks.base.ui import UI
 from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
 from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
 from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
+from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
 from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
 
 # Guide tabs are icon-only, position may shift between game versions.
@@ -22,20 +23,8 @@ STATUS_QUICK_CLEAR = '快速通关'
 STATUS_SCORE = '积分'
 
 
-class PureFictionStageNode:
-    def __init__(self, index, button):
-        self.index: int = index
-        # OcrResultButton of the stage number, clickable
-        self.button = button
-        # one of: locked, open, cleared, unknown
-        self.status: str = 'unknown'
-
-    @property
-    def challengeable(self):
-        return self.status in ['open', 'unknown']
-
-    def __repr__(self):
-        return f'Stage_{self.index:02d}({self.status})'
+class PureFictionStageNode(AbyssStageNode):
+    pass
 
 
 class PureFictionUI(UI):
@@ -52,7 +41,8 @@ class PureFictionUI(UI):
         if self.pf_in_stage_map():
             logger.info('Already in pure fiction')
             return
-        self.ui_ensure(page_guide)
+        self.abyss_exit_prep_if_stuck()
+        self.abyss_ui_ensure_guide()
         self.pf_guide_tab_goto()
         DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Pure_Fiction, main=self)
         self.pf_teleport()
@@ -150,6 +140,9 @@ class PureFictionUI(UI):
         """
         digits = {}
         statuses = {}
+        # Star glint animation can hide a cluster in a single frame,
+        # keep the max count seen across passes per node
+        star_history = {}
         nodes = []
         for attempt in range(4):
             if skip_first_screenshot and attempt == 0:
@@ -174,7 +167,7 @@ class PureFictionUI(UI):
                     self._pf_merge_box(statuses, box, 'cleared')
 
             nodes = []
-            for box, text in digits.values():
+            for key, (box, text) in digits.items():
                 try:
                     index = int(re.sub(r'\D', '', text))
                 except ValueError:
@@ -192,6 +185,13 @@ class PureFictionUI(UI):
                     if abs(sx - x_center) < 80 and -10 <= dy < best_dy:
                         best_dy = dy
                         node.status = status
+                # Gold star row sits right below the stage number
+                star_area = (
+                    int(x_center) - 60, box[3] + 2,
+                    int(x_center) + 60, min(box[3] + 40, 720),
+                )
+                count = abyss_count_stars(self.device.image, star_area)
+                node.stars = star_history[key] = max(star_history.get(key, 0), count)
                 nodes.append(node)
             nodes = sorted(nodes, key=lambda n: n.index)
 
@@ -204,36 +204,6 @@ class PureFictionUI(UI):
 
         logger.info(f'Pure fiction stages: {nodes}')
         return nodes
-
-    def pf_get_target_stage(self, nodes: list[PureFictionStageNode], mode: str = 'lowest_first'):
-        """
-        Args:
-            nodes:
-            mode: 'lowest_first' to climb stages from the lowest open one,
-                fits all account strengths.
-                'highest_only' to challenge the highest unlocked stage only,
-                for strong accounts since 3-starring a high stage grants
-                all lower stage rewards.
-
-        Returns:
-            PureFictionStageNode: or None if nothing to do
-        """
-        candidates = [node for node in nodes if node.challengeable]
-        if mode == 'highest_only':
-            unlocked = [node for node in nodes if node.status != 'locked']
-            if not unlocked:
-                logger.warning('No unlocked stage found')
-                return None
-            target = max(unlocked, key=lambda n: n.index)
-            if target.status == 'cleared':
-                logger.info(f'Highest unlocked stage {target} already cleared')
-                return None
-            return target
-        # lowest_first
-        if not candidates:
-            logger.info('No open stage to challenge')
-            return None
-        return min(candidates, key=lambda n: n.index)
 
     def pf_exit_to_main(self):
         """

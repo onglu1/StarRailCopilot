@@ -1366,9 +1366,21 @@
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage (3-starring it grants all lower rewards)",
-      "lowest_first": "Climb from lowest stage",
-      "highest_only": "Highest unlocked stage only"
+      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
+      "first_clear": "First clear (0-star stages only)",
+      "push": "Push (hammer first non-3-star)",
+      "sweep": "Sweep (all non-3-star stages)",
+      "highest_only": "Highest unlocked only"
+    },
+    "MaxRetry": {
+      "name": "Max attempts per stage",
+      "help": "Max attempts on the same stage within one run"
+    },
+    "RetryExceeded": {
+      "name": "When retries exhausted",
+      "help": "defer: try again after the daily reset; give_up: wait until next Monday",
+      "defer": "Try again tomorrow",
+      "give_up": "Give up this week"
     },
     "Team1Preset": {
       "name": "Team preset index for node 1",
@@ -1392,9 +1404,21 @@
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage",
-      "lowest_first": "Climb from lowest stage",
-      "highest_only": "Highest unlocked stage only"
+      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
+      "first_clear": "First clear (0-star stages only)",
+      "push": "Push (hammer first non-3-star)",
+      "sweep": "Sweep (all non-3-star stages)",
+      "highest_only": "Highest unlocked only"
+    },
+    "MaxRetry": {
+      "name": "Max attempts per stage",
+      "help": "Max attempts on the same stage within one run"
+    },
+    "RetryExceeded": {
+      "name": "When retries exhausted",
+      "help": "defer: try again after the daily reset; give_up: wait until next Monday",
+      "defer": "Try again tomorrow",
+      "give_up": "Give up this week"
     },
     "Team1Preset": {
       "name": "Team preset index for node 1",
@@ -1418,9 +1442,21 @@
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage",
-      "lowest_first": "Climb from lowest stage",
-      "highest_only": "Highest unlocked stage only"
+      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
+      "first_clear": "First clear (0-star stages only)",
+      "push": "Push (hammer first non-3-star)",
+      "sweep": "Sweep (all non-3-star stages)",
+      "highest_only": "Highest unlocked only"
+    },
+    "MaxRetry": {
+      "name": "Max attempts per stage",
+      "help": "Max attempts on the same stage within one run"
+    },
+    "RetryExceeded": {
+      "name": "When retries exhausted",
+      "help": "defer: try again after the daily reset; give_up: wait until next Monday",
+      "defer": "Try again tomorrow",
+      "give_up": "Give up this week"
     },
     "Team1Preset": {
       "name": "Team preset index for node 1",

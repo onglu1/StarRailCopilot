@@ -11,31 +11,21 @@ from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
 from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
 from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
 from tasks.apocalyptic_shadow.assets.assets_apocalyptic_shadow_ui import AS_OVERVIEW_GO
+from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
 from tasks.pure_fiction.assets.assets_pure_fiction_map import BLANK_CLOSE
 from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
 from tasks.pure_fiction.ui import TAB_TREASURES_LIGHTWARD_CLICK
 
 STATUS_LOCKED = '未解锁'
 STATUS_OPEN = '尚未挑战'
-# Cleared display after this season's first clear is unknown yet,
-# treat score/star-ish texts as cleared
-STATUS_CLEARED_WORDS = ['积分', '快速通关', '星']
+# A cleared stage tab shows its score
+STATUS_CLEARED_WORDS = ['积分', '快速通关']
 
 FULLWIDTH_DIGITS = str.maketrans('０１２３４５６７８９', '0123456789')
 
 
-class ApocalypticShadowStageNode:
-    def __init__(self, index, button):
-        self.index: int = index
-        self.button = button
-        self.status: str = 'unknown'
-
-    @property
-    def challengeable(self):
-        return self.status in ['open', 'unknown']
-
-    def __repr__(self):
-        return f'Stage_{self.index:02d}({self.status})'
+class ApocalypticShadowStageNode(AbyssStageNode):
+    pass
 
 
 class ApocalypticShadowUI(UI):
@@ -55,7 +45,8 @@ class ApocalypticShadowUI(UI):
         if self.as_in_stage_screen():
             logger.info('Already in apocalyptic shadow')
             return
-        self.ui_ensure(page_guide)
+        self.abyss_exit_prep_if_stuck()
+        self.abyss_ui_ensure_guide()
         self.as_guide_tab_goto()
         DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Apocalyptic_Shadow, main=self)
         self.as_teleport()
@@ -136,6 +127,8 @@ class ApocalypticShadowUI(UI):
         """
         digits = {}
         statuses = {}
+        # Star glint animation can hide a cluster in a single frame
+        star_history = {}
         nodes = []
         for attempt in range(4):
             if skip_first_screenshot and attempt == 0:
@@ -168,7 +161,7 @@ class ApocalypticShadowUI(UI):
                         self._merge(statuses, box, 'cleared')
 
             nodes = []
-            for box, (index, rest) in digits.values():
+            for key, (box, (index, rest)) in digits.items():
                 node = ApocalypticShadowStageNode(index, ClickButton(box, name=f'STAGE_{index:02d}'))
                 if STATUS_OPEN in rest:
                     node.status = 'open'
@@ -184,6 +177,13 @@ class ApocalypticShadowUI(UI):
                         if -10 <= dx < best_dx and abs(sbox[1] - box[1]) < 25:
                             best_dx = dx
                             node.status = status
+                # Gold stars sit right of the stage token at +38..+109 px,
+                # keep the band tight, gold tab ornaments sit further right
+                star_area = (
+                    min(box[2] + 25, 1279), max(box[1] - 6, 0),
+                    min(box[2] + 112, 1280), min(box[3] + 6, 720),
+                )
+                node.stars = abyss_count_stars(self.device.image, star_area)
                 # The same tab can be detected twice from merged and split
                 # tokens, keep the one with a definite status
                 existing = [n for n in nodes if n.index == node.index]
@@ -210,30 +210,3 @@ class ApocalypticShadowUI(UI):
                 return
         collection[(x, y)] = (box, value)
 
-    def as_get_target_stage(self, nodes: list[ApocalypticShadowStageNode], mode='lowest_first', skipped=None):
-        """
-        Args:
-            nodes:
-            mode: 'lowest_first' or 'highest_only'
-            skipped: set of stage indexes that failed to enter, e.g.
-                star-origin stages that need 3 teams (unsupported yet)
-
-        Returns:
-            ApocalypticShadowStageNode: or None if nothing to do
-        """
-        skipped = skipped or set()
-        candidates = [n for n in nodes if n.challengeable and n.index not in skipped]
-        if mode == 'highest_only':
-            unlocked = [n for n in nodes if n.status != 'locked' and n.index not in skipped]
-            if not unlocked:
-                logger.warning('No unlocked stage found')
-                return None
-            target = max(unlocked, key=lambda n: n.index)
-            if target.status == 'cleared':
-                logger.info(f'Highest unlocked stage {target} already cleared')
-                return None
-            return target
-        if not candidates:
-            logger.info('No open stage to challenge')
-            return None
-        return min(candidates, key=lambda n: n.index)

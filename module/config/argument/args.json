@@ -2479,10 +2479,24 @@
     "PureFiction": {
       "ChallengeMode": {
         "type": "select",
-        "value": "lowest_first",
+        "value": "first_clear",
         "option": [
-          "lowest_first",
+          "first_clear",
+          "push",
+          "sweep",
           "highest_only"
+        ]
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "RetryExceeded": {
+        "type": "select",
+        "value": "defer",
+        "option": [
+          "defer",
+          "give_up"
         ]
       },
       "Team1Preset": {
@@ -2534,10 +2548,24 @@
     "MemoryOfChaos": {
       "ChallengeMode": {
         "type": "select",
-        "value": "lowest_first",
+        "value": "first_clear",
         "option": [
-          "lowest_first",
+          "first_clear",
+          "push",
+          "sweep",
           "highest_only"
+        ]
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "RetryExceeded": {
+        "type": "select",
+        "value": "defer",
+        "option": [
+          "defer",
+          "give_up"
         ]
       },
       "Team1Preset": {
@@ -2589,10 +2617,24 @@
     "ApocalypticShadow": {
       "ChallengeMode": {
         "type": "select",
-        "value": "lowest_first",
+        "value": "first_clear",
         "option": [
-          "lowest_first",
+          "first_clear",
+          "push",
+          "sweep",
           "highest_only"
+        ]
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "RetryExceeded": {
+        "type": "select",
+        "value": "defer",
+        "option": [
+          "defer",
+          "give_up"
         ]
       },
       "Team1Preset": {
