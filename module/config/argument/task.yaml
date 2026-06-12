@@ -67,15 +67,6 @@ Weekly:
       - RogueWorld
       - RogueBlessing
       - RogueDebug
-    PureFiction:
-      - Scheduler
-      - PureFiction
-    MemoryOfChaos:
-      - Scheduler
-      - MemoryOfChaos
-    ApocalypticShadow:
-      - Scheduler
-      - ApocalypticShadow
 
 # ==================== Tool ====================
 
@@ -87,3 +78,10 @@ Tool:
       - Daemon
     PlannerScan:
       - PlannerScan
+    # [fork] abyss tasks are tools: click to run, no scheduling
+    PureFiction:
+      - PureFiction
+    MemoryOfChaos:
+      - MemoryOfChaos
+    ApocalypticShadow:
+      - ApocalypticShadow

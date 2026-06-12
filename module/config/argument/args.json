@@ -2450,232 +2450,6 @@
       }
     }
   },
-  "PureFiction": {
-    "Scheduler": {
-      "Enable": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "NextRun": {
-        "type": "datetime",
-        "value": "2020-01-01 00:00:00",
-        "validate": "datetime"
-      },
-      "Command": {
-        "type": "input",
-        "value": "PureFiction",
-        "display": "hide"
-      },
-      "ServerUpdate": {
-        "type": "input",
-        "value": "04:00",
-        "display": "hide"
-      }
-    },
-    "PureFiction": {
-      "ChallengeMode": {
-        "type": "select",
-        "value": "highest",
-        "option": [
-          "highest",
-          "push",
-          "assign"
-        ]
-      },
-      "AssignedStage": {
-        "type": "input",
-        "value": 1
-      },
-      "MaxRetry": {
-        "type": "input",
-        "value": 2
-      },
-      "RetryExceeded": {
-        "type": "select",
-        "value": "defer",
-        "option": [
-          "defer",
-          "give_up"
-        ]
-      },
-      "Team1Preset": {
-        "type": "select",
-        "value": 1,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      },
-      "Team2Preset": {
-        "type": "select",
-        "value": 2,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      },
-      "BuffSelect": {
-        "type": "select",
-        "value": "1",
-        "option": [
-          "1",
-          "2",
-          "3",
-          "random"
-        ]
-      }
-    }
-  },
-  "MemoryOfChaos": {
-    "Scheduler": {
-      "Enable": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "NextRun": {
-        "type": "datetime",
-        "value": "2020-01-01 00:00:00",
-        "validate": "datetime"
-      },
-      "Command": {
-        "type": "input",
-        "value": "MemoryOfChaos",
-        "display": "hide"
-      },
-      "ServerUpdate": {
-        "type": "input",
-        "value": "04:00",
-        "display": "hide"
-      }
-    },
-    "MemoryOfChaos": {
-      "ChallengeMode": {
-        "type": "select",
-        "value": "highest",
-        "option": [
-          "highest",
-          "push",
-          "assign"
-        ]
-      },
-      "AssignedStage": {
-        "type": "input",
-        "value": 1
-      },
-      "MaxRetry": {
-        "type": "input",
-        "value": 2
-      },
-      "RetryExceeded": {
-        "type": "select",
-        "value": "defer",
-        "option": [
-          "defer",
-          "give_up"
-        ]
-      },
-      "Team1Preset": {
-        "type": "select",
-        "value": 1,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      },
-      "Team2Preset": {
-        "type": "select",
-        "value": 2,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      }
-    }
-  },
-  "ApocalypticShadow": {
-    "Scheduler": {
-      "Enable": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "NextRun": {
-        "type": "datetime",
-        "value": "2020-01-01 00:00:00",
-        "validate": "datetime"
-      },
-      "Command": {
-        "type": "input",
-        "value": "ApocalypticShadow",
-        "display": "hide"
-      },
-      "ServerUpdate": {
-        "type": "input",
-        "value": "04:00",
-        "display": "hide"
-      }
-    },
-    "ApocalypticShadow": {
-      "ChallengeMode": {
-        "type": "select",
-        "value": "highest",
-        "option": [
-          "highest",
-          "push",
-          "assign"
-        ]
-      },
-      "AssignedStage": {
-        "type": "input",
-        "value": 1
-      },
-      "MaxRetry": {
-        "type": "input",
-        "value": 2
-      },
-      "RetryExceeded": {
-        "type": "select",
-        "value": "defer",
-        "option": [
-          "defer",
-          "give_up"
-        ]
-      },
-      "Team1Preset": {
-        "type": "select",
-        "value": 1,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      },
-      "Team2Preset": {
-        "type": "select",
-        "value": 2,
-        "option": [
-          1,
-          2,
-          3
-        ]
-      }
-    }
-  },
   "Daemon": {
     "Daemon": {
       "Enable": {
@@ -2705,6 +2479,209 @@
       "ResultAdd": {
         "type": "checkbox",
         "value": false
+      }
+    }
+  },
+  "PureFiction": {
+    "PureFiction": {
+      "ChallengeMode": {
+        "type": "select",
+        "value": "highest",
+        "option": [
+          "highest",
+          "push",
+          "assign"
+        ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "SwapOnRetry": {
+        "type": "checkbox",
+        "value": true
+      },
+      "Team1Preset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "Team2Preset": {
+        "type": "select",
+        "value": 2,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "Node1Buff": {
+        "type": "select",
+        "value": "1",
+        "option": [
+          "1",
+          "2",
+          "3",
+          "random"
+        ]
+      },
+      "Node2Buff": {
+        "type": "select",
+        "value": "1",
+        "option": [
+          "1",
+          "2",
+          "3",
+          "random"
+        ]
+      }
+    }
+  },
+  "MemoryOfChaos": {
+    "MemoryOfChaos": {
+      "ChallengeMode": {
+        "type": "select",
+        "value": "highest",
+        "option": [
+          "highest",
+          "push",
+          "assign"
+        ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "SwapOnRetry": {
+        "type": "checkbox",
+        "value": true
+      },
+      "Team1Preset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "Team2Preset": {
+        "type": "select",
+        "value": 2,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      }
+    }
+  },
+  "ApocalypticShadow": {
+    "ApocalypticShadow": {
+      "ChallengeMode": {
+        "type": "select",
+        "value": "highest",
+        "option": [
+          "highest",
+          "push",
+          "assign"
+        ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "SwapOnRetry": {
+        "type": "checkbox",
+        "value": true
+      },
+      "Team1Preset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "Team2Preset": {
+        "type": "select",
+        "value": 2,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
       }
     }
   }

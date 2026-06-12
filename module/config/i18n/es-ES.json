@@ -62,6 +62,14 @@
       "name": "Universo Simulado",
       "help": ""
     },
+    "Daemon": {
+      "name": "Clic de diálogo",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "Planificador de personajes",
+      "help": ""
+    },
     "PureFiction": {
       "name": "Pura ficción",
       "help": "Desafía Pura ficción automáticamente"
@@ -73,14 +81,6 @@
     "ApocalypticShadow": {
       "name": "Sombra apocalíptica",
       "help": "Desafía Sombra apocalíptica automáticamente"
-    },
-    "Daemon": {
-      "name": "Clic de diálogo",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "Planificador de personajes",
-      "help": ""
     }
   },
   "Scheduler": {
@@ -1346,31 +1346,55 @@
     },
     "MaxRetry": {
       "name": "Rondas máximas por nivel",
-      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
+      "help": "Rondas máximas en el mismo nivel por ejecución, se detiene al agotarlas"
     },
-    "RetryExceeded": {
-      "name": "Al agotar las rondas",
-      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
-      "defer": "Reintentar mañana",
-      "give_up": "Abandonar esta semana"
+    "SwapOnRetry": {
+      "name": "Intercambiar los equipos de los nodos entre rondas",
+      "help": "Si está marcado, los reintentos intercambian qué equipo predefinido lucha en cada nodo"
     },
     "Team1Preset": {
       "name": "Equipo predefinido del nodo 1",
       "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     },
     "Team2Preset": {
       "name": "Equipo predefinido del nodo 2",
       "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     },
-    "BuffSelect": {
-      "name": "Selección de aumento",
-      "help": "Qué aumento de Pura ficción elegir en cada nodo, o aleatorio",
+    "Node1Buff": {
+      "name": "Aumento del nodo 1",
+      "help": "Qué aumento de Pura ficción elegir en este nodo, o aleatorio",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "random": "Aleatorio"
+    },
+    "Node2Buff": {
+      "name": "Aumento del nodo 2",
+      "help": "Qué aumento de Pura ficción elegir en este nodo, o aleatorio",
       "1": "1",
       "2": "2",
       "3": "3",
@@ -1395,27 +1419,43 @@
     },
     "MaxRetry": {
       "name": "Rondas máximas por nivel",
-      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
+      "help": "Rondas máximas en el mismo nivel por ejecución, se detiene al agotarlas"
     },
-    "RetryExceeded": {
-      "name": "Al agotar las rondas",
-      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
-      "defer": "Reintentar mañana",
-      "give_up": "Abandonar esta semana"
+    "SwapOnRetry": {
+      "name": "Intercambiar los equipos de los nodos entre rondas",
+      "help": "Si está marcado, los reintentos intercambian qué equipo predefinido lucha en cada nodo"
     },
     "Team1Preset": {
       "name": "Equipo predefinido del nodo 1",
       "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     },
     "Team2Preset": {
       "name": "Equipo predefinido del nodo 2",
       "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     }
   },
   "ApocalypticShadow": {
@@ -1436,27 +1476,43 @@
     },
     "MaxRetry": {
       "name": "Rondas máximas por nivel",
-      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
+      "help": "Rondas máximas en el mismo nivel por ejecución, se detiene al agotarlas"
     },
-    "RetryExceeded": {
-      "name": "Al agotar las rondas",
-      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
-      "defer": "Reintentar mañana",
-      "give_up": "Abandonar esta semana"
+    "SwapOnRetry": {
+      "name": "Intercambiar los equipos de los nodos entre rondas",
+      "help": "Si está marcado, los reintentos intercambian qué equipo predefinido lucha en cada nodo"
     },
     "Team1Preset": {
       "name": "Equipo predefinido del nodo 1",
       "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     },
     "Team2Preset": {
       "name": "Equipo predefinido del nodo 2",
       "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
-      "3": "3"
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     }
   },
   "Weekly": {

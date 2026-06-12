@@ -25,10 +25,7 @@
     "page": "setting",
     "tasks": [
       "Weekly",
-      "Rogue",
-      "PureFiction",
-      "MemoryOfChaos",
-      "ApocalypticShadow"
+      "Rogue"
     ]
   },
   "Tool": {
@@ -36,7 +33,10 @@
     "page": "tool",
     "tasks": [
       "Daemon",
-      "PlannerScan"
+      "PlannerScan",
+      "PureFiction",
+      "MemoryOfChaos",
+      "ApocalypticShadow"
     ]
   }
 }
