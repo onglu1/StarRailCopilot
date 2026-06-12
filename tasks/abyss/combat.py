@@ -6,13 +6,21 @@ loading -> (mechanic intro overlay) -> in-dungeon map walking -> battle
 -> back to map with team 2 -> battle -> settlement screen.
 
 Verified facts these helpers rely on:
-- Abyss battle UI buttons at the top right auto-hide when idle, so state
-  detection alone cannot see them. On battle entry blind-click the auto
-  button once: abyss battles always start with auto off, the click both
-  enables auto and wakes the hidden UI, then handle_combat_state()
-  verifies auto and enables 2x speed while the UI is awake.
+- Auto and 2x speed are driven by the upstream combat state machine
+  (handle_combat_state) exactly like normal combat: it is gated on the
+  pause button being visible and reads the real active-state of each
+  button, so it never toggles something that is already on.
+- The abyss battle HUD auto-hides when idle (the gate then blocks all
+  state handling), but its touch areas persist: when the HUD is hidden
+  and auto/2x are not verified yet, one click on the auto button both
+  wakes the HUD and flips auto on (abyss battles always start with auto
+  off; in the rare case auto was already on, the state machine detects
+  the mis-toggle and corrects it).
+- The state machine only acts after the gate passes two consecutive
+  frames, the fade-in animation of the waking HUD misreads button
+  borders otherwise.
 - Ult cutscenes hide the wave flag for a few seconds mid-battle, the
-  battle-left debounce avoids re-clicking auto (which would toggle it off).
+  battle-left debounce keeps the battle state stable across them.
 - The wave flag at top-left is the only reliable battle HUD element,
   shared by all three modes.
 - Device-level stuck/click records must be cleared during the long
@@ -51,7 +59,6 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
     REWARD_PANEL_CLOSE = None
 
     _abyss_prev_frame = None
-    _combat_auto_blind_clicked = False
 
     def abyss_scan_stages(self) -> list:
         """Scan stage nodes. Override in subclasses."""
@@ -181,15 +188,17 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
         map_stuck = Timer(150, count=10)
         # Battle screen frozen this long means auto battle is off
         battle_stall = Timer(55, count=10)
-        # Auto clicks without any screen change, see below
+        # Wake clicks without any screen change, see below
         stall_clicks = 0
-        # Battle UI buttons at top-right auto-hide when idle, see module
-        # docstring for the blind-click-then-verify strategy
         was_in_battle = False
-        battle_entry = Timer(2, count=2)
+        # The hidden HUD is woken at most this often, see module docstring
+        hud_wake = Timer(3, count=3)
+        hud_wake_clicks = 0
+        # Consecutive frames with the pause button visible, the state
+        # machine acts only on a stable HUD
+        gate_streak = 0
         # Ult cutscenes hide the wave flag for a few seconds mid-battle,
-        # only consider the battle left after a sustained absence, otherwise
-        # the entry click would fire again and toggle auto OFF
+        # only consider the battle left after a sustained absence
         battle_left = Timer(8, count=3)
         self._abyss_prev_frame = None
 
@@ -251,19 +260,31 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
                     if not was_in_battle:
                         logger.info('Abyss battle entered')
                         was_in_battle = True
-                        battle_entry.reset()
                         self.combat_state_reset()
-                        self._combat_auto_blind_clicked = False
-                    # Blind-click auto shortly after entry, then let
-                    # handle_combat_state verify and set 2x while UI is awake
-                    if not self._combat_auto_blind_clicked:
-                        if battle_entry.reached():
-                            logger.info('Click auto battle on entry')
+                        hud_wake.reset()
+                        hud_wake_clicks = 0
+                        gate_streak = 0
+                    # Auto and 2x are driven by the upstream state machine,
+                    # it reads real button states and never mis-toggles.
+                    # Only act on a stable HUD, the fade-in of a waking HUD
+                    # misreads button borders
+                    if self.is_combat_executing():
+                        gate_streak += 1
+                        if gate_streak >= 2 and self.handle_combat_state():
+                            continue
+                    else:
+                        gate_streak = 0
+                        # HUD hidden with auto/2x not verified yet: one click
+                        # on auto wakes the HUD (and flips auto on, abyss
+                        # battles start with auto off; a mis-toggle would be
+                        # corrected by the state machine)
+                        if not (self._combat_auto_checked and self._combat_2x_checked) \
+                                and hud_wake_clicks < 3 and hud_wake.reached():
+                            logger.info('Battle HUD hidden, wake it via the auto button')
                             self.device.click(COMBAT_AUTO)
-                            self._combat_auto_blind_clicked = True
-                        continue
-                    if self.handle_combat_state():
-                        continue
+                            hud_wake.reset()
+                            hud_wake_clicks += 1
+                            continue
                     if not battle_stall.started():
                         battle_stall.start()
                     if self._abyss_battle_progressing():
@@ -271,14 +292,17 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
                         stall_clicks = 0
                     if battle_stall.reached():
                         # A stray click may have opened a modal (e.g. ult target
-                        # selection) that hides the battle controls, clicking
-                        # auto would then do nothing forever. Escalate to a
-                        # task-level restart after repeated dead clicks.
+                        # selection) that hides the battle controls, waking
+                        # would then do nothing forever. Escalate to a
+                        # task-level restart after repeated dead wakes.
                         if stall_clicks >= 3:
                             raise GameStuckError(
-                                'Battle stalled even after repeated auto battle clicks')
-                        logger.info('Battle stalled, click auto battle')
-                        self.device.click(COMBAT_AUTO)
+                                'Battle stalled even after repeated wake clicks')
+                        logger.info('Battle stalled, re-verify auto/2x')
+                        if not self.is_combat_executing():
+                            self.device.click(COMBAT_AUTO)
+                        self.combat_state_reset()
+                        gate_streak = 0
                         battle_stall.reset()
                         stall_clicks += 1
                     continue
