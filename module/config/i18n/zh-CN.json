@@ -62,6 +62,14 @@
       "name": "模拟宇宙",
       "help": ""
     },
+    "Daemon": {
+      "name": "剧情连点器",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "角色养成规划",
+      "help": ""
+    },
     "PureFiction": {
       "name": "虚构叙事",
       "help": "自动挑战虚构叙事"
@@ -73,14 +81,6 @@
     "ApocalypticShadow": {
       "name": "末日幻影",
       "help": "自动挑战末日幻影"
-    },
-    "Daemon": {
-      "name": "剧情连点器",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "角色养成规划",
-      "help": ""
     }
   },
   "Scheduler": {
