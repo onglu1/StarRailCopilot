@@ -45,6 +45,11 @@ class AbyssPrep(AbyssNav):
     # ButtonWrapper, the enter button at the bottom right of the prep screen
     ENTER_BUTTON = None
 
+    # Which node row our clicks last focused, None when unknown. Clicking a
+    # team slot of an unfocused row only focuses the row, but clicking the
+    # slot of an already-focused row acts on the member itself
+    _abyss_focused_node = None
+
     def _abyss_click_preset(self, preset: int) -> bool:
         """
         Click a preset block in the preset tab. Only the top 3 presets are
@@ -91,11 +96,15 @@ class AbyssPrep(AbyssNav):
                     break
                 if self.appear(PREP_CHECK, interval=2):
                     self.device.click(slot)
+                    self._abyss_focused_node = node_index
                     continue
 
-            # Focus this node, wait out the focus animation
-            self.device.click(slot)
-            self.device.sleep((0.6, 0.8))
+            # Focus this node only when another row is focused,
+            # wait out the focus animation
+            if self._abyss_focused_node != node_index:
+                self.device.click(slot)
+                self._abyss_focused_node = node_index
+                self.device.sleep((0.6, 0.8))
 
             # Switch to preset tab
             timeout = Timer(15, count=5).start()

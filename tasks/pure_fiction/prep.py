@@ -46,6 +46,7 @@ class PureFictionPrep(PureFictionUI):
 
             if self.appear(PREP_CHECK):
                 logger.info('Stage prep screen entered')
+                self._abyss_focused_node = None
                 break
             if timeout.reached():
                 logger.warning('pf_stage_enter timeout, rescan stages')

@@ -65,6 +65,7 @@ class ApocalypticShadowPrep(ApocalypticShadowUI):
 
             if self.appear(PREP_CHECK):
                 logger.info('Stage prep screen entered')
+                self._abyss_focused_node = None
                 return True
             if timeout.reached():
                 logger.warning(f'{node} prep screen did not open, skip this stage')
