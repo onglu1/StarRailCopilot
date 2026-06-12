@@ -320,17 +320,6 @@
       "DebugMode": false
     }
   },
-  "Daemon": {
-    "Daemon": {
-      "Enable": true,
-      "AimClicker": "do_not_click"
-    }
-  },
-  "PlannerScan": {
-    "PlannerScan": {
-      "ResultAdd": false
-    }
-  },
   "PureFiction": {
     "Scheduler": {
       "Enable": false,
@@ -339,12 +328,13 @@
       "ServerUpdate": "04:00"
     },
     "PureFiction": {
-      "ChallengeMode": "first_clear",
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
       "Team2Preset": 2,
-      "CandidateTeams": null
+      "BuffSelect": 1
     }
   },
   "MemoryOfChaos": {
@@ -355,12 +345,12 @@
       "ServerUpdate": "04:00"
     },
     "MemoryOfChaos": {
-      "ChallengeMode": "first_clear",
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
-      "Team2Preset": 2,
-      "CandidateTeams": null
+      "Team2Preset": 2
     }
   },
   "ApocalypticShadow": {
@@ -371,12 +361,23 @@
       "ServerUpdate": "04:00"
     },
     "ApocalypticShadow": {
-      "ChallengeMode": "first_clear",
+      "ChallengeMode": "highest",
+      "AssignedStage": 1,
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
-      "Team2Preset": 2,
-      "CandidateTeams": null
+      "Team2Preset": 2
+    }
+  },
+  "Daemon": {
+    "Daemon": {
+      "Enable": true,
+      "AimClicker": "do_not_click"
+    }
+  },
+  "PlannerScan": {
+    "PlannerScan": {
+      "ResultAdd": false
     }
   }
 }

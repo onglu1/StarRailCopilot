@@ -244,8 +244,10 @@ PlannerTarget:
 
 PureFiction:
   ChallengeMode:
-    value: first_clear
-    option: [ first_clear, push, sweep, highest_only ]
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
   MaxRetry:
     value: 2
   RetryExceeded:
@@ -257,13 +259,16 @@ PureFiction:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
-  CandidateTeams:
-    value: ''
+  BuffSelect:
+    value: '1'
+    option: [ '1', '2', '3', random ]
 
 MemoryOfChaos:
   ChallengeMode:
-    value: first_clear
-    option: [ first_clear, push, sweep, highest_only ]
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
   MaxRetry:
     value: 2
   RetryExceeded:
@@ -275,13 +280,13 @@ MemoryOfChaos:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
-  CandidateTeams:
-    value: ''
 
 ApocalypticShadow:
   ChallengeMode:
-    value: first_clear
-    option: [ first_clear, push, sweep, highest_only ]
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
   MaxRetry:
     value: 2
   RetryExceeded:
@@ -293,8 +298,6 @@ ApocalypticShadow:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
-  CandidateTeams:
-    value: ''
 
 Weekly:
   Name:

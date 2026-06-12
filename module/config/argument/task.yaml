@@ -67,6 +67,15 @@ Weekly:
       - RogueWorld
       - RogueBlessing
       - RogueDebug
+    PureFiction:
+      - Scheduler
+      - PureFiction
+    MemoryOfChaos:
+      - Scheduler
+      - MemoryOfChaos
+    ApocalypticShadow:
+      - Scheduler
+      - ApocalypticShadow
 
 # ==================== Tool ====================
 
@@ -78,15 +87,3 @@ Tool:
       - Daemon
     PlannerScan:
       - PlannerScan
-    # [fork] abyss tasks live on the tool page: click to run now, Scheduler
-    # group kept so weekly auto-scheduling still works (upstream PR keeps
-    # them under Weekly, resolve merge conflicts toward one placement)
-    PureFiction:
-      - Scheduler
-      - PureFiction
-    MemoryOfChaos:
-      - Scheduler
-      - MemoryOfChaos
-    ApocalypticShadow:
-      - Scheduler
-      - ApocalypticShadow

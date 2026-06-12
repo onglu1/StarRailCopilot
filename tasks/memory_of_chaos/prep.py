@@ -18,11 +18,6 @@ class MemoryOfChaosPrep(MemoryOfChaosUI):
         2: (888, 530, 1205, 574),
     }
     EFFECT_SLOT = {}
-    # Recommended-attribute icons left of the team rows
-    WEAKNESS_STRIP = {
-        1: (770, 455, 970, 510),
-        2: (770, 550, 970, 605),
-    }
     ENTER_BUTTON = MOC_ENTER
 
     def moc_stage_enter(self, node: MemoryOfChaosStageNode) -> bool:

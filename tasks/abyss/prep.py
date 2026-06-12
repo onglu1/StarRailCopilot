@@ -8,11 +8,14 @@ rows on the right (one per node/half), an optional per-node effect slot
 Chaos), and an enter button at the bottom right. Only coordinates and
 the enter button differ, subclasses bind them via class attributes.
 """
+import random
+
 from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.base.utils import crop, rgb2luma
 from module.exception import RequestHumanTakeover
 from module.logger import logger
+from module.ocr.ocr import Ocr
 from tasks.abyss.assets.assets_abyss_prep import (
     EQUIP_EFFECT,
     PREP_CHECK,
@@ -49,6 +52,8 @@ class AbyssPrep(AbyssNav):
     # team slot of an unfocused row only focuses the row, but clicking the
     # slot of an already-focused row acts on the member itself
     _abyss_focused_node = None
+    # Which effect card to equip: '1' / '2' / '3' / 'random'
+    _abyss_effect_select = '1'
 
     def _abyss_click_preset(self, preset: int) -> bool:
         """
@@ -131,9 +136,44 @@ class AbyssPrep(AbyssNav):
         logger.warning(f'Failed to fill team of node {node_index}')
         return False
 
+    def _abyss_effect_card(self) -> ClickButton:
+        """
+        The configured effect card to click. Card heights vary with their
+        description text, so cards beyond the first are anchored by OCR of
+        the card titles on the left edge of the panel.
+
+        Pages:
+            in: EQUIP_EFFECT, effect selection screen
+        """
+        select = str(self._abyss_effect_select)
+        if select == 'random':
+            select = random.choice(['1', '2', '3'])
+            logger.info(f'Random effect card: {select}')
+        if select == '1':
+            return EFFECT_CARD_1
+        ocr = Ocr(ClickButton((706, 140, 1270, 660), name='OCR_EFFECT_TITLES'), lang='cn')
+        titles = []
+        for row in ocr.detect_and_ocr(self.device.image):
+            text = row.ocr_text.strip()
+            box = tuple(row.box)
+            # Card titles are short, left-aligned at the panel edge.
+            # Mechanic footnotes and the equip button sit elsewhere
+            if box[0] > 790 or not text or len(text) > 6:
+                continue
+            if '机制' in text or '效果' in text:
+                continue
+            titles.append(box)
+        titles.sort(key=lambda b: b[1])
+        index = int(select) - 1
+        if index < len(titles):
+            return ClickButton(titles[index], name=f'EFFECT_CARD_{select}')
+        logger.warning(f'Effect card {select} not found among {len(titles)} titles, '
+                       f'fallback to card 1')
+        return EFFECT_CARD_1
+
     def abyss_set_effect(self, node_index: int, skip_first_screenshot=True):
         """
-        Equip the first buff/axiom for the given node.
+        Equip the configured buff/axiom for the given node.
         Idempotent, re-equipping the same effect is harmless.
 
         Pages:
@@ -178,7 +218,7 @@ class AbyssPrep(AbyssNav):
                 return
             if self.appear(EQUIP_EFFECT) and interval.reached():
                 if not selected:
-                    self.device.click(EFFECT_CARD_1)
+                    self.device.click(self._abyss_effect_card())
                     selected = True
                     self.device.sleep((0.3, 0.5))
                 self.device.click(EQUIP_EFFECT)
