@@ -31,6 +31,7 @@ from tasks.combat.state import CombatState
 from tasks.map.control.joystick import JoystickContact, MapControlJoystick
 from tasks.pure_fiction.assets.assets_pure_fiction_battle import PF_WAVE_FLAG, QUICK_CLEAR_CONFIRM
 from tasks.pure_fiction.assets.assets_pure_fiction_map import BLANK_CLOSE, MAP_CHECK
+from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
 
 
 class AbyssStageNode:
@@ -378,6 +379,15 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
                         contact.up()
                         contact = None
                     logger.info('Back at abyss stage screen without settlement')
+                    return
+                # A lost battle returns to the stage prep screen after its
+                # fail dialog. Back out, the run loop rescans and retries
+                if self.appear(PREP_CHECK):
+                    if contact is not None:
+                        contact.up()
+                        contact = None
+                    logger.info('Returned to prep screen, battle probably failed')
+                    self.abyss_exit_prep_if_stuck()
                     return
 
                 in_battle = self.appear(PF_WAVE_FLAG)
