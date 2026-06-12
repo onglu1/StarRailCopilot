@@ -64,7 +64,7 @@
     },
     "PureFiction": {
       "name": "虚构叙事",
-      "help": "自动挑战虚构叙事最高可挑战关卡"
+      "help": "自动挑战虚构叙事"
     },
     "MemoryOfChaos": {
       "name": "忘却之庭",
@@ -1328,37 +1328,6 @@
       "1": "1"
     }
   },
-  "Weekly": {
-    "_info": {
-      "name": "历战余响设置",
-      "help": "历战余响每周次数耗尽后仍然可以继续挑战，不消耗体力不获得奖励但是可以完成每日任务"
-    },
-    "Name": {
-      "name": "副本名称",
-      "help": "",
-      "Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass": "铁骸的锈冢 (翁法罗斯)",
-      "Echo_of_War_Glance_of_Twilight": "晨昏的回眸 (翁法罗斯)",
-      "Echo_of_War_Inner_Beast_Battlefield": "心兽的战场 (仙舟「罗浮」)",
-      "Echo_of_War_Salutations_of_Ashen_Dreams": "尘梦的赞礼 (匹诺康尼)",
-      "Echo_of_War_Borehole_Planet_Past_Nightmares": "蛀星的旧魇 (空间站「黑塔」)",
-      "Echo_of_War_Divine_Seed": "不死的神实 (仙舟「罗浮」)",
-      "Echo_of_War_End_of_the_Eternal_Freeze": "寒潮的落幕 (雅利洛-Ⅵ)",
-      "Echo_of_War_Destruction_Beginning": "毁灭的开端 (空间站「黑塔」)"
-    },
-    "Team": {
-      "name": "打本队伍",
-      "help": "",
-      "1": "1",
-      "2": "2",
-      "3": "3",
-      "4": "4",
-      "5": "5",
-      "6": "6",
-      "7": "7",
-      "8": "8",
-      "9": "9"
-    }
-  },
   "PureFiction": {
     "_info": {
       "name": "虚构叙事设置",
@@ -1471,6 +1440,37 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    }
+  },
+  "Weekly": {
+    "_info": {
+      "name": "历战余响设置",
+      "help": "历战余响每周次数耗尽后仍然可以继续挑战，不消耗体力不获得奖励但是可以完成每日任务"
+    },
+    "Name": {
+      "name": "副本名称",
+      "help": "",
+      "Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass": "铁骸的锈冢 (翁法罗斯)",
+      "Echo_of_War_Glance_of_Twilight": "晨昏的回眸 (翁法罗斯)",
+      "Echo_of_War_Inner_Beast_Battlefield": "心兽的战场 (仙舟「罗浮」)",
+      "Echo_of_War_Salutations_of_Ashen_Dreams": "尘梦的赞礼 (匹诺康尼)",
+      "Echo_of_War_Borehole_Planet_Past_Nightmares": "蛀星的旧魇 (空间站「黑塔」)",
+      "Echo_of_War_Divine_Seed": "不死的神实 (仙舟「罗浮」)",
+      "Echo_of_War_End_of_the_Eternal_Freeze": "寒潮的落幕 (雅利洛-Ⅵ)",
+      "Echo_of_War_Destruction_Beginning": "毁灭的开端 (空间站「黑塔」)"
+    },
+    "Team": {
+      "name": "打本队伍",
+      "help": "",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9"
     }
   },
   "DailyStorage": {

@@ -1,5 +1,5 @@
 """
-Shared stage-prep helpers for the abyss modes.
+Stage-prep helpers shared by the abyss modes.
 
 The prep screen of all three modes shares the same structure: a left
 character picker (with a preset-team tab at fixed position), two team
@@ -13,13 +13,13 @@ from module.base.timer import Timer
 from module.base.utils import crop, rgb2luma
 from module.exception import RequestHumanTakeover
 from module.logger import logger
-from tasks.base.ui import UI
-from tasks.pure_fiction.assets.assets_pure_fiction_prep import (
+from tasks.abyss.assets.assets_abyss_prep import (
     EQUIP_EFFECT,
     PREP_CHECK,
     TAB_PRESET_CHECK,
     TAB_PRESET_CLICK
 )
+from tasks.abyss.nav import AbyssNav
 
 # First effect card on the buff/axiom selection screen, same in PF and AS
 EFFECT_CARD_1 = ClickButton((760, 150, 1140, 225), name='EFFECT_CARD_1')
@@ -32,7 +32,7 @@ PRESET_BLOCK = {
 }
 
 
-class AbyssPrep(UI):
+class AbyssPrep(AbyssNav):
     # {node_index: ClickButton}, the first member slot of each team row
     TEAM_SLOT = {}
     # {node_index: (x1, y1, x2, y2)}, strip over the 4 member slots.

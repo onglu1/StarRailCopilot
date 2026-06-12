@@ -6,7 +6,7 @@ from module.base.button import Button, ButtonWrapper
 TAB_TREASURES_LIGHTWARD_CHECK = ButtonWrapper(
     name='TAB_TREASURES_LIGHTWARD_CHECK',
     share=Button(
-        file='./assets/share/pure_fiction/nav/TAB_TREASURES_LIGHTWARD_CHECK.png',
+        file='./assets/share/abyss/nav/TAB_TREASURES_LIGHTWARD_CHECK.png',
         area=(435, 92, 485, 135),
         search=(415, 72, 505, 155),
         color=(154, 154, 154),

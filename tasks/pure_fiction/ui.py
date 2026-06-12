@@ -1,20 +1,12 @@
 import re
 
 from module.base.button import ClickButton
-from module.base.timer import Timer
 from module.logger import logger
 from module.ocr.ocr import Ocr
-from tasks.base.page import page_guide, page_pure_fiction
-from tasks.base.ui import UI
+from tasks.abyss.combat import AbyssCombatLoop
+from tasks.abyss.stage import AbyssStageNode, abyss_count_stars
+from tasks.base.page import page_pure_fiction
 from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
-from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
-from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
-from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
-from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
-
-# Guide tabs are icon-only, position may shift between game versions.
-# Blind click as fallback when the selected-state template doesn't match.
-TAB_TREASURES_LIGHTWARD_CLICK = ClickButton((424, 88, 494, 136), name='TAB_TREASURES_LIGHTWARD_CLICK')
 
 # Stage node status texts below stage numbers
 STATUS_LOCKED = '未解锁'
@@ -27,93 +19,11 @@ class PureFictionStageNode(AbyssStageNode):
     pass
 
 
-class PureFictionUI(UI):
-    def pf_goto(self, skip_first_screenshot=True):
-        """
-        Goto the pure fiction stage map screen.
+class PureFictionUI(AbyssCombatLoop):
+    NAV_KEYWORD = KEYWORDS_DUNGEON_NAV.Pure_Fiction
 
-        Pages:
-            in: Any
-            out: page_pure_fiction
-        """
-        logger.hr('Pure fiction goto', level=2)
-        self.device.screenshot()
-        if self.pf_in_stage_map():
-            logger.info('Already in pure fiction')
-            return
-        self.abyss_exit_prep_if_stuck()
-        self.abyss_ui_ensure_guide()
-        self.pf_guide_tab_goto()
-        DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Pure_Fiction, main=self)
-        self.pf_teleport()
-
-    def pf_in_stage_map(self) -> bool:
+    def abyss_home_check(self) -> bool:
         return self.appear(page_pure_fiction.check_button)
-
-    def pf_guide_tab_goto(self, skip_first_screenshot=True):
-        """
-        Pages:
-            in: page_guide
-            out: page_guide, Treasures_Lightward tab, nav list loaded
-        """
-        timeout = Timer(10, count=10).start()
-        click_interval = Timer(2)
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if timeout.reached():
-                logger.warning('pf_guide_tab_goto timeout, continue anyway')
-                break
-            if self.match_template_color(TAB_TREASURES_LIGHTWARD_CHECK):
-                logger.info('Treasures_Lightward tab selected')
-                break
-            if click_interval.reached():
-                self.device.click(TAB_TREASURES_LIGHTWARD_CLICK)
-                click_interval.reset()
-                continue
-
-        # Wait until nav list shows Pure_Fiction related rows
-        for _ in self.loop(timeout=4):
-            DUNGEON_NAV_LIST.load_rows(main=self)
-            if DUNGEON_NAV_LIST.cur_buttons:
-                logger.info('Treasures_Lightward nav list loaded')
-                break
-        else:
-            logger.warning('Wait Treasures_Lightward nav list timeout')
-
-    def pf_teleport(self, skip_first_screenshot=True):
-        """
-        Pages:
-            in: page_guide, Treasures_Lightward tab, Pure_Fiction nav selected
-            out: page_pure_fiction
-                May pass through the one-time season intro animation,
-                which auto advances into the stage map.
-        """
-        logger.info('Pure fiction teleport')
-        timeout = Timer(60, count=60).start()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.pf_in_stage_map():
-                logger.info('Pure fiction stage map entered')
-                break
-            if timeout.reached():
-                logger.warning('pf_teleport timeout')
-                break
-            if self.appear_then_click(TELEPORT, interval=3):
-                continue
-            if self.handle_popup_confirm():
-                continue
-            if self.handle_popup_single():
-                continue
-            if self.handle_reward():
-                continue
 
     # OCR detection on the big stylized stage numbers is flaky and can randomly
     # miss one node per pass, so scan multiple passes with two slightly
@@ -129,11 +39,12 @@ class PureFictionUI(UI):
                 return
         collection[(x, y)] = (box, value)
 
-    def pf_scan_stages(self, skip_first_screenshot=True) -> list[PureFictionStageNode]:
+    def abyss_scan_stages(self, skip_first_screenshot=True) -> list[PureFictionStageNode]:
         """
         Scan stage nodes on the stage map via OCR.
         Stage numbers (01-12) with a status line below:
             未解锁 / 尚未挑战 / 快速通关 / 积分NNNNN
+        and a gold star row right below the number.
 
         Pages:
             in: page_pure_fiction
@@ -204,11 +115,3 @@ class PureFictionUI(UI):
 
         logger.info(f'Pure fiction stages: {nodes}')
         return nodes
-
-    def pf_exit_to_main(self):
-        """
-        Pages:
-            in: page_pure_fiction
-            out: page_main
-        """
-        self.ui_goto_main()

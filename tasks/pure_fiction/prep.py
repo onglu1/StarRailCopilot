@@ -2,12 +2,12 @@ from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.exception import RequestHumanTakeover
 from module.logger import logger
-from tasks.pure_fiction.abyss_prep import AbyssPrep
-from tasks.pure_fiction.assets.assets_pure_fiction_prep import ENTER_STORY, PREP_CHECK
+from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
+from tasks.pure_fiction.assets.assets_pure_fiction_prep import ENTER_STORY
 from tasks.pure_fiction.ui import PureFictionStageNode, PureFictionUI
 
 
-class PureFictionPrep(AbyssPrep, PureFictionUI):
+class PureFictionPrep(PureFictionUI):
     # Stage prep screen, two team rows (node 1 / node 2)
     # Each row: trial character + 4 member slots + 1 buff slot
     TEAM_SLOT = {
@@ -44,7 +44,7 @@ class PureFictionPrep(AbyssPrep, PureFictionUI):
                 break
             if timeout.reached():
                 logger.warning('pf_stage_enter timeout, rescan stages')
-                nodes = self.pf_scan_stages()
+                nodes = self.abyss_scan_stages()
                 match = [n for n in nodes if n.index == node.index]
                 if not match:
                     raise RequestHumanTakeover(f'Stage {node.index} not found on stage map')
@@ -54,7 +54,7 @@ class PureFictionPrep(AbyssPrep, PureFictionUI):
                 self.device.click(node.button)
                 interval.reset()
 
-    def pf_prep_stage(self, node: PureFictionStageNode, team1_preset=1, team2_preset=2) -> bool:
+    def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
         """
         Full prep flow: enter stage, set teams and buffs for both nodes, enter story.
 

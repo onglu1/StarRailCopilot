@@ -2,6 +2,7 @@ from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.logger import logger
 from module.ocr.ocr import Ocr
+from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
 from tasks.apocalyptic_shadow.assets.assets_apocalyptic_shadow_prep import (
     AS_BOSS_INFO_CHECK,
     AS_PREP_GO
@@ -9,18 +10,15 @@ from tasks.apocalyptic_shadow.assets.assets_apocalyptic_shadow_prep import (
 from tasks.apocalyptic_shadow.assets.assets_apocalyptic_shadow_ui import AS_STAGE_GO
 from tasks.apocalyptic_shadow.ui import ApocalypticShadowStageNode, ApocalypticShadowUI
 from tasks.base.assets.assets_base_page import BACK, CLOSE
-from tasks.pure_fiction.abyss_prep import AbyssPrep
-from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
 
+# Next-step / go-to-team button at the bottom right of the boss info dialog
+AS_BOSS_INFO_NEXT = ClickButton((1008, 632, 1110, 672), name='AS_BOSS_INFO_NEXT')
 # Title area on the prep screen right panel, reads 星启模式 on
 # star-origin stages (3 nodes, level 90 bosses)
 OCR_PREP_TITLE = ClickButton((500, 60, 1280, 240), name='OCR_AS_PREP_TITLE')
 
-# Next-step / go-to-team button at the bottom right of the boss info dialog
-AS_BOSS_INFO_NEXT = ClickButton((1008, 632, 1110, 672), name='AS_BOSS_INFO_NEXT')
 
-
-class ApocalypticShadowPrep(AbyssPrep, ApocalypticShadowUI):
+class ApocalypticShadowPrep(ApocalypticShadowUI):
     # AS prep screen: each node block shows boss preview and traits,
     # 4 member slots and an axiom (effect) slot
     TEAM_SLOT = {
@@ -74,7 +72,7 @@ class ApocalypticShadowPrep(AbyssPrep, ApocalypticShadowUI):
                     self.device.click(AS_BOSS_INFO_NEXT)
                     info_interval.reset()
                 continue
-            if self.as_in_stage_screen() and stage_interval.reached():
+            if self.abyss_home_check() and stage_interval.reached():
                 self.device.click(node.button)
                 self.device.sleep((0.7, 0.9))
                 self.device.click(AS_STAGE_GO)
@@ -113,7 +111,7 @@ class ApocalypticShadowPrep(AbyssPrep, ApocalypticShadowUI):
             else:
                 self.device.screenshot()
 
-            if self.as_in_stage_screen():
+            if self.abyss_home_check():
                 logger.info('Back at apocalyptic shadow stage screen')
                 break
             if timeout.reached():
@@ -126,7 +124,7 @@ class ApocalypticShadowPrep(AbyssPrep, ApocalypticShadowUI):
             if self.handle_popup_confirm():
                 continue
 
-    def as_prep_stage(self, node: ApocalypticShadowStageNode, team1_preset=1, team2_preset=2) -> bool:
+    def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
         """
         Returns:
             bool: False if the stage could not be entered or is unsupported

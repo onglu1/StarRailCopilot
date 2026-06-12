@@ -1328,37 +1328,6 @@
       "1": "1"
     }
   },
-  "Weekly": {
-    "_info": {
-      "name": "Ajustes de Ecos de la guerra",
-      "help": ""
-    },
-    "Name": {
-      "name": "Nombre de la Mazmorra",
-      "help": "",
-      "Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass": "Tumba oxidada del cadáver de hierro (Amphoreus)",
-      "Echo_of_War_Glance_of_Twilight": "Una mirada al crepúsculo (Amphoreus)",
-      "Echo_of_War_Inner_Beast_Battlefield": "Campo de batalla de la bestia interior (El Luofu de Xianzhou)",
-      "Echo_of_War_Salutations_of_Ashen_Dreams": "Tributo del sueño ceniciento (Colonipenal)",
-      "Echo_of_War_Borehole_Planet_Past_Nightmares": "Pesadilla del planeta devorado (Estación Espacial Herta)",
-      "Echo_of_War_Divine_Seed": "Semilla divina (El Luofu de Xianzhou)",
-      "Echo_of_War_End_of_the_Eternal_Freeze": "El fin del Hielo Eterno (Jarilo-VI)",
-      "Echo_of_War_Destruction_Beginning": "El principio de la Destrucción (Estación Espacial Herta)"
-    },
-    "Team": {
-      "name": "Equipo de mazmorra",
-      "help": "",
-      "1": "1",
-      "2": "2",
-      "3": "3",
-      "4": "4",
-      "5": "5",
-      "6": "6",
-      "7": "7",
-      "8": "8",
-      "9": "9"
-    }
-  },
   "PureFiction": {
     "_info": {
       "name": "PureFiction._info.name",
@@ -1471,6 +1440,37 @@
       "1": "1",
       "2": "2",
       "3": "3"
+    }
+  },
+  "Weekly": {
+    "_info": {
+      "name": "Ajustes de Ecos de la guerra",
+      "help": ""
+    },
+    "Name": {
+      "name": "Nombre de la Mazmorra",
+      "help": "",
+      "Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass": "Tumba oxidada del cadáver de hierro (Amphoreus)",
+      "Echo_of_War_Glance_of_Twilight": "Una mirada al crepúsculo (Amphoreus)",
+      "Echo_of_War_Inner_Beast_Battlefield": "Campo de batalla de la bestia interior (El Luofu de Xianzhou)",
+      "Echo_of_War_Salutations_of_Ashen_Dreams": "Tributo del sueño ceniciento (Colonipenal)",
+      "Echo_of_War_Borehole_Planet_Past_Nightmares": "Pesadilla del planeta devorado (Estación Espacial Herta)",
+      "Echo_of_War_Divine_Seed": "Semilla divina (El Luofu de Xianzhou)",
+      "Echo_of_War_End_of_the_Eternal_Freeze": "El fin del Hielo Eterno (Jarilo-VI)",
+      "Echo_of_War_Destruction_Beginning": "El principio de la Destrucción (Estación Espacial Herta)"
+    },
+    "Team": {
+      "name": "Equipo de mazmorra",
+      "help": "",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9"
     }
   },
   "DailyStorage": {
