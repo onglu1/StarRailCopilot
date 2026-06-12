@@ -67,19 +67,23 @@ def abyss_count_stars(image, area) -> int:
     return min(count, 3)
 
 
-def abyss_select_target(nodes, mode='first_clear', attempts=None, max_retry=2):
+def _abyss_stage_done(node) -> bool:
+    """Full-starred, or cleared with unreadable stars (nothing to gain)."""
+    return node.full_starred or (node.status == 'cleared' and node.stars is None)
+
+
+def abyss_select_target(nodes, mode='highest', attempts=None, max_retry=2, assigned=1):
     """
     Args:
         nodes: list of AbyssStageNode
         mode:
-            'first_clear': lowest stage with zero stars
+            'highest': the highest unlocked stage if not full-starred (default)
             'push': the first (lowest) stage that is not full-starred,
-                hammer it until full or retries exhausted
-            'sweep': all stages that are not full-starred, lowest first,
-                each up to max_retry attempts
-            'highest_only': the highest unlocked stage if not full-starred
+                hammer it until full or rounds exhausted
+            'assign': the manually assigned stage only
         attempts: {stage_index: attempts_this_run}
-        max_retry: max attempts per stage per run
+        max_retry: max rounds per stage per run, retries swap team order
+        assigned: stage index for the 'assign' mode
 
     Returns:
         AbyssStageNode: or None if nothing left to do
@@ -94,13 +98,6 @@ def abyss_select_target(nodes, mode='first_clear', attempts=None, max_retry=2):
         logger.warning('No enterable stage found')
         return None
 
-    if mode == 'highest_only':
-        top = max(enterable, key=lambda n: n.index)
-        if top.full_starred or (top.status == 'cleared' and top.stars is None):
-            return None
-        if tried(top) >= max_retry:
-            return None
-        return top
     if mode == 'push':
         nonfull = [n for n in enterable if not n.full_starred]
         if not nonfull:
@@ -109,19 +106,25 @@ def abyss_select_target(nodes, mode='first_clear', attempts=None, max_retry=2):
         if tried(first) >= max_retry:
             return None
         return first
-    if mode == 'sweep':
-        candidates = [n for n in enterable if not n.full_starred and tried(n) < max_retry]
-    else:
-        # first_clear
-        candidates = [n for n in enterable if n.stars_known_zero and tried(n) < max_retry]
-    if not candidates:
+    if mode == 'assign':
+        match = [n for n in enterable if n.index == int(assigned)]
+        if not match:
+            logger.warning(f'Assigned stage {assigned} not found or locked')
+            return None
+        node = match[0]
+        if _abyss_stage_done(node) or tried(node) >= max_retry:
+            return None
+        return node
+    # 'highest' (default)
+    top = max(enterable, key=lambda n: n.index)
+    if _abyss_stage_done(top) or tried(top) >= max_retry:
         return None
-    return min(candidates, key=lambda n: n.index)
+    return top
 
 
-def abyss_has_exhausted(nodes, mode='first_clear', attempts=None, max_retry=2) -> bool:
+def abyss_has_exhausted(nodes, mode='highest', attempts=None, max_retry=2, assigned=1) -> bool:
     """
-    Whether some mode-relevant stage still needs work but ran out of retries.
+    Whether the mode-relevant stage still needs work but ran out of rounds.
     Used to decide between deferring the task and finishing the week.
     """
     attempts = attempts or {}
@@ -130,13 +133,13 @@ def abyss_has_exhausted(nodes, mode='first_clear', attempts=None, max_retry=2) -
         return attempts.get(n.index, 0)
 
     enterable = [n for n in nodes if n.enterable]
-    if mode == 'first_clear':
-        relevant = [n for n in enterable if n.stars_known_zero]
-    elif mode == 'highest_only':
-        if not enterable:
-            return False
-        top = max(enterable, key=lambda n: n.index)
-        relevant = [top] if not top.full_starred and top.stars is not None else []
-    else:
+    if not enterable:
+        return False
+    if mode == 'push':
         relevant = [n for n in enterable if not n.full_starred and n.stars is not None]
+    elif mode == 'assign':
+        relevant = [n for n in enterable if n.index == int(assigned) and not _abyss_stage_done(n)]
+    else:
+        top = max(enterable, key=lambda n: n.index)
+        relevant = [] if _abyss_stage_done(top) else [top]
     return any(tried(n) >= max_retry for n in relevant)

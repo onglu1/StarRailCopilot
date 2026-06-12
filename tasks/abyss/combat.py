@@ -38,14 +38,14 @@ from module.ocr.ocr import Ocr
 from tasks.abyss.assets.assets_abyss_battle import QUICK_CLEAR_CONFIRM, WAVE_FLAG
 from tasks.abyss.assets.assets_abyss_map import BLANK_CLOSE, MAP_CHECK
 from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
-from tasks.abyss.composer import AbyssComposer
+from tasks.abyss.prep import AbyssPrep
 from tasks.abyss.stage import abyss_has_exhausted, abyss_select_target
 from tasks.combat.assets.assets_combat_state import COMBAT_AUTO
 from tasks.combat.state import CombatState
 from tasks.map.control.joystick import JoystickContact, MapControlJoystick
 
 
-class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
+class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
     # ButtonWrapper that detects the settlement screen and is clicked to leave it.
     # Override in subclasses.
     SETTLE_BUTTON = None
@@ -93,8 +93,10 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
         mode = getattr(self.config, f'{config_prefix}_ChallengeMode')
         max_retry = int(getattr(self.config, f'{config_prefix}_MaxRetry'))
         on_exhausted = getattr(self.config, f'{config_prefix}_RetryExceeded')
+        assigned = int(getattr(self.config, f'{config_prefix}_AssignedStage', 1))
+        # Buff/axiom card selection, only pure fiction exposes the setting
+        self._abyss_effect_select = str(getattr(self.config, f'{config_prefix}_BuffSelect', '1'))
         logger.attr('ChallengeMode', mode)
-        self.composer_init(getattr(self.config, f'{config_prefix}_CandidateTeams', ''))
 
         # If a previous run died inside a dungeon, finish it first
         self.device.screenshot()
@@ -103,7 +105,8 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
             self.abyss_dungeon_loop()
 
         fought, exhausted = self.abyss_run_challenges(
-            mode=mode, team1_preset=team1, team2_preset=team2, max_retry=max_retry)
+            mode=mode, team1_preset=team1, team2_preset=team2,
+            max_retry=max_retry, assigned=assigned)
         logger.attr('Battles fought', fought)
 
         self.abyss_claim_rewards()
@@ -116,17 +119,18 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
                 self.config.Scheduler_ServerUpdate))
         self.ui_goto_main()
 
-    def abyss_run_challenges(self, mode='first_clear', team1_preset=1, team2_preset=2,
-                             max_retry=2) -> tuple:
+    def abyss_run_challenges(self, mode='highest', team1_preset=1, team2_preset=2,
+                             max_retry=2, assigned=1) -> tuple:
         """
         The main challenge loop shared by all modes: scan, select a target
-        by mode and per-stage attempt counts, prep, fight, repeat. A failed
+        by mode and per-stage round counts, prep, fight, repeat. A failed
         battle leaves the stage unimproved so it gets selected again until
-        its retries are exhausted.
+        its rounds are exhausted; every retry swaps the node order of the
+        two teams.
 
         Returns:
             tuple: (battles_fought, exhausted)
-                exhausted: some relevant stage ran out of retries, callers
+                exhausted: the relevant stage ran out of rounds, callers
                 decide between deferring the task and finishing the week
         """
         attempts = {}
@@ -139,19 +143,26 @@ class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
             self.device.sleep((0.8, 1.0))
             self.device.screenshot()
             nodes = self.abyss_scan_stages()
-            target = abyss_select_target(nodes, mode=mode, attempts=attempts, max_retry=max_retry)
+            target = abyss_select_target(
+                nodes, mode=mode, attempts=attempts, max_retry=max_retry, assigned=assigned)
             if target is None:
-                exhausted = abyss_has_exhausted(nodes, mode=mode, attempts=attempts, max_retry=max_retry)
+                exhausted = abyss_has_exhausted(
+                    nodes, mode=mode, attempts=attempts, max_retry=max_retry, assigned=assigned)
                 logger.info(f'Abyss challenges finished, fought={fought}, exhausted={exhausted}')
                 return fought, exhausted
-            logger.hr(f'Challenge {target} (attempt {attempts.get(target.index, 0) + 1}/{max_retry})', level=1)
-            # Composer walks down its pair ranking as attempts accumulate
-            self._composer_stage_attempt = attempts.get(target.index, 0)
-            if not self.abyss_prep_stage(target, team1_preset=team1_preset, team2_preset=team2_preset):
+            att = attempts.get(target.index, 0)
+            logger.hr(f'Challenge {target} (round {att + 1}/{max_retry})', level=1)
+            # Retries swap which team fights which node
+            if att % 2 == 1:
+                logger.info('Retry with team order swapped')
+                t1, t2 = team2_preset, team1_preset
+            else:
+                t1, t2 = team1_preset, team2_preset
+            if not self.abyss_prep_stage(target, team1_preset=t1, team2_preset=t2):
                 # Locked or unsupported, never retry this run
                 attempts[target.index] = 999
                 continue
-            attempts[target.index] = attempts.get(target.index, 0) + 1
+            attempts[target.index] = att + 1
             self.abyss_dungeon_loop()
             fought += 1
         logger.warning('abyss_run_challenges hit the loop bound')

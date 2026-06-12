@@ -62,14 +62,6 @@
       "name": "Simulated Universe",
       "help": ""
     },
-    "Daemon": {
-      "name": "Dialogue Clicker",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "Character Planner",
-      "help": ""
-    },
     "PureFiction": {
       "name": "Pure Fiction",
       "help": "Auto challenge Pure Fiction"
@@ -81,6 +73,14 @@
     "ApocalypticShadow": {
       "name": "Apocalyptic Shadow",
       "help": "Auto challenge Apocalyptic Shadow"
+    },
+    "Daemon": {
+      "name": "Dialogue Clicker",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "Character Planner",
+      "help": ""
     }
   },
   "Scheduler": {
@@ -1331,22 +1331,25 @@
   "PureFiction": {
     "_info": {
       "name": "Pure Fiction Settings",
-      "help": "Auto challenge with in-game team presets, first buff auto-selected"
+      "help": "Auto challenge with in-game team presets"
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
-      "first_clear": "First clear (0-star stages only)",
-      "push": "Push (hammer first non-3-star)",
-      "sweep": "Sweep (all non-3-star stages)",
-      "highest_only": "Highest unlocked only"
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
     },
     "MaxRetry": {
-      "name": "Max attempts per stage",
-      "help": "Max attempts on the same stage within one run"
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, retries swap the node order of the two teams"
     },
     "RetryExceeded": {
-      "name": "When retries exhausted",
+      "name": "When rounds exhausted",
       "help": "defer: try again after the daily reset; give_up: wait until next Monday",
       "defer": "Try again tomorrow",
       "give_up": "Give up this week"
@@ -1365,9 +1368,13 @@
       "2": "2",
       "3": "3"
     },
-    "CandidateTeams": {
-      "name": "Candidate presets (auto compose)",
-      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
+    "BuffSelect": {
+      "name": "Buff selection",
+      "help": "Which Pure Fiction buff to take on each node, or pick randomly",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "random": "Random"
     }
   },
   "MemoryOfChaos": {
@@ -1377,18 +1384,21 @@
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
-      "first_clear": "First clear (0-star stages only)",
-      "push": "Push (hammer first non-3-star)",
-      "sweep": "Sweep (all non-3-star stages)",
-      "highest_only": "Highest unlocked only"
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
     },
     "MaxRetry": {
-      "name": "Max attempts per stage",
-      "help": "Max attempts on the same stage within one run"
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, retries swap the node order of the two teams"
     },
     "RetryExceeded": {
-      "name": "When retries exhausted",
+      "name": "When rounds exhausted",
       "help": "defer: try again after the daily reset; give_up: wait until next Monday",
       "defer": "Try again tomorrow",
       "give_up": "Give up this week"
@@ -1406,10 +1416,6 @@
       "1": "1",
       "2": "2",
       "3": "3"
-    },
-    "CandidateTeams": {
-      "name": "Candidate presets (auto compose)",
-      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
     }
   },
   "ApocalypticShadow": {
@@ -1419,18 +1425,21 @@
     },
     "ChallengeMode": {
       "name": "Challenge strategy",
-      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
-      "first_clear": "First clear (0-star stages only)",
-      "push": "Push (hammer first non-3-star)",
-      "sweep": "Sweep (all non-3-star stages)",
-      "highest_only": "Highest unlocked only"
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
     },
     "MaxRetry": {
-      "name": "Max attempts per stage",
-      "help": "Max attempts on the same stage within one run"
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, retries swap the node order of the two teams"
     },
     "RetryExceeded": {
-      "name": "When retries exhausted",
+      "name": "When rounds exhausted",
       "help": "defer: try again after the daily reset; give_up: wait until next Monday",
       "defer": "Try again tomorrow",
       "give_up": "Give up this week"
@@ -1448,10 +1457,6 @@
       "1": "1",
       "2": "2",
       "3": "3"
-    },
-    "CandidateTeams": {
-      "name": "Candidate presets (auto compose)",
-      "help": "Leave empty to use the fixed presets above. List in-game preset indices strongest first, e.g. \"1,2,3,5\". Members and elements are recognized, the best non-overlapping pair is picked by node weakness match, retries walk down the ranking"
     }
   },
   "Weekly": {

@@ -2450,38 +2450,6 @@
       }
     }
   },
-  "Daemon": {
-    "Daemon": {
-      "Enable": {
-        "type": "state",
-        "value": true,
-        "option": [
-          true
-        ],
-        "option_bold": [
-          true
-        ]
-      },
-      "AimClicker": {
-        "type": "select",
-        "value": "do_not_click",
-        "option": [
-          "item_enemy",
-          "item",
-          "enemy",
-          "do_not_click"
-        ]
-      }
-    }
-  },
-  "PlannerScan": {
-    "PlannerScan": {
-      "ResultAdd": {
-        "type": "checkbox",
-        "value": false
-      }
-    }
-  },
   "PureFiction": {
     "Scheduler": {
       "Enable": {
@@ -2511,13 +2479,16 @@
     "PureFiction": {
       "ChallengeMode": {
         "type": "select",
-        "value": "first_clear",
+        "value": "highest",
         "option": [
-          "first_clear",
+          "highest",
           "push",
-          "sweep",
-          "highest_only"
+          "assign"
         ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
       },
       "MaxRetry": {
         "type": "input",
@@ -2549,9 +2520,15 @@
           3
         ]
       },
-      "CandidateTeams": {
-        "type": "input",
-        "value": ""
+      "BuffSelect": {
+        "type": "select",
+        "value": "1",
+        "option": [
+          "1",
+          "2",
+          "3",
+          "random"
+        ]
       }
     }
   },
@@ -2584,13 +2561,16 @@
     "MemoryOfChaos": {
       "ChallengeMode": {
         "type": "select",
-        "value": "first_clear",
+        "value": "highest",
         "option": [
-          "first_clear",
+          "highest",
           "push",
-          "sweep",
-          "highest_only"
+          "assign"
         ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
       },
       "MaxRetry": {
         "type": "input",
@@ -2621,10 +2601,6 @@
           2,
           3
         ]
-      },
-      "CandidateTeams": {
-        "type": "input",
-        "value": ""
       }
     }
   },
@@ -2657,13 +2633,16 @@
     "ApocalypticShadow": {
       "ChallengeMode": {
         "type": "select",
-        "value": "first_clear",
+        "value": "highest",
         "option": [
-          "first_clear",
+          "highest",
           "push",
-          "sweep",
-          "highest_only"
+          "assign"
         ]
+      },
+      "AssignedStage": {
+        "type": "input",
+        "value": 1
       },
       "MaxRetry": {
         "type": "input",
@@ -2694,10 +2673,38 @@
           2,
           3
         ]
+      }
+    }
+  },
+  "Daemon": {
+    "Daemon": {
+      "Enable": {
+        "type": "state",
+        "value": true,
+        "option": [
+          true
+        ],
+        "option_bold": [
+          true
+        ]
       },
-      "CandidateTeams": {
-        "type": "input",
-        "value": ""
+      "AimClicker": {
+        "type": "select",
+        "value": "do_not_click",
+        "option": [
+          "item_enemy",
+          "item",
+          "enemy",
+          "do_not_click"
+        ]
+      }
+    }
+  },
+  "PlannerScan": {
+    "PlannerScan": {
+      "ResultAdd": {
+        "type": "checkbox",
+        "value": false
       }
     }
   }

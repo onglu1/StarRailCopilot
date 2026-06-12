@@ -3,8 +3,4 @@ def get_available_func():
         'Daemon',
         'Benchmark',
         'PlannerScan',
-        # [fork] abyss tasks run from the tool page
-        'PureFiction',
-        'MemoryOfChaos',
-        'ApocalypticShadow',
     )

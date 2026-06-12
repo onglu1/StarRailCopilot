@@ -62,14 +62,6 @@
       "name": "Universo Simulado",
       "help": ""
     },
-    "Daemon": {
-      "name": "Clic de diálogo",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "Planificador de personajes",
-      "help": ""
-    },
     "PureFiction": {
       "name": "Pura ficción",
       "help": "Desafía Pura ficción automáticamente"
@@ -81,6 +73,14 @@
     "ApocalypticShadow": {
       "name": "Sombra apocalíptica",
       "help": "Desafía Sombra apocalíptica automáticamente"
+    },
+    "Daemon": {
+      "name": "Clic de diálogo",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "Planificador de personajes",
+      "help": ""
     }
   },
   "Scheduler": {
@@ -1331,23 +1331,26 @@
   "PureFiction": {
     "_info": {
       "name": "Ajustes de Pura ficción",
-      "help": "Desafío automático con equipos predefinidos del juego, el primer aumento se elige automáticamente"
+      "help": "Desafío automático con equipos predefinidos del juego"
     },
     "ChallengeMode": {
       "name": "Estrategia de desafío",
-      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
-      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "help": "Predeterminada: solo el nivel más alto desbloqueado; Empuje: insiste en el primer nivel sin 3 estrellas; Asignado: solo el nivel indicado abajo",
+      "highest": "Predeterminada (nivel más alto)",
       "push": "Empuje (primer nivel sin 3 estrellas)",
-      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
-      "highest_only": "Solo el nivel más alto"
+      "assign": "Solo el nivel asignado"
+    },
+    "AssignedStage": {
+      "name": "Nivel asignado",
+      "help": "Índice del nivel, usado por la estrategia «Asignado»"
     },
     "MaxRetry": {
-      "name": "Intentos máximos por nivel",
-      "help": "Intentos máximos en el mismo nivel por ejecución"
+      "name": "Rondas máximas por nivel",
+      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
     },
     "RetryExceeded": {
-      "name": "Al agotar los reintentos",
-      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "name": "Al agotar las rondas",
+      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
       "defer": "Reintentar mañana",
       "give_up": "Abandonar esta semana"
     },
@@ -1365,9 +1368,13 @@
       "2": "2",
       "3": "3"
     },
-    "CandidateTeams": {
-      "name": "Equipos candidatos (composición automática)",
-      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
+    "BuffSelect": {
+      "name": "Selección de aumento",
+      "help": "Qué aumento de Pura ficción elegir en cada nodo, o aleatorio",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "random": "Aleatorio"
     }
   },
   "MemoryOfChaos": {
@@ -1377,19 +1384,22 @@
     },
     "ChallengeMode": {
       "name": "Estrategia de desafío",
-      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
-      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "help": "Predeterminada: solo el nivel más alto desbloqueado; Empuje: insiste en el primer nivel sin 3 estrellas; Asignado: solo el nivel indicado abajo",
+      "highest": "Predeterminada (nivel más alto)",
       "push": "Empuje (primer nivel sin 3 estrellas)",
-      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
-      "highest_only": "Solo el nivel más alto"
+      "assign": "Solo el nivel asignado"
+    },
+    "AssignedStage": {
+      "name": "Nivel asignado",
+      "help": "Índice del nivel, usado por la estrategia «Asignado»"
     },
     "MaxRetry": {
-      "name": "Intentos máximos por nivel",
-      "help": "Intentos máximos en el mismo nivel por ejecución"
+      "name": "Rondas máximas por nivel",
+      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
     },
     "RetryExceeded": {
-      "name": "Al agotar los reintentos",
-      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "name": "Al agotar las rondas",
+      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
       "defer": "Reintentar mañana",
       "give_up": "Abandonar esta semana"
     },
@@ -1406,10 +1416,6 @@
       "1": "1",
       "2": "2",
       "3": "3"
-    },
-    "CandidateTeams": {
-      "name": "Equipos candidatos (composición automática)",
-      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
     }
   },
   "ApocalypticShadow": {
@@ -1419,19 +1425,22 @@
     },
     "ChallengeMode": {
       "name": "Estrategia de desafío",
-      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
-      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "help": "Predeterminada: solo el nivel más alto desbloqueado; Empuje: insiste en el primer nivel sin 3 estrellas; Asignado: solo el nivel indicado abajo",
+      "highest": "Predeterminada (nivel más alto)",
       "push": "Empuje (primer nivel sin 3 estrellas)",
-      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
-      "highest_only": "Solo el nivel más alto"
+      "assign": "Solo el nivel asignado"
+    },
+    "AssignedStage": {
+      "name": "Nivel asignado",
+      "help": "Índice del nivel, usado por la estrategia «Asignado»"
     },
     "MaxRetry": {
-      "name": "Intentos máximos por nivel",
-      "help": "Intentos máximos en el mismo nivel por ejecución"
+      "name": "Rondas máximas por nivel",
+      "help": "Rondas máximas en el mismo nivel por ejecución; los reintentos intercambian el orden de los dos equipos"
     },
     "RetryExceeded": {
-      "name": "Al agotar los reintentos",
-      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "name": "Al agotar las rondas",
+      "help": "Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
       "defer": "Reintentar mañana",
       "give_up": "Abandonar esta semana"
     },
@@ -1448,10 +1457,6 @@
       "1": "1",
       "2": "2",
       "3": "3"
-    },
-    "CandidateTeams": {
-      "name": "Equipos candidatos (composición automática)",
-      "help": "Déjalo vacío para usar los equipos fijos de arriba. Lista los índices de los equipos predefinidos del juego de más fuerte a más débil, p. ej. «1,2,3,5». Se reconocen los miembros y elementos, se elige el mejor par sin personajes repetidos según las debilidades de los nodos, y los reintentos prueban la siguiente combinación"
     }
   },
   "Weekly": {
