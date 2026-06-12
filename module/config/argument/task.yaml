@@ -73,6 +73,9 @@ Weekly:
     MemoryOfChaos:
       - Scheduler
       - MemoryOfChaos
+    ApocalypticShadow:
+      - Scheduler
+      - ApocalypticShadow
 
 # ==================== Tool ====================
 

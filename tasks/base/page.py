@@ -159,6 +159,10 @@ page_forgotten_hall.link(CLOSE, destination=page_main)
 page_pure_fiction = Page(PURE_FICTION_CHECK)
 page_pure_fiction.link(CLOSE, destination=page_main)
 
+# Apocalyptic Shadow
+page_apocalyptic_shadow = Page(APOCALYPTIC_SHADOW_CHECK)
+page_apocalyptic_shadow.link(CLOSE, destination=page_main)
+
 # Rogue, Simulated Universe
 page_rogue = Page(ROGUE_CHECK)
 page_rogue.link(CLOSE, destination=page_main)

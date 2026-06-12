@@ -350,6 +350,21 @@
       "Team2Preset": 2
     }
   },
+  "ApocalypticShadow": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "ApocalypticShadow",
+      "ServerUpdate": "04:00"
+    },
+    "ApocalypticShadow": {
+      "ChallengeMode": "first_clear",
+      "MaxRetry": 2,
+      "RetryExceeded": "defer",
+      "Team1Preset": 1,
+      "Team2Preset": 2
+    }
+  },
   "Daemon": {
     "Daemon": {
       "Enable": true,

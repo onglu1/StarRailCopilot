@@ -76,6 +76,10 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.memory_of_chaos.memory_of_chaos import MemoryOfChaos
         MemoryOfChaos(config=self.config, device=self.device).run()
 
+    def apocalyptic_shadow(self):
+        from tasks.apocalyptic_shadow.apocalyptic_shadow import ApocalypticShadow
+        ApocalypticShadow(config=self.config, device=self.device).run()
+
     def benchmark(self):
         from module.daemon.benchmark import run_benchmark
         run_benchmark(config=self.config)
