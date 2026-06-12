@@ -70,15 +70,15 @@ class StarRailCopilot(AzurLaneAutoScript):
 
     def pure_fiction(self):
         from tasks.pure_fiction.pure_fiction import PureFiction
-        PureFiction(config=self.config, device=self.device).run()
+        PureFiction(config=self.config, device=self.device, task="PureFiction").run()
 
     def memory_of_chaos(self):
         from tasks.memory_of_chaos.memory_of_chaos import MemoryOfChaos
-        MemoryOfChaos(config=self.config, device=self.device).run()
+        MemoryOfChaos(config=self.config, device=self.device, task="MemoryOfChaos").run()
 
     def apocalyptic_shadow(self):
         from tasks.apocalyptic_shadow.apocalyptic_shadow import ApocalypticShadow
-        ApocalypticShadow(config=self.config, device=self.device).run()
+        ApocalypticShadow(config=self.config, device=self.device, task="ApocalypticShadow").run()
 
     def benchmark(self):
         from module.daemon.benchmark import run_benchmark
