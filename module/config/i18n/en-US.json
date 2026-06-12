@@ -62,6 +62,10 @@
       "name": "Simulated Universe",
       "help": ""
     },
+    "PureFiction": {
+      "name": "Pure Fiction",
+      "help": "Auto challenge Pure Fiction"
+    },
     "Daemon": {
       "name": "Dialogue Clicker",
       "help": ""
@@ -1314,6 +1318,44 @@
       "3": "3",
       "2": "2",
       "1": "1"
+    }
+  },
+  "PureFiction": {
+    "_info": {
+      "name": "Pure Fiction Settings",
+      "help": "Auto challenge with in-game team presets, first buff auto-selected"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "first_clear: only 0-star stages; push: hammer the first non-full-star stage; sweep: run all non-full-star stages; highest_only: highest unlocked stage",
+      "first_clear": "First clear (0-star stages only)",
+      "push": "Push (hammer first non-3-star)",
+      "sweep": "Sweep (all non-3-star stages)",
+      "highest_only": "Highest unlocked only"
+    },
+    "MaxRetry": {
+      "name": "Max attempts per stage",
+      "help": "Max attempts on the same stage within one run"
+    },
+    "RetryExceeded": {
+      "name": "When retries exhausted",
+      "help": "defer: try again after the daily reset; give_up: wait until next Monday",
+      "defer": "Try again tomorrow",
+      "give_up": "Give up this week"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3"
     }
   },
   "Weekly": {

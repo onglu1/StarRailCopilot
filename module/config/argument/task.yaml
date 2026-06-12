@@ -67,6 +67,9 @@ Weekly:
       - RogueWorld
       - RogueBlessing
       - RogueDebug
+    PureFiction:
+      - Scheduler
+      - PureFiction
 
 # ==================== Tool ====================
 

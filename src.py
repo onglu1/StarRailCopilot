@@ -68,6 +68,10 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.ornament.ornament import Ornament
         Ornament(config=self.config, device=self.device).run()
 
+    def pure_fiction(self):
+        from tasks.pure_fiction.pure_fiction import PureFiction
+        PureFiction(config=self.config, device=self.device).run()
+
     def benchmark(self):
         from module.daemon.benchmark import run_benchmark
         run_benchmark(config=self.config)
