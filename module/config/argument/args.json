@@ -2450,6 +2450,38 @@
       }
     }
   },
+  "Daemon": {
+    "Daemon": {
+      "Enable": {
+        "type": "state",
+        "value": true,
+        "option": [
+          true
+        ],
+        "option_bold": [
+          true
+        ]
+      },
+      "AimClicker": {
+        "type": "select",
+        "value": "do_not_click",
+        "option": [
+          "item_enemy",
+          "item",
+          "enemy",
+          "do_not_click"
+        ]
+      }
+    }
+  },
+  "PlannerScan": {
+    "PlannerScan": {
+      "ResultAdd": {
+        "type": "checkbox",
+        "value": false
+      }
+    }
+  },
   "PureFiction": {
     "Scheduler": {
       "Enable": {
@@ -2666,38 +2698,6 @@
       "CandidateTeams": {
         "type": "input",
         "value": ""
-      }
-    }
-  },
-  "Daemon": {
-    "Daemon": {
-      "Enable": {
-        "type": "state",
-        "value": true,
-        "option": [
-          true
-        ],
-        "option_bold": [
-          true
-        ]
-      },
-      "AimClicker": {
-        "type": "select",
-        "value": "do_not_click",
-        "option": [
-          "item_enemy",
-          "item",
-          "enemy",
-          "do_not_click"
-        ]
-      }
-    }
-  },
-  "PlannerScan": {
-    "PlannerScan": {
-      "ResultAdd": {
-        "type": "checkbox",
-        "value": false
       }
     }
   }
