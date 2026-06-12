@@ -173,8 +173,19 @@ class GeneratedConfig:
     Weekly_Team = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9
 
     # Group `PureFiction`
+    PureFiction_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
     PureFiction_Team1Preset = 1  # 1, 2, 3
     PureFiction_Team2Preset = 2  # 1, 2, 3
+
+    # Group `MemoryOfChaos`
+    MemoryOfChaos_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
+    MemoryOfChaos_Team1Preset = 1  # 1, 2, 3
+    MemoryOfChaos_Team2Preset = 2  # 1, 2, 3
+
+    # Group `ApocalypticShadow`
+    ApocalypticShadow_ChallengeMode = 'lowest_first'  # lowest_first, highest_only
+    ApocalypticShadow_Team1Preset = 1  # 1, 2, 3
+    ApocalypticShadow_Team2Preset = 2  # 1, 2, 3
 
     # Group `DailyStorage`
     DailyStorage_DailyActivity = {}

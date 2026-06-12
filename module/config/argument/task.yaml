@@ -70,6 +70,12 @@ Weekly:
     PureFiction: # [fork]
       - Scheduler
       - PureFiction
+    MemoryOfChaos: # [fork]
+      - Scheduler
+      - MemoryOfChaos
+    ApocalypticShadow: # [fork]
+      - Scheduler
+      - ApocalypticShadow
 
 # ==================== Tool ====================
 

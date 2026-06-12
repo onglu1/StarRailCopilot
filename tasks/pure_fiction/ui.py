@@ -205,22 +205,35 @@ class PureFictionUI(UI):
         logger.info(f'Pure fiction stages: {nodes}')
         return nodes
 
-    def pf_get_target_stage(self, nodes: list[PureFictionStageNode]):
+    def pf_get_target_stage(self, nodes: list[PureFictionStageNode], mode: str = 'lowest_first'):
         """
-        The highest unlocked stage that is not cleared yet.
+        Args:
+            nodes:
+            mode: 'lowest_first' to climb stages from the lowest open one,
+                fits all account strengths.
+                'highest_only' to challenge the highest unlocked stage only,
+                for strong accounts since 3-starring a high stage grants
+                all lower stage rewards.
 
         Returns:
             PureFictionStageNode: or None if nothing to do
         """
-        unlocked = [node for node in nodes if node.status != 'locked']
-        if not unlocked:
-            logger.warning('No unlocked pure fiction stage found')
+        candidates = [node for node in nodes if node.challengeable]
+        if mode == 'highest_only':
+            unlocked = [node for node in nodes if node.status != 'locked']
+            if not unlocked:
+                logger.warning('No unlocked stage found')
+                return None
+            target = max(unlocked, key=lambda n: n.index)
+            if target.status == 'cleared':
+                logger.info(f'Highest unlocked stage {target} already cleared')
+                return None
+            return target
+        # lowest_first
+        if not candidates:
+            logger.info('No open stage to challenge')
             return None
-        target = max(unlocked, key=lambda n: n.index)
-        if target.status == 'cleared':
-            logger.info(f'Highest unlocked stage {target} already cleared')
-            return None
-        return target
+        return min(candidates, key=lambda n: n.index)
 
     def pf_exit_to_main(self):
         """

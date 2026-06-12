@@ -66,6 +66,14 @@
       "name": "Pure Fiction",
       "help": "Auto challenge the highest unlocked Pure Fiction stage"
     },
+    "MemoryOfChaos": {
+      "name": "Forgotten Hall",
+      "help": "Auto challenge Memory of Chaos"
+    },
+    "ApocalypticShadow": {
+      "name": "Apocalyptic Shadow",
+      "help": "Auto challenge Apocalyptic Shadow"
+    },
     "Daemon": {
       "name": "Dialogue Clicker",
       "help": ""
@@ -1354,7 +1362,65 @@
   "PureFiction": {
     "_info": {
       "name": "Pure Fiction Settings",
-      "help": "Challenge the highest unlocked stage with in-game team presets, first buff auto-selected"
+      "help": "Auto challenge with in-game team presets, first buff auto-selected"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage (3-starring it grants all lower rewards)",
+      "lowest_first": "Climb from lowest stage",
+      "highest_only": "Highest unlocked stage only"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    }
+  },
+  "MemoryOfChaos": {
+    "_info": {
+      "name": "Forgotten Hall Settings",
+      "help": "Auto challenge Memory of Chaos with in-game team presets"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage",
+      "lowest_first": "Climb from lowest stage",
+      "highest_only": "Highest unlocked stage only"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    }
+  },
+  "ApocalypticShadow": {
+    "_info": {
+      "name": "Apocalyptic Shadow Settings",
+      "help": "Auto challenge with in-game team presets, first axiom auto-selected"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "Climb from the lowest stage to fit all accounts, or challenge only the highest unlocked stage",
+      "lowest_first": "Climb from lowest stage",
+      "highest_only": "Highest unlocked stage only"
     },
     "Team1Preset": {
       "name": "Team preset index for node 1",

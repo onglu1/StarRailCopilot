@@ -68,6 +68,14 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.pure_fiction.pure_fiction import PureFiction
         PureFiction(config=self.config, device=self.device).run()
 
+    def memory_of_chaos(self):  # [fork]
+        from tasks.memory_of_chaos.memory_of_chaos import MemoryOfChaos
+        MemoryOfChaos(config=self.config, device=self.device).run()
+
+    def apocalyptic_shadow(self):  # [fork]
+        from tasks.apocalyptic_shadow.apocalyptic_shadow import ApocalypticShadow
+        ApocalypticShadow(config=self.config, device=self.device).run()
+
     def ornament(self):
         from tasks.ornament.ornament import Ornament
         Ornament(config=self.config, device=self.device).run()
