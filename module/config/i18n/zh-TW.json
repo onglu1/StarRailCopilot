@@ -63,16 +63,16 @@
       "help": ""
     },
     "PureFiction": {
-      "name": "Task.PureFiction.name",
-      "help": "Task.PureFiction.help"
+      "name": "虛構敘事",
+      "help": "自動挑戰虛構敘事"
     },
     "MemoryOfChaos": {
-      "name": "Task.MemoryOfChaos.name",
-      "help": "Task.MemoryOfChaos.help"
+      "name": "忘卻之庭",
+      "help": "自動挑戰混沌回憶"
     },
     "ApocalypticShadow": {
-      "name": "Task.ApocalypticShadow.name",
-      "help": "Task.ApocalypticShadow.help"
+      "name": "末日幻影",
+      "help": "自動挑戰末日幻影"
     },
     "Daemon": {
       "name": "劇情連點器",
@@ -1330,37 +1330,37 @@
   },
   "PureFiction": {
     "_info": {
-      "name": "PureFiction._info.name",
-      "help": "PureFiction._info.help"
+      "name": "虛構敘事設定",
+      "help": "使用遊戲內預設編隊自動挑戰，增益預設選擇第一個"
     },
     "ChallengeMode": {
-      "name": "PureFiction.ChallengeMode.name",
-      "help": "PureFiction.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戰策略",
+      "help": "首通=只打0星關卡；攻堅=重複挑戰第一個未滿星關卡；掃蕩=依序挑戰所有未滿星關卡；只打最高=只挑戰最高可進入的關卡",
+      "first_clear": "首通（只打0星關卡）",
+      "push": "攻堅（重複挑戰第一個未滿星關）",
+      "sweep": "掃蕩（清一遍所有未滿星關）",
+      "highest_only": "只打最高可進關卡"
     },
     "MaxRetry": {
-      "name": "PureFiction.MaxRetry.name",
-      "help": "PureFiction.MaxRetry.help"
+      "name": "單關最多挑戰次數",
+      "help": "同一關卡在一次執行內最多嘗試的次數"
     },
     "RetryExceeded": {
-      "name": "PureFiction.RetryExceeded.name",
-      "help": "PureFiction.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "重試用盡後",
+      "help": "還有未打滿的關卡但重試次數用完時：明天再試=每日刷新後再來一輪；本週放棄=延到下週一",
+      "defer": "明天再試",
+      "give_up": "本週放棄"
     },
     "Team1Preset": {
-      "name": "PureFiction.Team1Preset.name",
-      "help": "PureFiction.Team1Preset.help",
+      "name": "節點1使用的預設編隊序號",
+      "help": "遊戲內編隊介面「預設編隊」清單中由上往下的序號",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "PureFiction.Team2Preset.name",
-      "help": "PureFiction.Team2Preset.help",
+      "name": "節點2使用的預設編隊序號",
+      "help": "兩個節點不能使用相同角色，請確保兩個預設無重複角色",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1368,37 +1368,37 @@
   },
   "MemoryOfChaos": {
     "_info": {
-      "name": "MemoryOfChaos._info.name",
-      "help": "MemoryOfChaos._info.help"
+      "name": "忘卻之庭設定",
+      "help": "使用遊戲內預設編隊自動挑戰混沌回憶"
     },
     "ChallengeMode": {
-      "name": "MemoryOfChaos.ChallengeMode.name",
-      "help": "MemoryOfChaos.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戰策略",
+      "help": "首通=只打0星關卡；攻堅=重複挑戰第一個未滿星關卡；掃蕩=依序挑戰所有未滿星關卡；只打最高=只挑戰最高可進入的關卡",
+      "first_clear": "首通（只打0星關卡）",
+      "push": "攻堅（重複挑戰第一個未滿星關）",
+      "sweep": "掃蕩（清一遍所有未滿星關）",
+      "highest_only": "只打最高可進關卡"
     },
     "MaxRetry": {
-      "name": "MemoryOfChaos.MaxRetry.name",
-      "help": "MemoryOfChaos.MaxRetry.help"
+      "name": "單關最多挑戰次數",
+      "help": "同一關卡在一次執行內最多嘗試的次數"
     },
     "RetryExceeded": {
-      "name": "MemoryOfChaos.RetryExceeded.name",
-      "help": "MemoryOfChaos.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "重試用盡後",
+      "help": "還有未打滿的關卡但重試次數用完時：明天再試=每日刷新後再來一輪；本週放棄=延到下週一",
+      "defer": "明天再試",
+      "give_up": "本週放棄"
     },
     "Team1Preset": {
-      "name": "MemoryOfChaos.Team1Preset.name",
-      "help": "MemoryOfChaos.Team1Preset.help",
+      "name": "節點1使用的預設編隊序號",
+      "help": "遊戲內編隊介面「預設編隊」清單中由上往下的序號",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "MemoryOfChaos.Team2Preset.name",
-      "help": "MemoryOfChaos.Team2Preset.help",
+      "name": "節點2使用的預設編隊序號",
+      "help": "兩個節點不能使用相同角色，請確保兩個預設無重複角色",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1406,37 +1406,37 @@
   },
   "ApocalypticShadow": {
     "_info": {
-      "name": "ApocalypticShadow._info.name",
-      "help": "ApocalypticShadow._info.help"
+      "name": "末日幻影設定",
+      "help": "使用遊戲內預設編隊自動挑戰，終焉公理預設選擇第一個"
     },
     "ChallengeMode": {
-      "name": "ApocalypticShadow.ChallengeMode.name",
-      "help": "ApocalypticShadow.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戰策略",
+      "help": "首通=只打0星關卡；攻堅=重複挑戰第一個未滿星關卡；掃蕩=依序挑戰所有未滿星關卡；只打最高=只挑戰最高可進入的關卡",
+      "first_clear": "首通（只打0星關卡）",
+      "push": "攻堅（重複挑戰第一個未滿星關）",
+      "sweep": "掃蕩（清一遍所有未滿星關）",
+      "highest_only": "只打最高可進關卡"
     },
     "MaxRetry": {
-      "name": "ApocalypticShadow.MaxRetry.name",
-      "help": "ApocalypticShadow.MaxRetry.help"
+      "name": "單關最多挑戰次數",
+      "help": "同一關卡在一次執行內最多嘗試的次數"
     },
     "RetryExceeded": {
-      "name": "ApocalypticShadow.RetryExceeded.name",
-      "help": "ApocalypticShadow.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "重試用盡後",
+      "help": "還有未打滿的關卡但重試次數用完時：明天再試=每日刷新後再來一輪；本週放棄=延到下週一",
+      "defer": "明天再試",
+      "give_up": "本週放棄"
     },
     "Team1Preset": {
-      "name": "ApocalypticShadow.Team1Preset.name",
-      "help": "ApocalypticShadow.Team1Preset.help",
+      "name": "節點1使用的預設編隊序號",
+      "help": "遊戲內編隊介面「預設編隊」清單中由上往下的序號",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "ApocalypticShadow.Team2Preset.name",
-      "help": "ApocalypticShadow.Team2Preset.help",
+      "name": "節點2使用的預設編隊序號",
+      "help": "兩個節點不能使用相同角色，請確保兩個預設無重複角色",
       "1": "1",
       "2": "2",
       "3": "3"

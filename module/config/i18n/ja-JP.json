@@ -63,16 +63,16 @@
       "help": "Task.Rogue.help"
     },
     "PureFiction": {
-      "name": "Task.PureFiction.name",
-      "help": "Task.PureFiction.help"
+      "name": "虚構叙事",
+      "help": "虚構叙事を自動挑戦"
     },
     "MemoryOfChaos": {
-      "name": "Task.MemoryOfChaos.name",
-      "help": "Task.MemoryOfChaos.help"
+      "name": "忘却の庭",
+      "help": "混沌の記憶を自動挑戦"
     },
     "ApocalypticShadow": {
-      "name": "Task.ApocalypticShadow.name",
-      "help": "Task.ApocalypticShadow.help"
+      "name": "末日の幻影",
+      "help": "末日の幻影を自動挑戦"
     },
     "Daemon": {
       "name": "Task.Daemon.name",
@@ -1330,37 +1330,37 @@
   },
   "PureFiction": {
     "_info": {
-      "name": "PureFiction._info.name",
-      "help": "PureFiction._info.help"
+      "name": "虚構叙事設定",
+      "help": "ゲーム内の編成プリセットで自動挑戦、バフは最初の項目を自動選択"
     },
     "ChallengeMode": {
-      "name": "PureFiction.ChallengeMode.name",
-      "help": "PureFiction.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戦戦略",
+      "help": "初クリア=星0の難度のみ／集中攻略=3つ星未満の最初の難度を繰り返し挑戦／一掃=3つ星未満の難度を順に挑戦／最高難度のみ=挑戦可能な最高難度のみ",
+      "first_clear": "初クリア（星0の難度のみ）",
+      "push": "集中攻略（最初の3つ星未満）",
+      "sweep": "一掃（すべての3つ星未満）",
+      "highest_only": "最高難度のみ"
     },
     "MaxRetry": {
-      "name": "PureFiction.MaxRetry.name",
-      "help": "PureFiction.MaxRetry.help"
+      "name": "難度ごとの最大挑戦回数",
+      "help": "1回の実行で同じ難度に挑戦する最大回数"
     },
     "RetryExceeded": {
-      "name": "PureFiction.RetryExceeded.name",
-      "help": "PureFiction.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "再試行を使い切った後",
+      "help": "未達成の難度が残っている場合：明日再試行=デイリーリセット後に再実行／今週は諦める=来週の月曜日まで待つ",
+      "defer": "明日再試行",
+      "give_up": "今週は諦める"
     },
     "Team1Preset": {
-      "name": "PureFiction.Team1Preset.name",
-      "help": "PureFiction.Team1Preset.help",
+      "name": "ノード1のプリセット編成番号",
+      "help": "ゲーム内編成画面「プリセット」リストの上からの番号",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "PureFiction.Team2Preset.name",
-      "help": "PureFiction.Team2Preset.help",
+      "name": "ノード2のプリセット編成番号",
+      "help": "2つのノードに同じキャラクターは編成できないため、プリセット同士でキャラクターが重複しないようにしてください",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1368,37 +1368,37 @@
   },
   "MemoryOfChaos": {
     "_info": {
-      "name": "MemoryOfChaos._info.name",
-      "help": "MemoryOfChaos._info.help"
+      "name": "忘却の庭設定",
+      "help": "ゲーム内の編成プリセットで混沌の記憶を自動挑戦"
     },
     "ChallengeMode": {
-      "name": "MemoryOfChaos.ChallengeMode.name",
-      "help": "MemoryOfChaos.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戦戦略",
+      "help": "初クリア=星0の難度のみ／集中攻略=3つ星未満の最初の難度を繰り返し挑戦／一掃=3つ星未満の難度を順に挑戦／最高難度のみ=挑戦可能な最高難度のみ",
+      "first_clear": "初クリア（星0の難度のみ）",
+      "push": "集中攻略（最初の3つ星未満）",
+      "sweep": "一掃（すべての3つ星未満）",
+      "highest_only": "最高難度のみ"
     },
     "MaxRetry": {
-      "name": "MemoryOfChaos.MaxRetry.name",
-      "help": "MemoryOfChaos.MaxRetry.help"
+      "name": "難度ごとの最大挑戦回数",
+      "help": "1回の実行で同じ難度に挑戦する最大回数"
     },
     "RetryExceeded": {
-      "name": "MemoryOfChaos.RetryExceeded.name",
-      "help": "MemoryOfChaos.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "再試行を使い切った後",
+      "help": "未達成の難度が残っている場合：明日再試行=デイリーリセット後に再実行／今週は諦める=来週の月曜日まで待つ",
+      "defer": "明日再試行",
+      "give_up": "今週は諦める"
     },
     "Team1Preset": {
-      "name": "MemoryOfChaos.Team1Preset.name",
-      "help": "MemoryOfChaos.Team1Preset.help",
+      "name": "ノード1のプリセット編成番号",
+      "help": "ゲーム内編成画面「プリセット」リストの上からの番号",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "MemoryOfChaos.Team2Preset.name",
-      "help": "MemoryOfChaos.Team2Preset.help",
+      "name": "ノード2のプリセット編成番号",
+      "help": "2つのノードに同じキャラクターは編成できないため、プリセット同士でキャラクターが重複しないようにしてください",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1406,37 +1406,37 @@
   },
   "ApocalypticShadow": {
     "_info": {
-      "name": "ApocalypticShadow._info.name",
-      "help": "ApocalypticShadow._info.help"
+      "name": "末日の幻影設定",
+      "help": "ゲーム内の編成プリセットで自動挑戦、終焉公理は最初の項目を自動選択"
     },
     "ChallengeMode": {
-      "name": "ApocalypticShadow.ChallengeMode.name",
-      "help": "ApocalypticShadow.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "挑戦戦略",
+      "help": "初クリア=星0の難度のみ／集中攻略=3つ星未満の最初の難度を繰り返し挑戦／一掃=3つ星未満の難度を順に挑戦／最高難度のみ=挑戦可能な最高難度のみ",
+      "first_clear": "初クリア（星0の難度のみ）",
+      "push": "集中攻略（最初の3つ星未満）",
+      "sweep": "一掃（すべての3つ星未満）",
+      "highest_only": "最高難度のみ"
     },
     "MaxRetry": {
-      "name": "ApocalypticShadow.MaxRetry.name",
-      "help": "ApocalypticShadow.MaxRetry.help"
+      "name": "難度ごとの最大挑戦回数",
+      "help": "1回の実行で同じ難度に挑戦する最大回数"
     },
     "RetryExceeded": {
-      "name": "ApocalypticShadow.RetryExceeded.name",
-      "help": "ApocalypticShadow.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "再試行を使い切った後",
+      "help": "未達成の難度が残っている場合：明日再試行=デイリーリセット後に再実行／今週は諦める=来週の月曜日まで待つ",
+      "defer": "明日再試行",
+      "give_up": "今週は諦める"
     },
     "Team1Preset": {
-      "name": "ApocalypticShadow.Team1Preset.name",
-      "help": "ApocalypticShadow.Team1Preset.help",
+      "name": "ノード1のプリセット編成番号",
+      "help": "ゲーム内編成画面「プリセット」リストの上からの番号",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "ApocalypticShadow.Team2Preset.name",
-      "help": "ApocalypticShadow.Team2Preset.help",
+      "name": "ノード2のプリセット編成番号",
+      "help": "2つのノードに同じキャラクターは編成できないため、プリセット同士でキャラクターが重複しないようにしてください",
       "1": "1",
       "2": "2",
       "3": "3"
