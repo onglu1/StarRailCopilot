@@ -254,8 +254,13 @@ Weekly:
 # [fork] Pure Fiction
 PureFiction:
   ChallengeMode:
-    value: lowest_first
-    option: [ lowest_first, highest_only ]
+    value: first_clear
+    option: [ first_clear, push, sweep, highest_only ]
+  MaxRetry:
+    value: 2
+  RetryExceeded:
+    value: defer
+    option: [ defer, give_up ]
   Team1Preset:
     value: 1
     option: [ 1, 2, 3 ]
@@ -266,8 +271,13 @@ PureFiction:
 # [fork] Memory of Chaos
 MemoryOfChaos:
   ChallengeMode:
-    value: lowest_first
-    option: [ lowest_first, highest_only ]
+    value: first_clear
+    option: [ first_clear, push, sweep, highest_only ]
+  MaxRetry:
+    value: 2
+  RetryExceeded:
+    value: defer
+    option: [ defer, give_up ]
   Team1Preset:
     value: 1
     option: [ 1, 2, 3 ]
@@ -278,8 +288,13 @@ MemoryOfChaos:
 # [fork] Apocalyptic Shadow
 ApocalypticShadow:
   ChallengeMode:
-    value: lowest_first
-    option: [ lowest_first, highest_only ]
+    value: first_clear
+    option: [ first_clear, push, sweep, highest_only ]
+  MaxRetry:
+    value: 2
+  RetryExceeded:
+    value: defer
+    option: [ defer, give_up ]
   Team1Preset:
     value: 1
     option: [ 1, 2, 3 ]

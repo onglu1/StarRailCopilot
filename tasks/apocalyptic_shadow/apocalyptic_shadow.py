@@ -17,6 +17,15 @@ class ApocalypticShadow(ApocalypticShadowPrep, AbyssCombatLoop):
     def abyss_home_check(self) -> bool:
         return self.as_in_stage_screen()
 
+    def abyss_goto(self):
+        self.as_goto()
+
+    def abyss_scan_stages(self) -> list:
+        return self.as_scan_stages()
+
+    def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
+        return self.as_prep_stage(node, team1_preset=team1_preset, team2_preset=team2_preset)
+
     def abyss_mid_settle_handler(self) -> bool:
         """
         Apocalyptic shadow shows a mid-run settlement after node 1 with
@@ -38,7 +47,8 @@ class ApocalypticShadow(ApocalypticShadowPrep, AbyssCombatLoop):
         team1 = int(self.config.ApocalypticShadow_Team1Preset)
         team2 = int(self.config.ApocalypticShadow_Team2Preset)
         mode = self.config.ApocalypticShadow_ChallengeMode
-        logger.attr('Team presets', f'{team1}, {team2}')
+        max_retry = int(self.config.ApocalypticShadow_MaxRetry)
+        on_exhausted = self.config.ApocalypticShadow_RetryExceeded
         logger.attr('ChallengeMode', mode)
 
         # If a previous run died inside a dungeon, finish it first
@@ -47,33 +57,16 @@ class ApocalypticShadow(ApocalypticShadowPrep, AbyssCombatLoop):
             logger.info('Resuming inside an apocalyptic shadow dungeon')
             self.abyss_dungeon_loop()
 
-        cleared = 0
-        skipped = set()
-        # At most all stages of a season plus margin
-        for _ in range(8):
-            self.as_goto()
-            nodes = self.as_scan_stages()
-            target = self.as_get_target_stage(nodes, mode=mode, skipped=skipped)
-            if target is None:
-                logger.info('Apocalyptic shadow finished, nothing to challenge')
-                break
-            logger.hr(f'Challenge {target}', level=1)
-            if not self.as_prep_stage(target, team1_preset=team1, team2_preset=team2):
-                # Probably a star-origin (3-node) stage, unsupported yet
-                skipped.add(target.index)
-                continue
-            self.abyss_dungeon_loop()
-            cleared += 1
+        fought, exhausted = self.abyss_run_challenges(
+            mode=mode, team1_preset=team1, team2_preset=team2, max_retry=max_retry)
+        logger.attr('Battles fought', fought)
 
-            # Check progress to avoid retrying the same stage forever
-            nodes = self.as_scan_stages()
-            after = [n for n in nodes if n.index == target.index]
-            if after and after[0].status == 'open':
-                logger.warning(f'{target} still not cleared after challenge, '
-                               f'teams may be too weak, stop')
-                break
+        self.abyss_claim_rewards()
 
-        logger.attr('Stages challenged', cleared)
-        monday = get_server_next_monday_update(self.config.Scheduler_ServerUpdate)
-        self.config.task_delay(target=monday)
+        if exhausted and on_exhausted == 'defer':
+            logger.info('Some stage ran out of retries, try again after the daily reset')
+            self.config.task_delay(server_update=True)
+        else:
+            self.config.task_delay(target=get_server_next_monday_update(
+                self.config.Scheduler_ServerUpdate))
         self.ui_goto_main()

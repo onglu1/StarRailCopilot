@@ -1,3 +1,4 @@
+from module.base.button import ClickButton
 from module.config.utils import get_server_next_monday_update
 from module.logger import logger
 from tasks.memory_of_chaos.assets.assets_memory_of_chaos_battle import MOC_SETTLE_BACK
@@ -9,16 +10,30 @@ from tasks.pure_fiction.assets.assets_pure_fiction_map import MAP_CHECK
 
 class MemoryOfChaos(MemoryOfChaosPrep, AbyssCombatLoop):
     SETTLE_BUTTON = MOC_SETTLE_BACK
+    # Gift box at the bottom right of the crystal list
+    REWARD_ENTRY = ClickButton((1165, 610, 1245, 685), name='MOC_REWARD_ENTRY')
+    REWARD_TABS = [ClickButton((395, 115, 490, 153), name='MOC_REWARD_TAB2')]
+    REWARD_PANEL_CLOSE = ClickButton((1073, 112, 1113, 153), name='REWARD_PANEL_CLOSE')
 
     def abyss_home_check(self) -> bool:
         return self.moc_in_stage_screen()
+
+    def abyss_goto(self):
+        self.moc_goto()
+
+    def abyss_scan_stages(self) -> list:
+        return self.moc_scan_stages()
+
+    def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
+        return self.moc_prep_stage(node, team1_preset=team1_preset, team2_preset=team2_preset)
 
     def run(self):
         logger.hr('Memory of Chaos', level=1)
         team1 = int(self.config.MemoryOfChaos_Team1Preset)
         team2 = int(self.config.MemoryOfChaos_Team2Preset)
         mode = self.config.MemoryOfChaos_ChallengeMode
-        logger.attr('Team presets', f'{team1}, {team2}')
+        max_retry = int(self.config.MemoryOfChaos_MaxRetry)
+        on_exhausted = self.config.MemoryOfChaos_RetryExceeded
         logger.attr('ChallengeMode', mode)
 
         # If a previous run died inside a dungeon, finish it first
@@ -27,33 +42,16 @@ class MemoryOfChaos(MemoryOfChaosPrep, AbyssCombatLoop):
             logger.info('Resuming inside a memory of chaos dungeon')
             self.abyss_dungeon_loop()
 
-        cleared = 0
-        skipped = set()
-        # At most all 12 stages plus margin
-        for _ in range(14):
-            self.moc_goto()
-            nodes = self.moc_scan_stages()
-            target = self.moc_get_target_stage(nodes, mode=mode, skipped=skipped)
-            if target is None:
-                logger.info('Memory of chaos finished, nothing to challenge')
-                break
-            logger.hr(f'Challenge {target}', level=1)
-            if not self.moc_prep_stage(target, team1_preset=team1, team2_preset=team2):
-                # Probably locked, never retry it this run
-                skipped.add(target.index)
-                continue
-            self.abyss_dungeon_loop()
-            cleared += 1
+        fought, exhausted = self.abyss_run_challenges(
+            mode=mode, team1_preset=team1, team2_preset=team2, max_retry=max_retry)
+        logger.attr('Battles fought', fought)
 
-            # Check progress to avoid retrying the same stage forever
-            nodes = self.moc_scan_stages()
-            after = [n for n in nodes if n.index == target.index]
-            if after and after[0].status == 'open':
-                logger.warning(f'{target} still has no stars after challenge, '
-                               f'teams may be too weak, stop')
-                break
+        self.abyss_claim_rewards()
 
-        logger.attr('Stages challenged', cleared)
-        monday = get_server_next_monday_update(self.config.Scheduler_ServerUpdate)
-        self.config.task_delay(target=monday)
+        if exhausted and on_exhausted == 'defer':
+            logger.info('Some stage ran out of retries, try again after the daily reset')
+            self.config.task_delay(server_update=True)
+        else:
+            self.config.task_delay(target=get_server_next_monday_update(
+                self.config.Scheduler_ServerUpdate))
         self.ui_goto_main()

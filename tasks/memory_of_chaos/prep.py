@@ -44,6 +44,7 @@ class MemoryOfChaosPrep(AbyssPrep, MemoryOfChaosUI):
                 return True
             if timeout.reached():
                 logger.warning(f'{node} prep screen did not open, stage may be locked')
+                self.abyss_escape_stray_dialog()
                 return False
             if self.handle_popup_confirm():
                 continue

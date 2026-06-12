@@ -328,7 +328,9 @@
       "ServerUpdate": "04:00"
     },
     "PureFiction": {
-      "ChallengeMode": "lowest_first",
+      "ChallengeMode": "first_clear",
+      "MaxRetry": 2,
+      "RetryExceeded": "defer",
       "Team1Preset": 1,
       "Team2Preset": 2
     }
@@ -341,7 +343,9 @@
       "ServerUpdate": "04:00"
     },
     "MemoryOfChaos": {
-      "ChallengeMode": "lowest_first",
+      "ChallengeMode": "first_clear",
+      "MaxRetry": 2,
+      "RetryExceeded": "defer",
       "Team1Preset": 1,
       "Team2Preset": 2
     }
@@ -354,7 +358,9 @@
       "ServerUpdate": "04:00"
     },
     "ApocalypticShadow": {
-      "ChallengeMode": "lowest_first",
+      "ChallengeMode": "first_clear",
+      "MaxRetry": 2,
+      "RetryExceeded": "defer",
       "Team1Preset": 1,
       "Team2Preset": 2
     }

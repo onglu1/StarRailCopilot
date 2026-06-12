@@ -2,7 +2,6 @@ import re
 
 from module.base.button import ClickButton
 from module.base.timer import Timer
-from module.base.utils import crop
 from module.logger import logger
 from module.ocr.ocr import Ocr
 from tasks.base.assets.assets_base_page import FORGOTTEN_HALL_CHECK
@@ -11,29 +10,18 @@ from tasks.base.ui import UI
 from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
 from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
 from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
+from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
 from tasks.pure_fiction.ui import TAB_TREASURES_LIGHTWARD_CLICK
 from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
 
-# Gold star color under cleared stage crystals
-STAR_COLOR_BRIGHT = 150
-STAR_PIXEL_COUNT = 80
 
-
-class MemoryOfChaosStageNode:
-    def __init__(self, index, button):
-        self.index: int = index
-        self.button = button
-        # 'cleared' when gold stars are present under the number, else 'open'.
-        # Locked stages are not visually distinguished here, they are handled
-        # behaviorally: entering fails -> skip the stage
-        self.status: str = 'open'
-
-    @property
-    def challengeable(self):
-        return self.status == 'open'
-
-    def __repr__(self):
-        return f'Stage_{self.index:02d}({self.status})'
+class MemoryOfChaosStageNode(AbyssStageNode):
+    """
+    MoC crystals show no status words, stars are the only state display.
+    Locked stages are not visually distinguished, they are handled
+    behaviorally: entering fails -> skip the stage.
+    """
+    pass
 
 
 class MemoryOfChaosUI(UI):
@@ -56,7 +44,8 @@ class MemoryOfChaosUI(UI):
         if self.moc_in_stage_screen():
             logger.info('Already in memory of chaos')
             return
-        self.ui_ensure(page_guide)
+        self.abyss_exit_prep_if_stuck()
+        self.abyss_ui_ensure_guide()
         self.moc_guide_tab_goto()
         DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Forgotten_Hall, main=self)
         self.moc_teleport()
@@ -113,18 +102,14 @@ class MemoryOfChaosUI(UI):
             if self.handle_reward():
                 continue
 
-    def _moc_stage_has_stars(self, box) -> bool:
+    def _moc_stage_stars(self, box) -> int:
         """
-        Whether gold stars are present right below a stage number box.
+        Count gold stars right below a stage number box.
+        One MoC star is a ~155 px cluster, crystal glow measures 0.
         """
         x_center = int((box[0] + box[2]) / 2)
         area = (max(0, x_center - 65), box[3], min(1280, x_center + 65), min(720, box[3] + 50))
-        image = crop(self.device.image, area, copy=False)
-        px = image.reshape(-1, 3).astype(int)
-        # Gold stars measure ~(241, 189, 110), a single star is ~150 px,
-        # crystal glow and background measure 0 with this tolerance
-        mask = (abs(px[:, 0] - 241) < 30) & (abs(px[:, 1] - 189) < 30) & (abs(px[:, 2] - 110) < 40)
-        return int(mask.sum()) > STAR_PIXEL_COUNT
+        return abyss_count_stars(self.device.image, area)
 
     def moc_scan_stages(self, skip_first_screenshot=True) -> list[MemoryOfChaosStageNode]:
         """
@@ -135,6 +120,8 @@ class MemoryOfChaosUI(UI):
             in: page_forgotten_hall
         """
         digits = {}
+        # Star glint animation can hide a cluster in a single frame
+        star_history = {}
         nodes = []
         for attempt in range(4):
             if skip_first_screenshot and attempt == 0:
@@ -154,7 +141,7 @@ class MemoryOfChaosUI(UI):
                         digits[(x, y)] = (box, text)
 
             nodes = []
-            for box, text in digits.values():
+            for key, (box, text) in digits.items():
                 try:
                     index = int(re.sub(r'\D', '', text))
                 except ValueError:
@@ -162,8 +149,9 @@ class MemoryOfChaosUI(UI):
                 if not 1 <= index <= 12:
                     continue
                 node = MemoryOfChaosStageNode(index, ClickButton(box, name=f'STAGE_{index:02d}'))
-                if self._moc_stage_has_stars(box):
-                    node.status = 'cleared'
+                count = self._moc_stage_stars(box)
+                node.stars = star_history[key] = max(star_history.get(key, 0), count)
+                node.status = 'cleared' if node.stars > 0 else 'open'
                 nodes.append(node)
             nodes = sorted(nodes, key=lambda n: n.index)
 
@@ -173,25 +161,3 @@ class MemoryOfChaosUI(UI):
         logger.info(f'Memory of chaos stages: {nodes}')
         return nodes
 
-    def moc_get_target_stage(self, nodes: list[MemoryOfChaosStageNode], mode='lowest_first', skipped=None):
-        """
-        Args:
-            nodes:
-            mode: 'lowest_first' or 'highest_only'
-            skipped: set of stage indexes that failed to enter (locked)
-
-        Returns:
-            MemoryOfChaosStageNode: or None
-        """
-        skipped = skipped or set()
-        candidates = [n for n in nodes if n.challengeable and n.index not in skipped]
-        if not candidates:
-            logger.info('No open memory of chaos stage to challenge')
-            return None
-        if mode == 'highest_only':
-            top = max(nodes, key=lambda n: n.index)
-            if top.status == 'cleared' or top.index in skipped:
-                logger.info(f'Highest visible stage {top} already cleared or skipped')
-                return None
-            return top
-        return min(candidates, key=lambda n: n.index)
