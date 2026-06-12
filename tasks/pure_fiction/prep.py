@@ -14,6 +14,12 @@ class PureFictionPrep(PureFictionUI):
         1: ClickButton((867, 452, 915, 488), name='TEAM_1_SLOT'),
         2: ClickButton((867, 547, 915, 583), name='TEAM_2_SLOT'),
     }
+    # Node number badges left of the rows, clicking focuses without
+    # selecting a member
+    TEAM_ROW_FOCUS = {
+        1: ClickButton((534, 452, 568, 505), name='TEAM_1_FOCUS'),
+        2: ClickButton((534, 547, 568, 600), name='TEAM_2_FOCUS'),
+    }
     TEAM_ROW_SLOTS = {
         1: (920, 448, 1160, 492),
         2: (920, 543, 1160, 587),

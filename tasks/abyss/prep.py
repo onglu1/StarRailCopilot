@@ -68,6 +68,10 @@ def abyss_panel_shift(before_strip, after_image) -> int:
 class AbyssPrep(AbyssNav):
     # {node_index: ClickButton}, the first member slot of each team row
     TEAM_SLOT = {}
+    # {node_index: ClickButton}, a row point without slot semantics (the
+    # node number badge / block header). Clicking it focuses the row
+    # without selecting a member, member slot clicks select the character
+    TEAM_ROW_FOCUS = {}
     # {node_index: (x1, y1, x2, y2)}, strip over the 4 member slots.
     # Bright portraits when filled (luma std 60-90), dark placeholder
     # circles when empty (std ~21), dimmed unfocused filled rows ~44
@@ -154,6 +158,15 @@ class AbyssPrep(AbyssNav):
         slot = self.TEAM_SLOT[node_index]
 
         for trial in range(3):
+            # Focus the row via its header badge, which has no slot
+            # semantics. If the header click did not take (the preset then
+            # lands on the wrong node and the team stays empty), later
+            # trials fall back to the proven member-slot click
+            if trial == 0:
+                focus = self.TEAM_ROW_FOCUS.get(node_index, slot)
+            else:
+                focus = slot
+
             # Open character picker
             timeout = Timer(15, count=5).start()
             while 1:
@@ -165,14 +178,14 @@ class AbyssPrep(AbyssNav):
                     logger.warning('abyss_set_team open picker timeout')
                     break
                 if self.appear(PREP_CHECK, interval=2):
-                    self.device.click(slot)
+                    self.device.click(focus)
                     self._abyss_focused_node = node_index
                     continue
 
             # Focus this node only when another row is focused,
             # wait out the focus animation
-            if self._abyss_focused_node != node_index:
-                self.device.click(slot)
+            if self._abyss_focused_node != node_index or trial > 0:
+                self.device.click(focus)
                 self._abyss_focused_node = node_index
                 self.device.sleep((0.6, 0.8))
 
