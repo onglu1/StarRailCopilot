@@ -13,6 +13,12 @@ class MemoryOfChaosPrep(MemoryOfChaosUI):
         1: ClickButton((888, 440, 932, 484), name='MOC_TEAM_1_SLOT'),
         2: ClickButton((888, 530, 932, 574), name='MOC_TEAM_2_SLOT'),
     }
+    # Node number badges left of the rows, clicking focuses without
+    # selecting a member
+    TEAM_ROW_FOCUS = {
+        1: ClickButton((537, 442, 578, 492), name='MOC_TEAM_1_FOCUS'),
+        2: ClickButton((537, 532, 578, 582), name='MOC_TEAM_2_FOCUS'),
+    }
     TEAM_ROW_SLOTS = {
         1: (888, 440, 1205, 484),
         2: (888, 530, 1205, 574),

@@ -25,6 +25,12 @@ class ApocalypticShadowPrep(ApocalypticShadowUI):
         1: ClickButton((735, 285, 785, 330), name='AS_TEAM_1_SLOT'),
         2: ClickButton((735, 520, 785, 565), name='AS_TEAM_2_SLOT'),
     }
+    # Node block header titles, clicking focuses the block without
+    # selecting a member
+    TEAM_ROW_FOCUS = {
+        1: ClickButton((700, 172, 860, 190), name='AS_TEAM_1_FOCUS'),
+        2: ClickButton((700, 402, 860, 420), name='AS_TEAM_2_FOCUS'),
+    }
     TEAM_ROW_SLOTS = {
         1: (725, 275, 1020, 340),
         2: (725, 510, 1020, 575),
