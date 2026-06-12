@@ -10,6 +10,8 @@
 
 **⬜ 后续：末日幻影星启模式（难度4，3节点3编队）**——当前检测到后优雅跳过；完整支持需：第3套编队配置项、3行准备屏坐标适配（布局与常规不同，数字块标记节点）、`前往节点三` 中场资产。另：MoC 选关 v1 只扫当前可见水晶（默认停在进度处，足够覆盖正常使用）；MoC 1-2 星关卡不会重打（金星检测只分有星/无星）。
 
+**✅ PR 化重构（2026-06-12 中午，master f41f7153）**：共享层抽成独立 `tasks/abyss/` 包（stage 感知与选关 / nav 导航与恢复 / prep 配队 / combat 副本循环与奖励），三任务线性继承零跨模式依赖；共享资产移到 `assets/{share,cn}/abyss/`（PF_WAVE_FLAG→WAVE_FLAG）。PR 分支 **`pr/abyss`** 基于 upstream/master，三个干净 commit（Add: PureFiction / MemoryOfChaos / ApocalypticShadow），无 fork 标记无 fork 文档，每个 commit 自洽可构建。master 已采纳同一布局——**深渊相关条目在上游文件里不再打 `# [fork]` 标记**（以 PR 分支为准识别，PR 合并后随上游同步自然消化）。注意：资产仅 cn，PR 描述里需说明 en 资产缺口。
+
 **✅ 第二轮改进完成（2026-06-12 上午，commit 0b0660da）**：快速 auto+二倍速（复用上游 CombatState，3 秒内全开）；挑战策略改为 首通/攻坚/扫描/只打最高 + 单关重试上限 + 超限 defer/give_up；PF/MoC 星数奖励自动领取（AS 结算自发无需领）；金星簇数星感知；快速通关弹窗/迷路弹窗/未注册 prep 屏的恢复链。ztj 弱号实测通过。
 
 **✅ 三模式全部完成（2026-06-12）**：`PureFiction` / `MemoryOfChaos` / `ApocalypticShadow` 三个任务（Weekly 组），代码在 `tasks/pure_fiction|memory_of_chaos|apocalyptic_shadow/`，共享基类在 `tasks/pure_fiction/abyss*.py`。设计与实测记录见 [2026-06-12-pure-fiction-design.md](2026-06-12-pure-fiction-design.md)。流程：自动导航 → 按挑战策略选关（默认从最低难度逐层，highest_only 可选）→ 套用游戏内预设编队 1/2 + 每节点装第一个增益/公理 → 走图触敌 → 停滞看门狗保 AUTO → 两半场（AS 含中场结算）→ 结算退出 → 循环 → 延到下周一 04:00。用户侧启用：GUI → 周常 → 各任务 → Enable。
