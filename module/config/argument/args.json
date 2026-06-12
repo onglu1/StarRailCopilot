@@ -2519,6 +2519,75 @@
       }
     }
   },
+  "MemoryOfChaos": {
+    "Scheduler": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "NextRun": {
+        "type": "datetime",
+        "value": "2020-01-01 00:00:00",
+        "validate": "datetime"
+      },
+      "Command": {
+        "type": "input",
+        "value": "MemoryOfChaos",
+        "display": "hide"
+      },
+      "ServerUpdate": {
+        "type": "input",
+        "value": "04:00",
+        "display": "hide"
+      }
+    },
+    "MemoryOfChaos": {
+      "ChallengeMode": {
+        "type": "select",
+        "value": "first_clear",
+        "option": [
+          "first_clear",
+          "push",
+          "sweep",
+          "highest_only"
+        ]
+      },
+      "MaxRetry": {
+        "type": "input",
+        "value": 2
+      },
+      "RetryExceeded": {
+        "type": "select",
+        "value": "defer",
+        "option": [
+          "defer",
+          "give_up"
+        ]
+      },
+      "Team1Preset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3
+        ]
+      },
+      "Team2Preset": {
+        "type": "select",
+        "value": 2,
+        "option": [
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  },
   "Daemon": {
     "Daemon": {
       "Enable": {

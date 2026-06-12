@@ -66,6 +66,10 @@
       "name": "Pura ficción",
       "help": "Desafía Pura ficción automáticamente"
     },
+    "MemoryOfChaos": {
+      "name": "Salón olvidado",
+      "help": "Desafía Memoria del caos automáticamente"
+    },
     "Daemon": {
       "name": "Clic de diálogo",
       "help": ""
@@ -1324,6 +1328,44 @@
     "_info": {
       "name": "Ajustes de Pura ficción",
       "help": "Desafío automático con equipos predefinidos del juego, el primer aumento se elige automáticamente"
+    },
+    "ChallengeMode": {
+      "name": "Estrategia de desafío",
+      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
+      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "push": "Empuje (primer nivel sin 3 estrellas)",
+      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
+      "highest_only": "Solo el nivel más alto"
+    },
+    "MaxRetry": {
+      "name": "Intentos máximos por nivel",
+      "help": "Intentos máximos en el mismo nivel por ejecución"
+    },
+    "RetryExceeded": {
+      "name": "Al agotar los reintentos",
+      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "defer": "Reintentar mañana",
+      "give_up": "Abandonar esta semana"
+    },
+    "Team1Preset": {
+      "name": "Equipo predefinido del nodo 1",
+      "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "Equipo predefinido del nodo 2",
+      "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    }
+  },
+  "MemoryOfChaos": {
+    "_info": {
+      "name": "Ajustes del Salón olvidado",
+      "help": "Desafío automático de Memoria del caos con equipos predefinidos del juego"
     },
     "ChallengeMode": {
       "name": "Estrategia de desafío",

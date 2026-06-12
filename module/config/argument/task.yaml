@@ -70,6 +70,9 @@ Weekly:
     PureFiction:
       - Scheduler
       - PureFiction
+    MemoryOfChaos:
+      - Scheduler
+      - MemoryOfChaos
 
 # ==================== Tool ====================
 

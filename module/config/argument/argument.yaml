@@ -258,6 +258,22 @@ PureFiction:
     value: 2
     option: [ 1, 2, 3 ]
 
+MemoryOfChaos:
+  ChallengeMode:
+    value: first_clear
+    option: [ first_clear, push, sweep, highest_only ]
+  MaxRetry:
+    value: 2
+  RetryExceeded:
+    value: defer
+    option: [ defer, give_up ]
+  Team1Preset:
+    value: 1
+    option: [ 1, 2, 3 ]
+  Team2Preset:
+    value: 2
+    option: [ 1, 2, 3 ]
+
 Weekly:
   Name:
     # Dungeon names will be injected in config updater

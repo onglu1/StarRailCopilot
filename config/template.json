@@ -335,6 +335,21 @@
       "Team2Preset": 2
     }
   },
+  "MemoryOfChaos": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "MemoryOfChaos",
+      "ServerUpdate": "04:00"
+    },
+    "MemoryOfChaos": {
+      "ChallengeMode": "first_clear",
+      "MaxRetry": 2,
+      "RetryExceeded": "defer",
+      "Team1Preset": 1,
+      "Team2Preset": 2
+    }
+  },
   "Daemon": {
     "Daemon": {
       "Enable": true,
