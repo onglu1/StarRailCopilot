@@ -5,7 +5,6 @@ for screens outside the page system (stage prep, stray dialogs).
 """
 from module.base.button import ClickButton
 from module.base.timer import Timer
-from module.exception import GamePageUnknownError
 from module.logger import logger
 from tasks.abyss.assets.assets_abyss_battle import QUICK_CLEAR_CONFIRM
 from tasks.abyss.assets.assets_abyss_map import BLANK_CLOSE
@@ -45,8 +44,13 @@ class AbyssNav(UI):
         if self.abyss_home_check():
             logger.info('Already at the abyss stage screen')
             return
+        # The prep screen is not a registered page, ui_ensure cannot start
+        # from it (GamePageUnknownError is fatal at the scheduler level)
         self.abyss_exit_prep_if_stuck()
-        self.abyss_ui_ensure_guide()
+        # Standard route, same as the dungeon module. Unknown pages and
+        # popups are handled by the framework: popup dismissing inside
+        # ui_get_current_page, game-dead / game-stuck -> Restart task
+        self.ui_ensure(page_guide)
         self.abyss_guide_tab_goto()
         DUNGEON_NAV_LIST.select_row(self.NAV_KEYWORD, main=self)
         self.abyss_teleport()
@@ -188,14 +192,3 @@ class AbyssNav(UI):
             self.device.click(ClickButton((80, 420, 180, 540), name='OUTSIDE_MODAL'))
             self.device.sleep((0.6, 0.8))
 
-    def abyss_ui_ensure_guide(self):
-        """
-        ui_ensure(page_guide) with one recovery attempt: a stray dialog
-        makes the page unknown, escape it then retry.
-        """
-        try:
-            self.ui_ensure(page_guide)
-        except GamePageUnknownError:
-            logger.warning('Page unknown, escape stray dialogs and retry')
-            self.abyss_escape_stray_dialog()
-            self.ui_ensure(page_guide)
