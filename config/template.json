@@ -320,6 +320,17 @@
       "DebugMode": false
     }
   },
+  "Daemon": {
+    "Daemon": {
+      "Enable": true,
+      "AimClicker": "do_not_click"
+    }
+  },
+  "PlannerScan": {
+    "PlannerScan": {
+      "ResultAdd": false
+    }
+  },
   "PureFiction": {
     "Scheduler": {
       "Enable": false,
@@ -366,17 +377,6 @@
       "Team1Preset": 1,
       "Team2Preset": 2,
       "CandidateTeams": null
-    }
-  },
-  "Daemon": {
-    "Daemon": {
-      "Enable": true,
-      "AimClicker": "do_not_click"
-    }
-  },
-  "PlannerScan": {
-    "PlannerScan": {
-      "ResultAdd": false
     }
   }
 }
