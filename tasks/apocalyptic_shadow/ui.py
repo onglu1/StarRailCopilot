@@ -1,20 +1,13 @@
 import re
 
 from module.base.button import ClickButton
-from module.base.timer import Timer
 from module.logger import logger
 from module.ocr.ocr import Ocr
-from tasks.base.assets.assets_base_page import APOCALYPTIC_SHADOW_CHECK
-from tasks.base.page import page_guide
-from tasks.base.ui import UI
-from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
-from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
-from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
+from tasks.abyss.combat import AbyssCombatLoop
+from tasks.abyss.stage import AbyssStageNode, abyss_count_stars
 from tasks.apocalyptic_shadow.assets.assets_apocalyptic_shadow_ui import AS_OVERVIEW_GO
-from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
-from tasks.pure_fiction.assets.assets_pure_fiction_map import BLANK_CLOSE
-from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
-from tasks.pure_fiction.ui import TAB_TREASURES_LIGHTWARD_CLICK
+from tasks.base.assets.assets_base_page import APOCALYPTIC_SHADOW_CHECK
+from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
 
 STATUS_LOCKED = '未解锁'
 STATUS_OPEN = '尚未挑战'
@@ -28,94 +21,19 @@ class ApocalypticShadowStageNode(AbyssStageNode):
     pass
 
 
-class ApocalypticShadowUI(UI):
-    def as_in_stage_screen(self) -> bool:
+class ApocalypticShadowUI(AbyssCombatLoop):
+    NAV_KEYWORD = KEYWORDS_DUNGEON_NAV.Apocalyptic_Shadow
+
+    def abyss_home_check(self) -> bool:
         return self.appear(APOCALYPTIC_SHADOW_CHECK)
 
-    def as_goto(self):
-        """
-        Goto the apocalyptic shadow stage screen.
+    def abyss_teleport_handler(self) -> bool:
+        # Teleport lands on a season overview screen first
+        if self.appear_then_click(AS_OVERVIEW_GO, interval=2):
+            return True
+        return False
 
-        Pages:
-            in: Any
-            out: page_apocalyptic_shadow, stage strip at the bottom
-        """
-        logger.hr('Apocalyptic shadow goto', level=2)
-        self.device.screenshot()
-        if self.as_in_stage_screen():
-            logger.info('Already in apocalyptic shadow')
-            return
-        self.abyss_exit_prep_if_stuck()
-        self.abyss_ui_ensure_guide()
-        self.as_guide_tab_goto()
-        DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Apocalyptic_Shadow, main=self)
-        self.as_teleport()
-
-    def as_guide_tab_goto(self, skip_first_screenshot=True):
-        timeout = Timer(10, count=10).start()
-        click_interval = Timer(2)
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if timeout.reached():
-                logger.warning('as_guide_tab_goto timeout, continue anyway')
-                break
-            if self.match_template_color(TAB_TREASURES_LIGHTWARD_CHECK):
-                logger.info('Treasures_Lightward tab selected')
-                break
-            if click_interval.reached():
-                self.device.click(TAB_TREASURES_LIGHTWARD_CLICK)
-                click_interval.reset()
-                continue
-
-        for _ in self.loop(timeout=4):
-            DUNGEON_NAV_LIST.load_rows(main=self)
-            if DUNGEON_NAV_LIST.cur_buttons:
-                logger.info('Treasures_Lightward nav list loaded')
-                break
-        else:
-            logger.warning('Wait Treasures_Lightward nav list timeout')
-
-    def as_teleport(self, skip_first_screenshot=True):
-        """
-        Teleport into apocalyptic shadow. Passes through the season overview
-        screen and possible one-time popups (mode update announcement).
-        """
-        logger.info('Apocalyptic shadow teleport')
-        timeout = Timer(60, count=60).start()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.as_in_stage_screen():
-                logger.info('Apocalyptic shadow stage screen entered')
-                break
-            if timeout.reached():
-                logger.warning('as_teleport timeout')
-                break
-            if self.match_template_luma(BLANK_CLOSE, interval=2):
-                logger.info(f'{BLANK_CLOSE} -> click blank')
-                self.device.click(BLANK_CLOSE)
-                continue
-            if self.handle_tutorial():
-                continue
-            if self.appear_then_click(AS_OVERVIEW_GO, interval=2):
-                continue
-            if self.appear_then_click(TELEPORT, interval=3):
-                continue
-            if self.handle_popup_confirm():
-                continue
-            if self.handle_popup_single():
-                continue
-            if self.handle_reward():
-                continue
-
-    def as_scan_stages(self, skip_first_screenshot=True) -> list[ApocalypticShadowStageNode]:
+    def abyss_scan_stages(self, skip_first_screenshot=True) -> list[ApocalypticShadowStageNode]:
         """
         Scan the stage strip at the screen bottom via OCR. Tokens come in
         merged form like `01尚未挑战` or separated `03` + `尚未挑战`.
@@ -183,7 +101,8 @@ class ApocalypticShadowUI(UI):
                     min(box[2] + 25, 1279), max(box[1] - 6, 0),
                     min(box[2] + 112, 1280), min(box[3] + 6, 720),
                 )
-                node.stars = abyss_count_stars(self.device.image, star_area)
+                count = abyss_count_stars(self.device.image, star_area)
+                node.stars = star_history[key] = max(star_history.get(key, 0), count)
                 # The same tab can be detected twice from merged and split
                 # tokens, keep the one with a definite status
                 existing = [n for n in nodes if n.index == node.index]
@@ -209,4 +128,3 @@ class ApocalypticShadowUI(UI):
             if abs(cx - x) < 25 and abs(cy - y) < 25:
                 return
         collection[(x, y)] = (box, value)
-

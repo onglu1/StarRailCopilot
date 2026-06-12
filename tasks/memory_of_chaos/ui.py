@@ -1,18 +1,13 @@
 import re
 
 from module.base.button import ClickButton
-from module.base.timer import Timer
 from module.logger import logger
 from module.ocr.ocr import Ocr
+from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
+from tasks.abyss.combat import AbyssCombatLoop
+from tasks.abyss.stage import AbyssStageNode, abyss_count_stars
 from tasks.base.assets.assets_base_page import FORGOTTEN_HALL_CHECK
-from tasks.base.page import page_guide
-from tasks.base.ui import UI
 from tasks.dungeon.keywords import KEYWORDS_DUNGEON_NAV
-from tasks.dungeon.ui.nav import DUNGEON_NAV_LIST
-from tasks.forgotten_hall.assets.assets_forgotten_hall_ui import TELEPORT
-from tasks.pure_fiction.abyss import AbyssStageNode, abyss_count_stars
-from tasks.pure_fiction.ui import TAB_TREASURES_LIGHTWARD_CLICK
-from tasks.pure_fiction.assets.assets_pure_fiction_nav import TAB_TREASURES_LIGHTWARD_CHECK
 
 
 class MemoryOfChaosStageNode(AbyssStageNode):
@@ -24,83 +19,13 @@ class MemoryOfChaosStageNode(AbyssStageNode):
     pass
 
 
-class MemoryOfChaosUI(UI):
-    def moc_in_stage_screen(self) -> bool:
+class MemoryOfChaosUI(AbyssCombatLoop):
+    NAV_KEYWORD = KEYWORDS_DUNGEON_NAV.Forgotten_Hall
+
+    def abyss_home_check(self) -> bool:
         # FORGOTTEN_HALL_CHECK also matches the prep screen (same top-left
-        # emblem), exclude prep by its 编队 label
-        from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
+        # emblem), exclude prep by its team label
         return self.appear(FORGOTTEN_HALL_CHECK) and not self.appear(PREP_CHECK)
-
-    def moc_goto(self):
-        """
-        Goto the memory of chaos stage screen.
-
-        Pages:
-            in: Any
-            out: page_forgotten_hall, memory of chaos crystal list
-        """
-        logger.hr('Memory of chaos goto', level=2)
-        self.device.screenshot()
-        if self.moc_in_stage_screen():
-            logger.info('Already in memory of chaos')
-            return
-        self.abyss_exit_prep_if_stuck()
-        self.abyss_ui_ensure_guide()
-        self.moc_guide_tab_goto()
-        DUNGEON_NAV_LIST.select_row(KEYWORDS_DUNGEON_NAV.Forgotten_Hall, main=self)
-        self.moc_teleport()
-
-    def moc_guide_tab_goto(self, skip_first_screenshot=True):
-        timeout = Timer(10, count=10).start()
-        click_interval = Timer(2)
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if timeout.reached():
-                logger.warning('moc_guide_tab_goto timeout, continue anyway')
-                break
-            if self.match_template_color(TAB_TREASURES_LIGHTWARD_CHECK):
-                logger.info('Treasures_Lightward tab selected')
-                break
-            if click_interval.reached():
-                self.device.click(TAB_TREASURES_LIGHTWARD_CLICK)
-                click_interval.reset()
-                continue
-
-        for _ in self.loop(timeout=4):
-            DUNGEON_NAV_LIST.load_rows(main=self)
-            if DUNGEON_NAV_LIST.cur_buttons:
-                logger.info('Treasures_Lightward nav list loaded')
-                break
-        else:
-            logger.warning('Wait Treasures_Lightward nav list timeout')
-
-    def moc_teleport(self, skip_first_screenshot=True):
-        logger.info('Memory of chaos teleport')
-        timeout = Timer(60, count=60).start()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.moc_in_stage_screen():
-                logger.info('Memory of chaos stage screen entered')
-                break
-            if timeout.reached():
-                logger.warning('moc_teleport timeout')
-                break
-            if self.appear_then_click(TELEPORT, interval=3):
-                continue
-            if self.handle_popup_confirm():
-                continue
-            if self.handle_popup_single():
-                continue
-            if self.handle_reward():
-                continue
 
     def _moc_stage_stars(self, box) -> int:
         """
@@ -111,7 +36,7 @@ class MemoryOfChaosUI(UI):
         area = (max(0, x_center - 65), box[3], min(1280, x_center + 65), min(720, box[3] + 50))
         return abyss_count_stars(self.device.image, area)
 
-    def moc_scan_stages(self, skip_first_screenshot=True) -> list[MemoryOfChaosStageNode]:
+    def abyss_scan_stages(self, skip_first_screenshot=True) -> list[MemoryOfChaosStageNode]:
         """
         Scan visible stage crystals via OCR, multi-pass union since detection
         on the big stylized numbers is flaky.
@@ -160,4 +85,3 @@ class MemoryOfChaosUI(UI):
 
         logger.info(f'Memory of chaos stages: {nodes}')
         return nodes
-

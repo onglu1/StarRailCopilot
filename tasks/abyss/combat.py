@@ -1,260 +1,57 @@
 """
-Shared in-dungeon state machine for the three abyss-like weekly modes:
-Pure Fiction / Memory of Chaos / Apocalyptic Shadow.
+In-dungeon state machine and reward claiming shared by the abyss modes.
 
 All three share the same structure once a stage is entered:
 loading -> (mechanic intro overlay) -> in-dungeon map walking -> battle
 -> back to map with team 2 -> battle -> settlement screen.
 
 Verified facts these helpers rely on:
-- Abyss battles do not render pause/auto/2x at the standard top-right
-  position, the wave flag at top-left is the only reliable battle HUD
-  element (PF_WAVE_FLAG, shared across modes).
-- Auto battle does not persist between halves. There is no readable
-  auto-state either, so a stall watchdog clicks the (invisible but
-  touch-active) auto position after ~55s of a frozen battle screen.
-  If auto is already on the screen keeps changing and we never click.
+- Abyss battle UI buttons at the top right auto-hide when idle, so state
+  detection alone cannot see them. On battle entry blind-click the auto
+  button once: abyss battles always start with auto off, the click both
+  enables auto and wakes the hidden UI, then handle_combat_state()
+  verifies auto and enables 2x speed while the UI is awake.
+- Ult cutscenes hide the wave flag for a few seconds mid-battle, the
+  battle-left debounce avoids re-clicking auto (which would toggle it off).
+- The wave flag at top-left is the only reliable battle HUD element,
+  shared by all three modes.
 - Device-level stuck/click records must be cleared during the long
   battle and walking phases, same as upstream combat.
 """
 import cv2
-import numpy as np
 
 from module.base.button import ClickButton
 from module.base.timer import Timer
-from module.base.utils import crop, rgb2luma
+from module.base.utils import rgb2luma
+from module.config.utils import get_server_next_monday_update
 from module.exception import GameStuckError
 from module.logger import logger
 from module.ocr.ocr import Ocr
+from tasks.abyss.assets.assets_abyss_battle import QUICK_CLEAR_CONFIRM, WAVE_FLAG
+from tasks.abyss.assets.assets_abyss_map import BLANK_CLOSE, MAP_CHECK
+from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
+from tasks.abyss.prep import AbyssPrep
+from tasks.abyss.stage import abyss_has_exhausted, abyss_select_target
 from tasks.combat.assets.assets_combat_state import COMBAT_AUTO
 from tasks.combat.state import CombatState
 from tasks.map.control.joystick import JoystickContact, MapControlJoystick
-from tasks.pure_fiction.assets.assets_pure_fiction_battle import PF_WAVE_FLAG, QUICK_CLEAR_CONFIRM
-from tasks.pure_fiction.assets.assets_pure_fiction_map import BLANK_CLOSE, MAP_CHECK
-from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
 
 
-class AbyssStageNode:
-    """
-    A stage entry on an abyss stage-select screen.
-
-    status: 'open' / 'cleared' / 'locked' / 'unknown'
-    stars: 0-3 counted from gold star glyphs, None when unreadable
-        (e.g. the selected tab in apocalyptic shadow renders enlarged)
-    """
-
-    def __init__(self, index, button):
-        self.index: int = index
-        self.button = button
-        self.status: str = 'unknown'
-        self.stars = None
-
-    @property
-    def enterable(self) -> bool:
-        return self.status != 'locked'
-
-    @property
-    def full_starred(self) -> bool:
-        return self.stars is not None and self.stars >= 3
-
-    @property
-    def stars_known_zero(self) -> bool:
-        if self.stars is not None:
-            return self.stars == 0
-        # Stars unreadable: only un-attempted stages count as zero
-        return self.status in ['open', 'unknown']
-
-    def __repr__(self):
-        stars = '?' if self.stars is None else self.stars
-        return f'Stage_{self.index:02d}({self.status}, {stars}*)'
-
-
-def abyss_count_stars(image, area) -> int:
-    """
-    Count gold star glyphs inside the area via connected components.
-    Gold measures ~(241, 189, 110), one star is a 45-155 px cluster
-    depending on the mode, empty star outlines and backgrounds measure 0.
-    """
-    img = crop(image, area, copy=False)
-    height, width = img.shape[:2]
-    px = img.reshape(-1, 3).astype(int)
-    mask = (np.abs(px[:, 0] - 241) < 30) & (np.abs(px[:, 1] - 189) < 30) & (np.abs(px[:, 2] - 110) < 40)
-    mask = mask.reshape(height, width).astype(np.uint8)
-    n, _, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
-    count = 0
-    for i in range(1, n):
-        w, h = stats[i, cv2.CC_STAT_WIDTH], stats[i, cv2.CC_STAT_HEIGHT]
-        # Stars are roughly square blobs, gold decoration lines are thin
-        if stats[i, cv2.CC_STAT_AREA] >= 12 and h >= 5 and w <= h * 3:
-            count += 1
-    return min(count, 3)
-
-
-def abyss_select_target(nodes, mode='first_clear', attempts=None, max_retry=2):
-    """
-    Args:
-        nodes: list of AbyssStageNode
-        mode:
-            'first_clear': lowest stage with zero stars
-            'push': the first (lowest) stage that is not full-starred,
-                hammer it until full or retries exhausted
-            'sweep': all stages that are not full-starred, lowest first,
-                each up to max_retry attempts
-            'highest_only': the highest unlocked stage if not full-starred
-        attempts: {stage_index: attempts_this_run}
-        max_retry: max attempts per stage per run
-
-    Returns:
-        AbyssStageNode: or None if nothing left to do
-    """
-    attempts = attempts or {}
-
-    def tried(n):
-        return attempts.get(n.index, 0)
-
-    enterable = [n for n in nodes if n.enterable]
-    if not enterable:
-        logger.warning('No enterable stage found')
-        return None
-
-    if mode == 'highest_only':
-        top = max(enterable, key=lambda n: n.index)
-        if top.full_starred or top.status == 'cleared' and top.stars is None:
-            return None
-        if tried(top) >= max_retry:
-            return None
-        return top
-    if mode == 'push':
-        nonfull = [n for n in enterable if not n.full_starred]
-        if not nonfull:
-            return None
-        first = min(nonfull, key=lambda n: n.index)
-        if tried(first) >= max_retry:
-            return None
-        return first
-    if mode == 'sweep':
-        candidates = [n for n in enterable if not n.full_starred and tried(n) < max_retry]
-    else:
-        # first_clear
-        candidates = [n for n in enterable if n.stars_known_zero and tried(n) < max_retry]
-    if not candidates:
-        return None
-    return min(candidates, key=lambda n: n.index)
-
-
-def abyss_has_exhausted(nodes, mode='first_clear', attempts=None, max_retry=2) -> bool:
-    """
-    Whether some mode-relevant stage still needs work but ran out of retries.
-    Used to decide between deferring the task and finishing the week.
-    """
-    attempts = attempts or {}
-
-    def tried(n):
-        return attempts.get(n.index, 0)
-
-    enterable = [n for n in nodes if n.enterable]
-    if mode == 'first_clear':
-        relevant = [n for n in enterable if n.stars_known_zero]
-    elif mode == 'highest_only':
-        if not enterable:
-            return False
-        top = max(enterable, key=lambda n: n.index)
-        relevant = [top] if not top.full_starred and top.stars is not None else []
-    else:
-        relevant = [n for n in enterable if not n.full_starred and n.stars is not None]
-    return any(tried(n) >= max_retry for n in relevant)
-
-
-class AbyssCombatLoop(MapControlJoystick, CombatState):
+class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
     # ButtonWrapper that detects the settlement screen and is clicked to leave it.
     # Override in subclasses.
     SETTLE_BUTTON = None
+    # ClickButton opening the star-reward panel from the mode's stage screen,
+    # None when the mode has no claimable panel (apocalyptic shadow grants
+    # clear rewards directly on the settlement screen)
+    REWARD_ENTRY = None
+    # Extra reward tabs to claim besides the default one
+    REWARD_TABS = []
+    # Close button of the reward panel, same position in PF and MoC panels
+    REWARD_PANEL_CLOSE = None
 
     _abyss_prev_frame = None
     _combat_auto_blind_clicked = False
-
-    def abyss_home_check(self) -> bool:
-        """
-        Whether back at the mode's own stage screen. Override in subclasses.
-        """
-        raise NotImplementedError
-
-    def abyss_goto(self):
-        """Goto the mode's stage screen. Override in subclasses."""
-        raise NotImplementedError
-
-    def abyss_escape_stray_dialog(self):
-        """
-        Stray dialogs can cover the stage screen: a material-source popup
-        from a mis-clicked reward icon, or the quick-clear offer that pops
-        after clearing a high stage. Escape back to a known screen.
-        """
-        from tasks.base.page import page_guide, page_main
-        for _ in range(6):
-            self.device.screenshot()
-            if self.abyss_home_check():
-                return
-            if self.ui_page_appear(page_main) or self.ui_page_appear(page_guide):
-                return
-            if self.appear_then_click(QUICK_CLEAR_CONFIRM, interval=2):
-                self.device.sleep((0.8, 1.0))
-                continue
-            if self.match_template_luma(BLANK_CLOSE):
-                logger.info(f'{BLANK_CLOSE} -> click blank')
-                self.device.click(BLANK_CLOSE)
-                self.device.sleep((0.6, 0.8))
-                continue
-            if self.handle_popup_single():
-                continue
-            if self.handle_popup_confirm():
-                continue
-            if self.handle_reward():
-                continue
-            # Click outside a centered modal
-            logger.info('Escape stray dialog, click outside modal')
-            self.device.click(ClickButton((80, 420, 180, 540), name='OUTSIDE_MODAL'))
-            self.device.sleep((0.6, 0.8))
-
-    def abyss_ui_ensure_guide(self):
-        """
-        ui_ensure(page_guide) with one recovery attempt: a stray dialog
-        makes the page unknown, escape it then retry.
-        """
-        from module.exception import GamePageUnknownError
-        from tasks.base.page import page_guide
-        try:
-            self.ui_ensure(page_guide)
-        except GamePageUnknownError:
-            logger.warning('Page unknown, escape stray dialogs and retry')
-            self.abyss_escape_stray_dialog()
-            self.ui_ensure(page_guide)
-
-    def abyss_exit_prep_if_stuck(self):
-        """
-        The stage prep screen is not a registered page, ui_ensure would fail
-        there. If a previous run died on prep, back out first.
-        Call at the start of the mode's goto.
-        """
-        from tasks.base.assets.assets_base_page import BACK, CLOSE
-        from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
-        if not self.appear(PREP_CHECK):
-            return
-        logger.info('Stuck on a stage prep screen, back out first')
-        timeout = Timer(20, count=10).start()
-        while 1:
-            self.device.screenshot()
-            if not self.appear(PREP_CHECK):
-                logger.info('Left the stage prep screen')
-                break
-            if timeout.reached():
-                logger.warning('abyss_exit_prep_if_stuck timeout')
-                break
-            if self.appear_then_click(BACK, interval=2):
-                continue
-            if self.appear_then_click(CLOSE, interval=2):
-                continue
-            if self.handle_popup_confirm():
-                continue
 
     def abyss_scan_stages(self) -> list:
         """Scan stage nodes. Override in subclasses."""
@@ -263,6 +60,53 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
     def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
         """Enter a stage and prepare teams. Override in subclasses."""
         raise NotImplementedError
+
+    def abyss_mid_settle_handler(self) -> bool:
+        """
+        Mode-specific handler that runs before the settlement check each loop,
+        e.g. Apocalyptic Shadow shows a mid-run settlement after node 1 where
+        both "exit" and "go to node 2" are present, "go to node 2" must win.
+
+        Returns:
+            bool: If handled
+        """
+        return False
+
+    def abyss_run(self, config_prefix: str):
+        """
+        Shared task entry: resume an interrupted dungeon, run challenges by
+        the configured strategy, claim rewards, then schedule the next run.
+
+        Args:
+            config_prefix: task name in config, e.g. 'PureFiction'
+        """
+        logger.hr(config_prefix, level=1)
+        team1 = int(getattr(self.config, f'{config_prefix}_Team1Preset'))
+        team2 = int(getattr(self.config, f'{config_prefix}_Team2Preset'))
+        mode = getattr(self.config, f'{config_prefix}_ChallengeMode')
+        max_retry = int(getattr(self.config, f'{config_prefix}_MaxRetry'))
+        on_exhausted = getattr(self.config, f'{config_prefix}_RetryExceeded')
+        logger.attr('ChallengeMode', mode)
+
+        # If a previous run died inside a dungeon, finish it first
+        self.device.screenshot()
+        if self.appear(self.SETTLE_BUTTON) or self.appear(WAVE_FLAG) or self.appear(MAP_CHECK):
+            logger.info('Resuming inside an abyss dungeon')
+            self.abyss_dungeon_loop()
+
+        fought, exhausted = self.abyss_run_challenges(
+            mode=mode, team1_preset=team1, team2_preset=team2, max_retry=max_retry)
+        logger.attr('Battles fought', fought)
+
+        self.abyss_claim_rewards()
+
+        if exhausted and on_exhausted == 'defer':
+            logger.info('Some stage ran out of retries, try again after the daily reset')
+            self.config.task_delay(server_update=True)
+        else:
+            self.config.task_delay(target=get_server_next_monday_update(
+                self.config.Scheduler_ServerUpdate))
+        self.ui_goto_main()
 
     def abyss_run_challenges(self, mode='first_clear', team1_preset=1, team2_preset=2,
                              max_retry=2) -> tuple:
@@ -303,17 +147,6 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
         logger.warning('abyss_run_challenges hit the loop bound')
         return fought, False
 
-    def abyss_mid_settle_handler(self) -> bool:
-        """
-        Mode-specific handler that runs before the settlement check each loop,
-        e.g. Apocalyptic Shadow shows a mid-run settlement after node 1 where
-        both "exit" and "go to node 2" are present, "go to node 2" must win.
-
-        Returns:
-            bool: If handled
-        """
-        return False
-
     def _abyss_battle_progressing(self) -> bool:
         """
         Whether the battle screen has changed since the last call.
@@ -347,11 +180,8 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
         battle_stall = Timer(55, count=10)
         # Auto clicks without any screen change, see below
         stall_clicks = 0
-        # Battle UI buttons at top-right auto-hide when idle, so state
-        # detection alone cannot see them. On battle entry blind-click the
-        # auto button once: abyss battles always start with auto off, the
-        # click both enables auto and wakes the hidden UI. While the UI is
-        # awake handle_combat_state() verifies auto and enables 2x speed.
+        # Battle UI buttons at top-right auto-hide when idle, see module
+        # docstring for the blind-click-then-verify strategy
         was_in_battle = False
         battle_entry = Timer(2, count=2)
         # Ult cutscenes hide the wave flag for a few seconds mid-battle,
@@ -390,7 +220,7 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
                     self.abyss_exit_prep_if_stuck()
                     return
 
-                in_battle = self.appear(PF_WAVE_FLAG)
+                in_battle = self.appear(WAVE_FLAG)
                 in_map = not in_battle and self.appear(MAP_CHECK)
                 if in_battle:
                     battle_left.clear()
@@ -488,14 +318,44 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
 
         self.abyss_settle_exit()
 
-    # ClickButton opening the star-reward panel from the mode's stage screen,
-    # None when the mode has no claimable panel (apocalyptic shadow grants
-    # clear rewards directly on the settlement screen)
-    REWARD_ENTRY = None
-    # Extra reward tabs to claim besides the default one
-    REWARD_TABS = []
-    # Close button of the reward panel, same position in PF and MoC panels
-    REWARD_PANEL_CLOSE = None
+    def abyss_settle_exit(self, skip_first_screenshot=True):
+        """
+        Leave the settlement screen, handle quick-clear popup and reward popups.
+
+        Pages:
+            in: settlement screen, SETTLE_BUTTON
+            out: the mode's stage screen
+        """
+        logger.info('Abyss settle exit')
+        timeout = Timer(60, count=20).start()
+        while 1:
+            if skip_first_screenshot:
+                skip_first_screenshot = False
+            else:
+                self.device.screenshot()
+
+            if self.abyss_home_check():
+                logger.info('Back at abyss stage screen')
+                break
+            if timeout.reached():
+                logger.warning('abyss_settle_exit timeout')
+                break
+            if self.appear_then_click(self.SETTLE_BUTTON, interval=3):
+                continue
+            if self.appear_then_click(QUICK_CLEAR_CONFIRM, interval=2):
+                continue
+            if self.match_template_luma(BLANK_CLOSE, interval=2):
+                logger.info(f'{BLANK_CLOSE} -> click blank')
+                self.device.click(BLANK_CLOSE)
+                continue
+            if self.handle_reward():
+                continue
+            if self.handle_battle_pass_notification():
+                continue
+            if self.handle_popup_confirm():
+                continue
+            if self.handle_popup_single():
+                continue
 
     def abyss_claim_rewards(self):
         """
@@ -584,42 +444,3 @@ class AbyssCombatLoop(MapControlJoystick, CombatState):
             if self.REWARD_PANEL_CLOSE is not None:
                 self.device.click(self.REWARD_PANEL_CLOSE)
                 self.device.sleep((0.8, 1.0))
-
-    def abyss_settle_exit(self, skip_first_screenshot=True):
-        """
-        Leave the settlement screen, handle quick-clear popup and reward popups.
-
-        Pages:
-            in: settlement screen, SETTLE_BUTTON
-            out: the mode's stage screen
-        """
-        logger.info('Abyss settle exit')
-        timeout = Timer(60, count=20).start()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.abyss_home_check():
-                logger.info('Back at abyss stage screen')
-                break
-            if timeout.reached():
-                logger.warning('abyss_settle_exit timeout')
-                break
-            if self.appear_then_click(self.SETTLE_BUTTON, interval=3):
-                continue
-            if self.appear_then_click(QUICK_CLEAR_CONFIRM, interval=2):
-                continue
-            if self.match_template_luma(BLANK_CLOSE, interval=2):
-                logger.info(f'{BLANK_CLOSE} -> click blank')
-                self.device.click(BLANK_CLOSE)
-                continue
-            if self.handle_reward():
-                continue
-            if self.handle_battle_pass_notification():
-                continue
-            if self.handle_popup_confirm():
-                continue
-            if self.handle_popup_single():
-                continue

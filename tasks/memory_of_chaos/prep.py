@@ -1,13 +1,12 @@
 from module.base.button import ClickButton
 from module.base.timer import Timer
 from module.logger import logger
+from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
 from tasks.memory_of_chaos.assets.assets_memory_of_chaos_prep import MOC_ENTER
 from tasks.memory_of_chaos.ui import MemoryOfChaosStageNode, MemoryOfChaosUI
-from tasks.pure_fiction.abyss_prep import AbyssPrep
-from tasks.pure_fiction.assets.assets_pure_fiction_prep import PREP_CHECK
 
 
-class MemoryOfChaosPrep(AbyssPrep, MemoryOfChaosUI):
+class MemoryOfChaosPrep(MemoryOfChaosUI):
     # MoC prep screen: boss preview + 4 member slots per node, no effect slot.
     # The character picker is open by default when the prep screen is entered.
     TEAM_SLOT = {
@@ -52,7 +51,7 @@ class MemoryOfChaosPrep(AbyssPrep, MemoryOfChaosUI):
                 self.device.click(node.button)
                 interval.reset()
 
-    def moc_prep_stage(self, node: MemoryOfChaosStageNode, team1_preset=1, team2_preset=2) -> bool:
+    def abyss_prep_stage(self, node, team1_preset=1, team2_preset=2) -> bool:
         """
         Returns:
             bool: False if the stage could not be entered (probably locked)
