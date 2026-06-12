@@ -63,16 +63,16 @@
       "help": ""
     },
     "PureFiction": {
-      "name": "Task.PureFiction.name",
-      "help": "Task.PureFiction.help"
+      "name": "Pura ficción",
+      "help": "Desafía Pura ficción automáticamente"
     },
     "MemoryOfChaos": {
-      "name": "Task.MemoryOfChaos.name",
-      "help": "Task.MemoryOfChaos.help"
+      "name": "Salón olvidado",
+      "help": "Desafía Memoria del caos automáticamente"
     },
     "ApocalypticShadow": {
-      "name": "Task.ApocalypticShadow.name",
-      "help": "Task.ApocalypticShadow.help"
+      "name": "Sombra apocalíptica",
+      "help": "Desafía Sombra apocalíptica automáticamente"
     },
     "Daemon": {
       "name": "Clic de diálogo",
@@ -1330,37 +1330,37 @@
   },
   "PureFiction": {
     "_info": {
-      "name": "PureFiction._info.name",
-      "help": "PureFiction._info.help"
+      "name": "Ajustes de Pura ficción",
+      "help": "Desafío automático con equipos predefinidos del juego, el primer aumento se elige automáticamente"
     },
     "ChallengeMode": {
-      "name": "PureFiction.ChallengeMode.name",
-      "help": "PureFiction.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "Estrategia de desafío",
+      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
+      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "push": "Empuje (primer nivel sin 3 estrellas)",
+      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
+      "highest_only": "Solo el nivel más alto"
     },
     "MaxRetry": {
-      "name": "PureFiction.MaxRetry.name",
-      "help": "PureFiction.MaxRetry.help"
+      "name": "Intentos máximos por nivel",
+      "help": "Intentos máximos en el mismo nivel por ejecución"
     },
     "RetryExceeded": {
-      "name": "PureFiction.RetryExceeded.name",
-      "help": "PureFiction.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "Al agotar los reintentos",
+      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "defer": "Reintentar mañana",
+      "give_up": "Abandonar esta semana"
     },
     "Team1Preset": {
-      "name": "PureFiction.Team1Preset.name",
-      "help": "PureFiction.Team1Preset.help",
+      "name": "Equipo predefinido del nodo 1",
+      "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "PureFiction.Team2Preset.name",
-      "help": "PureFiction.Team2Preset.help",
+      "name": "Equipo predefinido del nodo 2",
+      "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1368,37 +1368,37 @@
   },
   "MemoryOfChaos": {
     "_info": {
-      "name": "MemoryOfChaos._info.name",
-      "help": "MemoryOfChaos._info.help"
+      "name": "Ajustes del Salón olvidado",
+      "help": "Desafío automático de Memoria del caos con equipos predefinidos del juego"
     },
     "ChallengeMode": {
-      "name": "MemoryOfChaos.ChallengeMode.name",
-      "help": "MemoryOfChaos.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "Estrategia de desafío",
+      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
+      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "push": "Empuje (primer nivel sin 3 estrellas)",
+      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
+      "highest_only": "Solo el nivel más alto"
     },
     "MaxRetry": {
-      "name": "MemoryOfChaos.MaxRetry.name",
-      "help": "MemoryOfChaos.MaxRetry.help"
+      "name": "Intentos máximos por nivel",
+      "help": "Intentos máximos en el mismo nivel por ejecución"
     },
     "RetryExceeded": {
-      "name": "MemoryOfChaos.RetryExceeded.name",
-      "help": "MemoryOfChaos.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "Al agotar los reintentos",
+      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "defer": "Reintentar mañana",
+      "give_up": "Abandonar esta semana"
     },
     "Team1Preset": {
-      "name": "MemoryOfChaos.Team1Preset.name",
-      "help": "MemoryOfChaos.Team1Preset.help",
+      "name": "Equipo predefinido del nodo 1",
+      "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "MemoryOfChaos.Team2Preset.name",
-      "help": "MemoryOfChaos.Team2Preset.help",
+      "name": "Equipo predefinido del nodo 2",
+      "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
       "3": "3"
@@ -1406,37 +1406,37 @@
   },
   "ApocalypticShadow": {
     "_info": {
-      "name": "ApocalypticShadow._info.name",
-      "help": "ApocalypticShadow._info.help"
+      "name": "Ajustes de Sombra apocalíptica",
+      "help": "Desafío automático con equipos predefinidos del juego, el primer axioma se elige automáticamente"
     },
     "ChallengeMode": {
-      "name": "ApocalypticShadow.ChallengeMode.name",
-      "help": "ApocalypticShadow.ChallengeMode.help",
-      "first_clear": "first_clear",
-      "push": "push",
-      "sweep": "sweep",
-      "highest_only": "highest_only"
+      "name": "Estrategia de desafío",
+      "help": "Primera victoria: solo niveles con 0 estrellas; Empuje: insiste en el primer nivel sin 3 estrellas; Barrido: todos los niveles sin 3 estrellas en orden; Solo el más alto: solo el nivel más alto desbloqueado",
+      "first_clear": "Primera victoria (solo niveles con 0 estrellas)",
+      "push": "Empuje (primer nivel sin 3 estrellas)",
+      "sweep": "Barrido (todos los niveles sin 3 estrellas)",
+      "highest_only": "Solo el nivel más alto"
     },
     "MaxRetry": {
-      "name": "ApocalypticShadow.MaxRetry.name",
-      "help": "ApocalypticShadow.MaxRetry.help"
+      "name": "Intentos máximos por nivel",
+      "help": "Intentos máximos en el mismo nivel por ejecución"
     },
     "RetryExceeded": {
-      "name": "ApocalypticShadow.RetryExceeded.name",
-      "help": "ApocalypticShadow.RetryExceeded.help",
-      "defer": "defer",
-      "give_up": "give_up"
+      "name": "Al agotar los reintentos",
+      "help": "Si quedan niveles incompletos sin reintentos: Reintentar mañana = otra ronda tras el reinicio diario; Abandonar esta semana = esperar al próximo lunes",
+      "defer": "Reintentar mañana",
+      "give_up": "Abandonar esta semana"
     },
     "Team1Preset": {
-      "name": "ApocalypticShadow.Team1Preset.name",
-      "help": "ApocalypticShadow.Team1Preset.help",
+      "name": "Equipo predefinido del nodo 1",
+      "help": "Índice en la lista de equipos predefinidos del juego, de arriba abajo",
       "1": "1",
       "2": "2",
       "3": "3"
     },
     "Team2Preset": {
-      "name": "ApocalypticShadow.Team2Preset.name",
-      "help": "ApocalypticShadow.Team2Preset.help",
+      "name": "Equipo predefinido del nodo 2",
+      "help": "Los nodos no pueden compartir personajes; asegúrate de que los dos equipos predefinidos no se solapen",
       "1": "1",
       "2": "2",
       "3": "3"
