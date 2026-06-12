@@ -22,6 +22,11 @@ class PureFictionPrep(PureFictionUI):
         1: ClickButton((1174, 448, 1218, 492), name='BUFF_1_SLOT'),
         2: ClickButton((1174, 543, 1218, 587), name='BUFF_2_SLOT'),
     }
+    # Recommended-attribute icons left of the team rows
+    WEAKNESS_STRIP = {
+        1: (740, 470, 940, 515),
+        2: (740, 565, 940, 610),
+    }
     ENTER_BUTTON = ENTER_STORY
 
     def pf_stage_enter(self, node: PureFictionStageNode, skip_first_screenshot=True):

@@ -332,7 +332,8 @@
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
-      "Team2Preset": 2
+      "Team2Preset": 2,
+      "CandidateTeams": null
     }
   },
   "MemoryOfChaos": {
@@ -347,7 +348,8 @@
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
-      "Team2Preset": 2
+      "Team2Preset": 2,
+      "CandidateTeams": null
     }
   },
   "ApocalypticShadow": {
@@ -362,7 +364,8 @@
       "MaxRetry": 2,
       "RetryExceeded": "defer",
       "Team1Preset": 1,
-      "Team2Preset": 2
+      "Team2Preset": 2,
+      "CandidateTeams": null
     }
   },
   "Daemon": {

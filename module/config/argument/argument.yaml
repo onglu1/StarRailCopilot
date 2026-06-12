@@ -257,6 +257,8 @@ PureFiction:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
+  CandidateTeams:
+    value: ''
 
 MemoryOfChaos:
   ChallengeMode:
@@ -273,6 +275,8 @@ MemoryOfChaos:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
+  CandidateTeams:
+    value: ''
 
 ApocalypticShadow:
   ChallengeMode:
@@ -289,6 +293,8 @@ ApocalypticShadow:
   Team2Preset:
     value: 2
     option: [ 1, 2, 3 ]
+  CandidateTeams:
+    value: ''
 
 Weekly:
   Name:

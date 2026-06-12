@@ -30,14 +30,14 @@ from module.ocr.ocr import Ocr
 from tasks.abyss.assets.assets_abyss_battle import QUICK_CLEAR_CONFIRM, WAVE_FLAG
 from tasks.abyss.assets.assets_abyss_map import BLANK_CLOSE, MAP_CHECK
 from tasks.abyss.assets.assets_abyss_prep import PREP_CHECK
-from tasks.abyss.prep import AbyssPrep
+from tasks.abyss.composer import AbyssComposer
 from tasks.abyss.stage import abyss_has_exhausted, abyss_select_target
 from tasks.combat.assets.assets_combat_state import COMBAT_AUTO
 from tasks.combat.state import CombatState
 from tasks.map.control.joystick import JoystickContact, MapControlJoystick
 
 
-class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
+class AbyssCombatLoop(AbyssComposer, MapControlJoystick, CombatState):
     # ButtonWrapper that detects the settlement screen and is clicked to leave it.
     # Override in subclasses.
     SETTLE_BUTTON = None
@@ -87,6 +87,7 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
         max_retry = int(getattr(self.config, f'{config_prefix}_MaxRetry'))
         on_exhausted = getattr(self.config, f'{config_prefix}_RetryExceeded')
         logger.attr('ChallengeMode', mode)
+        self.composer_init(getattr(self.config, f'{config_prefix}_CandidateTeams', ''))
 
         # If a previous run died inside a dungeon, finish it first
         self.device.screenshot()
@@ -137,6 +138,8 @@ class AbyssCombatLoop(AbyssPrep, MapControlJoystick, CombatState):
                 logger.info(f'Abyss challenges finished, fought={fought}, exhausted={exhausted}')
                 return fought, exhausted
             logger.hr(f'Challenge {target} (attempt {attempts.get(target.index, 0) + 1}/{max_retry})', level=1)
+            # Composer walks down its pair ranking as attempts accumulate
+            self._composer_stage_attempt = attempts.get(target.index, 0)
             if not self.abyss_prep_stage(target, team1_preset=team1_preset, team2_preset=team2_preset):
                 # Locked or unsupported, never retry this run
                 attempts[target.index] = 999
