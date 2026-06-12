@@ -62,6 +62,14 @@
       "name": "Simulated Universe",
       "help": ""
     },
+    "Daemon": {
+      "name": "Dialogue Clicker",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "Character Planner",
+      "help": ""
+    },
     "PureFiction": {
       "name": "Pure Fiction",
       "help": "Auto challenge Pure Fiction"
@@ -73,14 +81,6 @@
     "ApocalypticShadow": {
       "name": "Apocalyptic Shadow",
       "help": "Auto challenge Apocalyptic Shadow"
-    },
-    "Daemon": {
-      "name": "Dialogue Clicker",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "Character Planner",
-      "help": ""
     }
   },
   "Scheduler": {

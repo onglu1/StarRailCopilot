@@ -62,6 +62,14 @@
       "name": "Universo Simulado",
       "help": ""
     },
+    "Daemon": {
+      "name": "Clic de diálogo",
+      "help": ""
+    },
+    "PlannerScan": {
+      "name": "Planificador de personajes",
+      "help": ""
+    },
     "PureFiction": {
       "name": "Pura ficción",
       "help": "Desafía Pura ficción automáticamente"
@@ -73,14 +81,6 @@
     "ApocalypticShadow": {
       "name": "Sombra apocalíptica",
       "help": "Desafía Sombra apocalíptica automáticamente"
-    },
-    "Daemon": {
-      "name": "Clic de diálogo",
-      "help": ""
-    },
-    "PlannerScan": {
-      "name": "Planificador de personajes",
-      "help": ""
     }
   },
   "Scheduler": {
