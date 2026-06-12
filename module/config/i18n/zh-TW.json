@@ -66,6 +66,14 @@
       "name": "Task.PureFiction.name",
       "help": "Task.PureFiction.help"
     },
+    "MemoryOfChaos": {
+      "name": "Task.MemoryOfChaos.name",
+      "help": "Task.MemoryOfChaos.help"
+    },
+    "ApocalypticShadow": {
+      "name": "Task.ApocalypticShadow.name",
+      "help": "Task.ApocalypticShadow.help"
+    },
     "Daemon": {
       "name": "劇情連點器",
       "help": ""
@@ -1356,6 +1364,12 @@
       "name": "PureFiction._info.name",
       "help": "PureFiction._info.help"
     },
+    "ChallengeMode": {
+      "name": "PureFiction.ChallengeMode.name",
+      "help": "PureFiction.ChallengeMode.help",
+      "lowest_first": "lowest_first",
+      "highest_only": "highest_only"
+    },
     "Team1Preset": {
       "name": "PureFiction.Team1Preset.name",
       "help": "PureFiction.Team1Preset.help",
@@ -1366,6 +1380,58 @@
     "Team2Preset": {
       "name": "PureFiction.Team2Preset.name",
       "help": "PureFiction.Team2Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    }
+  },
+  "MemoryOfChaos": {
+    "_info": {
+      "name": "MemoryOfChaos._info.name",
+      "help": "MemoryOfChaos._info.help"
+    },
+    "ChallengeMode": {
+      "name": "MemoryOfChaos.ChallengeMode.name",
+      "help": "MemoryOfChaos.ChallengeMode.help",
+      "lowest_first": "lowest_first",
+      "highest_only": "highest_only"
+    },
+    "Team1Preset": {
+      "name": "MemoryOfChaos.Team1Preset.name",
+      "help": "MemoryOfChaos.Team1Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "MemoryOfChaos.Team2Preset.name",
+      "help": "MemoryOfChaos.Team2Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    }
+  },
+  "ApocalypticShadow": {
+    "_info": {
+      "name": "ApocalypticShadow._info.name",
+      "help": "ApocalypticShadow._info.help"
+    },
+    "ChallengeMode": {
+      "name": "ApocalypticShadow.ChallengeMode.name",
+      "help": "ApocalypticShadow.ChallengeMode.help",
+      "lowest_first": "lowest_first",
+      "highest_only": "highest_only"
+    },
+    "Team1Preset": {
+      "name": "ApocalypticShadow.Team1Preset.name",
+      "help": "ApocalypticShadow.Team1Preset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3"
+    },
+    "Team2Preset": {
+      "name": "ApocalypticShadow.Team2Preset.name",
+      "help": "ApocalypticShadow.Team2Preset.help",
       "1": "1",
       "2": "2",
       "3": "3"

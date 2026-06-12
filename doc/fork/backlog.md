@@ -8,9 +8,9 @@
 
 忘却之庭/虚构叙事/末日幻影，注册进 GUI 和调度器。
 
-**✅ 虚构叙事已完成（2026-06-12）**：任务名 `PureFiction`（Weekly 组），代码在 `tasks/pure_fiction/`，设计与实测记录见 [2026-06-12-pure-fiction-design.md](2026-06-12-pure-fiction-design.md)。流程：自动导航 → 选最高可挑战关 → 套用游戏内预设编队 1/2 + 每节点装第一个增益 → 进关走图触敌 → 战斗停滞看门狗保证 AUTO 开启 → 两半场 → 结算退出 → 循环到全通关 → 延到下周一 04:00。已实战通关本季 12/12 星。用户侧启用：GUI → Weekly → 虚构叙事 → Enable。
+**⬜ 后续：末日幻影星启模式（难度4，3节点3编队）**——当前检测到后优雅跳过；完整支持需：第3套编队配置项、3行准备屏坐标适配（布局与常规不同，数字块标记节点）、`前往节点三` 中场资产。另：MoC 选关 v1 只扫当前可见水晶（默认停在进度处，足够覆盖正常使用）；MoC 1-2 星关卡不会重打（金星检测只分有星/无星）。
 
-剩余：忘却之庭（混沌回忆）、末日幻影。
+**✅ 三模式全部完成（2026-06-12）**：`PureFiction` / `MemoryOfChaos` / `ApocalypticShadow` 三个任务（Weekly 组），代码在 `tasks/pure_fiction|memory_of_chaos|apocalyptic_shadow/`，共享基类在 `tasks/pure_fiction/abyss*.py`。设计与实测记录见 [2026-06-12-pure-fiction-design.md](2026-06-12-pure-fiction-design.md)。流程：自动导航 → 按挑战策略选关（默认从最低难度逐层，highest_only 可选）→ 套用游戏内预设编队 1/2 + 每节点装第一个增益/公理 → 走图触敌 → 停滞看门狗保 AUTO → 两半场（AS 含中场结算）→ 结算退出 → 循环 → 延到下周一 04:00。用户侧启用：GUI → 周常 → 各任务 → Enable。
 
 - ~~上游已有底子：`tasks/forgotten_hall/`~~ 实测上游该目录代码已烂（tab switch 缺 Treasures_Lightward 状态，玩法是老版走图）。PF 实现未复用它，仅复用了其 `TELEPORT` 资产（0.999 匹配）。MoC/AS 建议直接仿 `tasks/pure_fiction/` 的骨架（选关 OCR 多趟并集、状态机循环、停滞看门狗都可搬）。
 - 注意：**PF 战斗界面没有标准位置的暂停/AUTO/2x 按钮**（上游 `is_combat_executing` 失效），MoC/AS 是否同样需要实测确认。

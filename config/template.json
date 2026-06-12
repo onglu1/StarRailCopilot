@@ -328,6 +328,33 @@
       "ServerUpdate": "04:00"
     },
     "PureFiction": {
+      "ChallengeMode": "lowest_first",
+      "Team1Preset": 1,
+      "Team2Preset": 2
+    }
+  },
+  "MemoryOfChaos": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "MemoryOfChaos",
+      "ServerUpdate": "04:00"
+    },
+    "MemoryOfChaos": {
+      "ChallengeMode": "lowest_first",
+      "Team1Preset": 1,
+      "Team2Preset": 2
+    }
+  },
+  "ApocalypticShadow": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "ApocalypticShadow",
+      "ServerUpdate": "04:00"
+    },
+    "ApocalypticShadow": {
+      "ChallengeMode": "lowest_first",
       "Team1Preset": 1,
       "Team2Preset": 2
     }
