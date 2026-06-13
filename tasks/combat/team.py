@@ -1,6 +1,10 @@
 import re
 
+import cv2
+import numpy as np
+
 from module.base.timer import Timer
+from module.base.utils import crop
 from module.logger import logger
 from tasks.base.ui import UI
 from tasks.combat.assets.assets_combat_team import *
@@ -16,6 +20,27 @@ def button_to_index(button: ButtonWrapper) -> int:
 
 
 class CombatTeam(UI):
+    def _match_team_gold(self, button, similarity=0.92):
+        """
+        Match team tab using gold channel (R-B) instead of luma.
+        Luma fails when character portraits alter background brightness;
+        gold channel is immune because gold text has R>>B while backgrounds have R≈B.
+        """
+        image = self.device.image
+        for assets in button.buttons:
+            search_image = crop(image, assets.search, copy=False)
+            r, _, b = cv2.split(search_image)
+            search_gold = cv2.subtract(r, b)
+            r, _, b = cv2.split(assets.image)
+            template_gold = cv2.subtract(r, b)
+            res = cv2.matchTemplate(template_gold, search_gold, cv2.TM_CCOEFF_NORMED)
+            _, sim, _, point = cv2.minMaxLoc(res)
+            assets._button_offset = np.array(point) + assets.search[:2] - assets.area[:2]
+            if sim > similarity:
+                button._matched_button = assets
+                return True
+        return False
+
     def _get_team(self) -> int:
         """
         Returns:
@@ -28,7 +53,7 @@ class CombatTeam(UI):
             TEAM_11_CHECK, TEAM_12_CHECK,
         ]:
             button.load_search(TEAM_SEARCH.area)
-            if self.match_template_luma(button, similarity=0.92):
+            if self._match_team_gold(button):
                 if self.image_color_count(button.button, color=(255, 234, 191), threshold=180, count=50):
                     team = button_to_index(button)
                     break
