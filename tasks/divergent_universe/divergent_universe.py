@@ -387,6 +387,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 ('战斗', '精英', '首领', '商店', '事件', '奖励', '异常', '空白', '休整', '财富'),
                 (0.03, 0.24, 0.60, 0.51)), name='站点卡选择')
             self.confirm_selection(kind)
+            self.device.click_record_clear()
             self.active['selections'] += 1
             self.progress.save()
             return
@@ -417,6 +418,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                            tag='DU_CHOICE_' + kind)
             self.confirm_selection(kind, choice=choice)
         self.active['selections'] += 1
+        self.device.click_record_clear()
         self.progress.save()
 
     def confirm_selection(self, kind, choice=None):
@@ -505,6 +507,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self._node_done = False
         self.active['node_done'] = False
         self.active.pop('navigation_reentry', None)
+        self.active.pop('navigation_reentry_completed', None)
         self.progress.save('next_station')
 
     def move(self, direction, seconds=0.5, run=True):
@@ -685,6 +688,20 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if (not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
                     and self.handle_combat_interact(interval=1)):
                 continue
+            if not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造'):
+                targets = op.read_region((0.30, 0.12, 0.80, 0.46), snapshot=False)
+                unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)]
+                unknown += op.template_matches(str(op.templates / 'event_unknown.png'),
+                                                (0.30, 0.10, 0.80, 0.46), confidence=0.80)
+                named = [box for box in targets if len(re.findall(r'[\u4e00-\u9fff]', box.source)) >= 2
+                         and box.source not in ('造物调试台', '随意门') and box.score >= 0.8]
+                if unknown or named:
+                    target = min(unknown or named, key=lambda box: box.left)
+                    direction = RogueExit.screen2direction(target.center)
+                    self.move(direction, 0.5)
+                    searches = 0
+                    missing.reset()
+                    continue
             door = self.find_door()
             if door:
                 searches = 0
@@ -729,7 +746,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     continue
                 searches += 1
                 if searches >= 9:
-                    if not self.active.get('navigation_reentry'):
+                    if not self.active.get('navigation_reentry_completed'):
                         self.reenter_station()
                         return
                     break
@@ -746,6 +763,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
             op.snapshot()
             if left and (self.lobby_visible() or (self.is_in_main() and not self.world_visible())
                          or op.text('差分宇宙', (0.58, 0.45, 0.96, 0.68))):
+                self.active['navigation_reentry_completed'] = True
+                self.progress.save('reentry_confirmed')
                 self._periodic_selected = False
                 self._entry_prepared = False
                 self.device.click_record_clear()
@@ -757,10 +776,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self.active['navigation_reentry'] = True
                     self.progress.save('reentering')
                 continue
-            if left:
-                op.click_text('确认', (0.4, 0.4, 0.9, 0.9), exact=True)
-            elif self.world_visible():
+            if self.world_visible():
                 op.back()
+            elif left:
+                op.click_text('确认', (0.4, 0.4, 0.9, 0.9), exact=True)
         raise RuntimeError('差分宇宙暂离后未能返回入口，当前进度已保留')
 
     def handle_misc(self):
@@ -800,6 +819,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self._node_done = False
             self.active['node_done'] = False
             self.active.pop('navigation_reentry', None)
+            self.active.pop('navigation_reentry_completed', None)
         self.active['node'] = node
         for station in ('战斗', '精英', '首领', '转化', '商店', '事件', '铸造', '奖励', '休整', '异常', '财富'):
             if station in text:

@@ -117,6 +117,6 @@ class DivergentOperator(MobileOperator):
         button = self.template('back', (0.9, 0, 1, 0.15))
         button = button or self.template('divergent_universe_quit', (0, 0, 0.13, 0.18))
         if button:
-            return self.click_box(button)
+            return self.click_box(button, interval=5)
         from tasks.base.assets.assets_base_page import BACK
         return self.popups.appear_then_click(BACK, interval=1)
