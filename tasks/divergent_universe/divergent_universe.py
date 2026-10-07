@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-entry-16')
+        logger.attr('DU control revision', '2026-10-08-entry-17')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -583,7 +583,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def interaction_visible(self):
         from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
-        return self.appear(DU_INTERACT) or self.appear(DUNGEON_COMBAT_INTERACT)
+        if self.appear(DU_INTERACT):
+            return True
+        # Shops contain NPC conversations (for example Ruan Mei). Their bubble
+        # must not cancel every movement gesture toward the actual exit.
+        return bool(self.appear(DUNGEON_COMBAT_INTERACT) and self.op.text(
+            ('随意门', '前往下一区域', '战利品', '事件', '奖励'), (0.58, 0.48, 0.92, 0.70)))
 
     def handle_combat_interact(self, interval=2):
         from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
