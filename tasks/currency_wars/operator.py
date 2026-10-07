@@ -336,7 +336,7 @@ class MobileOperator:
         matches = self.template_matches(img, region, confidence=kwargs.get('confidence', 0.83))
         return matches[0] if matches else None
 
-    def template_matches(self, path, region=(0, 0, 1, 1), confidence=0.83):
+    def template_matches(self, path, region=(0, 0, 1, 1), confidence=0.83, scales=(2 / 3, 0.75, 0.85, 1.0)):
         if path not in self._templates:
             template = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
             self._templates[path] = template
@@ -346,7 +346,7 @@ class MobileOperator:
         x1, y1, x2, y2 = self.region_pixels(region)
         frame = cv2.cvtColor(self.image[y1:y2, x1:x2], cv2.COLOR_RGB2GRAY)
         matches = []
-        for scale in (2 / 3, 0.75, 0.85, 1.0):
+        for scale in scales:
             sample = cv2.resize(template, None, fx=scale, fy=scale)
             h, w = sample.shape
             if h >= frame.shape[0] or w >= frame.shape[1]:

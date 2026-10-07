@@ -1,4 +1,4 @@
-> **本 fork：货币战争 + 自动深渊。** 货币战争入口在「每周」，虚构叙事、混沌回忆和末日幻影入口在「工具」。Windows 可用根目录 `start.bat` 启动 WebUI。详见 [整合版使用说明](doc/currency-wars-and-abyss.md)。
+> **本 fork：货币战争、差分宇宙与自动深渊。** 货币战争入口在「每周」，差分宇宙、虚构叙事、混沌回忆和末日幻影入口在「工具」。Windows 可用根目录 `start.bat` 启动 WebUI。详见 [整合版使用说明](doc/currency-wars-and-abyss.md) 和 [差分宇宙设置](doc/divergent-universe.md)。
 
 **| [English](README_en.md) | 简体中文 | [Español](README_es.md) | [日本語](README_ja.md) |**
 

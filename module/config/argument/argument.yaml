@@ -564,3 +564,26 @@ CurrencyWars:
   MaxMinutes: 120
   RecoveryRetries: 3
   SaveEvidence: false
+
+DivergentUniverse:
+  Mode:
+    value: first_station
+    option: [first_station, full]
+  Runs: 1
+  TeamPreset:
+    value: 1
+    option: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  PreferUncollected: true
+  UseTechnique: false
+  StopAtWeeklyLimit: false
+  ClaimRewards: true
+  StationPriority:
+    value: '战斗 > 精英 > 商店'
+    valuetype: str
+  ChoicePriority:
+    value: ''
+    valuetype: str
+    type: textarea
+  MaxMinutes: 120
+  RecoveryRetries: 3
+  SaveEvidence: false

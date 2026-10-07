@@ -394,5 +394,21 @@
       "Team1Preset": 1,
       "Team2Preset": 2
     }
+  },
+  "DivergentUniverse": {
+    "DivergentUniverse": {
+      "Mode": "first_station",
+      "Runs": 1,
+      "TeamPreset": 1,
+      "PreferUncollected": true,
+      "UseTechnique": false,
+      "StopAtWeeklyLimit": false,
+      "ClaimRewards": true,
+      "StationPriority": "战斗 > 精英 > 商店",
+      "ChoicePriority": null,
+      "MaxMinutes": 120,
+      "RecoveryRetries": 3,
+      "SaveEvidence": false
+    }
   }
 }

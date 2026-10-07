@@ -85,6 +85,10 @@
     "ApocalypticShadow": {
       "name": "Apocalyptic Shadow",
       "help": "Auto challenge Apocalyptic Shadow"
+    },
+    "DivergentUniverse": {
+      "name": "Divergent Universe",
+      "help": "Run with the current in-game team and difficulty. CN Android UI only."
     }
   },
   "Scheduler": {
@@ -2106,6 +2110,74 @@
     "SaveEvidence": {
       "name": "SaveEvidence",
       "help": ""
+    }
+  },
+  "DivergentUniverse": {
+    "_info": {
+      "name": "Divergent Universe",
+      "help": ""
+    },
+    "Mode": {
+      "name": "Mode",
+      "help": "",
+      "first_station": "First-station farming",
+      "full": "Full exploration"
+    },
+    "Runs": {
+      "name": "Completed runs",
+      "help": "0 runs continuously. Resuming preserves the current run and mode."
+    },
+    "TeamPreset": {
+      "name": "Team preset to download",
+      "help": "Use preset 1–12 when the download slots are empty. Existing downloaded characters are retained.",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "PreferUncollected": {
+      "name": "Prefer uncollected choices",
+      "help": "Prioritize the game’s unrecorded collection badge before keywords and recommendations."
+    },
+    "UseTechnique": {
+      "name": "Use technique before combat",
+      "help": "Use the active character’s technique before approaching enemies."
+    },
+    "StopAtWeeklyLimit": {
+      "name": "Stop at weekly point limit",
+      "help": "Stop before a new run when weekly points are full. Leave disabled to farm fitting levels."
+    },
+    "ClaimRewards": {
+      "name": "Claim point rewards when finished",
+      "help": "Claim available weekly point rewards after the requested runs finish."
+    },
+    "StationPriority": {
+      "name": "Station priority",
+      "help": "Separate station names with >. Used during full exploration."
+    },
+    "ChoicePriority": {
+      "name": "Choice keyword priority",
+      "help": "Separate keywords with >. Uncollected entries take priority when enabled."
+    },
+    "MaxMinutes": {
+      "name": "Minutes per run",
+      "help": "Timeout for one run before automatic recovery is attempted."
+    },
+    "RecoveryRetries": {
+      "name": "Automatic recovery attempts",
+      "help": "Restart the game and resume after an error. 0 stops immediately."
+    },
+    "SaveEvidence": {
+      "name": "Save diagnostic screenshots",
+      "help": "Save local choice, navigation and settlement screenshots."
     }
   },
   "Gui": {

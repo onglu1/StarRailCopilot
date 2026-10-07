@@ -42,12 +42,20 @@ class MapControl(Combat, AimDetectorMixin):
         #     exit(1)
 
         logger.info(f'Rotation set: {target}')
-        diff = self.minimap.rotation_diff(target) * self.minimap.ROTATION_SWIPE_MULTIPLY
+        self.rotation_swipe(self.minimap.rotation_diff(target))
+        return True
+
+    def rotation_swipe(self, rotation_diff):
+        """Apply SRC's calibrated camera gesture.
+
+        ``rotation_diff`` uses Minimap.rotation_diff's sign: current minus
+        target. Keep the same distance limit, safe area and touch backend for
+        callers whose screen provides a relative target but no minimap.
+        """
+        diff = rotation_diff * self.minimap.ROTATION_SWIPE_MULTIPLY
         diff = min(diff, self.minimap.ROTATION_SWIPE_MAX_DISTANCE)
         diff = max(diff, -self.minimap.ROTATION_SWIPE_MAX_DISTANCE)
-
         self.device.swipe_vector((-diff, 0), box=ROTATION_SWIPE_AREA.area, duration=(0.2, 0.5))
-        return True
 
     def rotation_set(self, target, threshold=15, skip_first_screenshot=False):
         """

@@ -294,3 +294,17 @@ class GeneratedConfig:
     CurrencyWars_MaxMinutes = 120
     CurrencyWars_RecoveryRetries = 3
     CurrencyWars_SaveEvidence = False
+
+    # Group `DivergentUniverse`
+    DivergentUniverse_Mode = 'first_station'  # first_station, full
+    DivergentUniverse_Runs = 1
+    DivergentUniverse_TeamPreset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    DivergentUniverse_PreferUncollected = True
+    DivergentUniverse_UseTechnique = False
+    DivergentUniverse_StopAtWeeklyLimit = False
+    DivergentUniverse_ClaimRewards = True
+    DivergentUniverse_StationPriority = '战斗 > 精英 > 商店'
+    DivergentUniverse_ChoicePriority = None
+    DivergentUniverse_MaxMinutes = 120
+    DivergentUniverse_RecoveryRetries = 3
+    DivergentUniverse_SaveEvidence = False

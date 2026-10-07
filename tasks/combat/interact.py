@@ -8,12 +8,14 @@ from tasks.rogue.assets.assets_rogue_weekly import REWARD_ENTER, REWARD_MESSAGE
 
 
 class CombatInteract(UI):
+    INTERACT_BUTTON = DUNGEON_COMBAT_INTERACT
+
     def handle_combat_interact(self, interval=2):
         """
         Returns:
             bool: If clicked.
         """
-        if self.appear_then_click(DUNGEON_COMBAT_INTERACT, interval=interval):
+        if self.appear_then_click(self.INTERACT_BUTTON, interval=interval):
             return True
 
         return False

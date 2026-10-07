@@ -2860,5 +2860,77 @@
         ]
       }
     }
+  },
+  "DivergentUniverse": {
+    "DivergentUniverse": {
+      "Mode": {
+        "type": "select",
+        "value": "first_station",
+        "option": [
+          "first_station",
+          "full"
+        ]
+      },
+      "Runs": {
+        "type": "input",
+        "value": 1
+      },
+      "TeamPreset": {
+        "type": "select",
+        "value": 1,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "PreferUncollected": {
+        "type": "checkbox",
+        "value": true
+      },
+      "UseTechnique": {
+        "type": "checkbox",
+        "value": false
+      },
+      "StopAtWeeklyLimit": {
+        "type": "checkbox",
+        "value": false
+      },
+      "ClaimRewards": {
+        "type": "checkbox",
+        "value": true
+      },
+      "StationPriority": {
+        "type": "input",
+        "value": "战斗 > 精英 > 商店",
+        "valuetype": "str"
+      },
+      "ChoicePriority": {
+        "type": "textarea",
+        "value": "",
+        "valuetype": "str"
+      },
+      "MaxMinutes": {
+        "type": "input",
+        "value": 120
+      },
+      "RecoveryRetries": {
+        "type": "input",
+        "value": 3
+      },
+      "SaveEvidence": {
+        "type": "checkbox",
+        "value": false
+      }
+    }
   }
 }

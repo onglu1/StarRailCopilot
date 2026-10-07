@@ -99,10 +99,11 @@ class RogueExit(CombatInteract):
                 continue
 
     @staticmethod
-    def screen2direction(point):
+    def screen2direction(point, at_floor=False):
         """
         Args:
             point: Coordinate on screenshot
+            at_floor: Point is the object's floor contact instead of its label.
 
         Returns:
             float: Direction to move, -180~180
@@ -112,18 +113,25 @@ class RogueExit(CombatInteract):
         distant_point = np.array((1509.46, 247.34))
         name_y = 77.60
         foot_y = 621.82
-        if point[1] < 80:
+        if not at_floor and point[1] < 80:
             logger.warning(f'screen2direction: Point {point} to high')
             point = (point[0], 80)
 
-        door_projection_bottom = (
-            Points([point]).link(vanish_point).get_x(name_y)[0],
-            foot_y,
-        )
-        door_bottom = (
-            point[0],
-            Points([door_projection_bottom]).link(vanish_point).get_y(point[0])[0],
-        )
+        if at_floor:
+            door_bottom = point
+            door_projection_bottom = (
+                Points([point]).link(vanish_point).get_x(foot_y)[0],
+                foot_y,
+            )
+        else:
+            door_projection_bottom = (
+                Points([point]).link(vanish_point).get_x(name_y)[0],
+                foot_y,
+            )
+            door_bottom = (
+                point[0],
+                Points([door_projection_bottom]).link(vanish_point).get_y(point[0])[0],
+            )
         door_distant = (
             Points([door_bottom]).link(distant_point).get_x(foot_y)[0],
             foot_y,

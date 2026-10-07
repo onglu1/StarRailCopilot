@@ -85,6 +85,10 @@
     "ApocalypticShadow": {
       "name": "末日幻影",
       "help": "自動挑戰末日幻影"
+    },
+    "DivergentUniverse": {
+      "name": "Task.DivergentUniverse.name",
+      "help": "Task.DivergentUniverse.help"
     }
   },
   "Scheduler": {
@@ -2106,6 +2110,74 @@
     "SaveEvidence": {
       "name": "SaveEvidence",
       "help": ""
+    }
+  },
+  "DivergentUniverse": {
+    "_info": {
+      "name": "DivergentUniverse._info.name",
+      "help": "DivergentUniverse._info.help"
+    },
+    "Mode": {
+      "name": "DivergentUniverse.Mode.name",
+      "help": "DivergentUniverse.Mode.help",
+      "first_station": "first_station",
+      "full": "full"
+    },
+    "Runs": {
+      "name": "DivergentUniverse.Runs.name",
+      "help": "DivergentUniverse.Runs.help"
+    },
+    "TeamPreset": {
+      "name": "DivergentUniverse.TeamPreset.name",
+      "help": "DivergentUniverse.TeamPreset.help",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "PreferUncollected": {
+      "name": "DivergentUniverse.PreferUncollected.name",
+      "help": "DivergentUniverse.PreferUncollected.help"
+    },
+    "UseTechnique": {
+      "name": "DivergentUniverse.UseTechnique.name",
+      "help": "DivergentUniverse.UseTechnique.help"
+    },
+    "StopAtWeeklyLimit": {
+      "name": "DivergentUniverse.StopAtWeeklyLimit.name",
+      "help": "DivergentUniverse.StopAtWeeklyLimit.help"
+    },
+    "ClaimRewards": {
+      "name": "DivergentUniverse.ClaimRewards.name",
+      "help": "DivergentUniverse.ClaimRewards.help"
+    },
+    "StationPriority": {
+      "name": "DivergentUniverse.StationPriority.name",
+      "help": "DivergentUniverse.StationPriority.help"
+    },
+    "ChoicePriority": {
+      "name": "DivergentUniverse.ChoicePriority.name",
+      "help": "DivergentUniverse.ChoicePriority.help"
+    },
+    "MaxMinutes": {
+      "name": "DivergentUniverse.MaxMinutes.name",
+      "help": "DivergentUniverse.MaxMinutes.help"
+    },
+    "RecoveryRetries": {
+      "name": "DivergentUniverse.RecoveryRetries.name",
+      "help": "DivergentUniverse.RecoveryRetries.help"
+    },
+    "SaveEvidence": {
+      "name": "DivergentUniverse.SaveEvidence.name",
+      "help": "DivergentUniverse.SaveEvidence.help"
     }
   },
   "Gui": {

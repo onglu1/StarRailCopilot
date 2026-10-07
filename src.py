@@ -85,6 +85,10 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.currency_wars.currency_wars import CurrencyWars
         CurrencyWars(config=self.config, device=self.device).run()
 
+    def divergent_universe(self):
+        from tasks.divergent_universe.divergent_universe import DivergentUniverse
+        DivergentUniverse(config=self.config, device=self.device, task="DivergentUniverse").run()
+
     def benchmark(self):
         from module.daemon.benchmark import run_benchmark
         run_benchmark(config=self.config)

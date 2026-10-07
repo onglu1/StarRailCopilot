@@ -963,6 +963,8 @@ class ConfigUpdater:
             str: Arg path that should be hidden
         """
         currency = deep_get(data, 'CurrencyWars.CurrencyWars', {})
+        if deep_get(data, 'DivergentUniverse.DivergentUniverse.Mode', 'first_station') == 'first_station':
+            yield 'DivergentUniverse.DivergentUniverse.StationPriority'
         source = currency.get('Strategy', 'random')
         for argument, required in (('ShareCode', 'code'), ('RandomCodes', 'code_pool'), ('SequenceCodes', 'sequence'), ('StrategyFile', 'file')):
             if source != required:
