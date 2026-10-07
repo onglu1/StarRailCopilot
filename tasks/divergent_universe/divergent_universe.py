@@ -131,7 +131,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-events-4')
+        logger.attr('DU control revision', '2026-10-08-events-7')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -267,6 +267,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if self.is_in_login_confirm() or op.text(
                     ('正在检查数据', '正在载入', '正在加载'), (0, 0.70, 1, 1)):
                 self.login_from_current()
+                timeout.reset()
                 unknown.reset()
                 continue
             if self.return_to_main():
@@ -277,6 +278,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # to the common main page without abandoning a saved DU run.
                 op.save('entry_unknown')
                 self.login_from_current(restart=True)
+                timeout.reset()
                 unknown.reset()
         raise RuntimeError('未能从当前页面回到差分宇宙入口')
 
@@ -370,6 +372,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self.navigate_station()
                 idle_since = time.monotonic()
                 continue
+            # Once the native event page is identified, avoid repeatedly OCRing
+            # settlement dialogs and launch controls before every dialogue tap.
+            if not self.selection_kind() and '事件' in self.header_text() and self.handle_misc():
+                idle_since = time.monotonic()
+                continue
             result = self.handle_settlement()
             if isinstance(result, str):
                 return result
@@ -428,10 +435,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
         else:
             priorities = tuple(p.strip() for p in (self.config.DivergentUniverse_ChoicePriority or '').split('>') if p.strip())
             previous = None
+            page_changed = object()
             def choices_ready():
                 nonlocal previous
                 if self.selection_kind() != kind:
-                    return False
+                    return page_changed
                 choices = read_choices(op, kind)
                 signature = tuple((normalize(c.title), c.uncollected, c.recommended, c.rarity) for c in choices)
                 ready = bool(choices and any(c.title or c.uncollected for c in choices) and signature == previous)
@@ -440,6 +448,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
             # Require consistent card contents across frames, not an assumed
             # animation duration. New badges can appear after the card title.
             choices = op.wait_until(choices_ready, name=kind + '卡片内容')
+            if choices is page_changed:
+                return  # The reward animation has already advanced to another page.
             op.save('choice_' + kind)
             choice = choose(choices, self.config.DivergentUniverse_PreferUncollected, priorities, discard=kind == 'discard')
             logger.info(f'DU choose {kind}: uncollected={choice.uncollected}, recommended={choice.recommended}, rarity={choice.rarity}, {choice.title}')
@@ -631,6 +641,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.progress.save('combat_finished')
 
     def find_door(self):
+        # The sleeping portal is locked until this room's events are finished.
+        # Its pink frame also matches an open portal, so reject the visible Z.
+        if self.op.template_matches(str(self.op.templates / 'door_sleeping.png'),
+                                    (0.30, 0, 0.93, 0.67), confidence=0.72,
+                                    scales=np.geomspace(0.4, 2.5, 28)):
+            return None
         # DU's door is a distinct pink prop with two round eyes. Recognize the
         # stable eye feature first: glow changes make a narrow HSV range lose
         # the portal between adjacent frames, and pink hair is not a portal.
@@ -693,6 +709,25 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 found.append(Box(x + 380, y + 75, w, bottom - y, 'door_edge', coverage))
         return max(found, key=lambda box: box.score) if found else None
 
+    def event_direction(self, target):
+        # DU event plaques are much taller than SU's exit nameplates. Passing
+        # their high label directly to the SU projection makes a nearby event
+        # look almost entirely sideways. Use the observed plaque's bottom.
+        gray = cv2.cvtColor(self.op.image, cv2.COLOR_RGB2GRAY)
+        contours, _ = cv2.findContours(cv2.Canny(gray, 60, 140), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        tx, ty = target.center
+        plaques = []
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            if (abs(x + w / 2 - tx) < w * 0.3 and ty < y < ty + 150
+                    and 40 <= w <= 340 and 70 <= h <= 450 and 1.2 < h / w < 4
+                    and 260 < y + h < 580):
+                plaques.append((x, y, w, h))
+        if plaques:
+            x, y, w, h = max(plaques, key=lambda box: box[2] * box[3])
+            return RogueExit.screen2direction((x + w / 2, y + h), at_floor=True)
+        return RogueExit.screen2direction(target.center)
+
     def navigate_station(self):
         op = self.op
         self.progress.save('navigating')
@@ -730,10 +765,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if self.handle_misc():
                     return
                 continue
-            if (not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
+            if (self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
                     and self.handle_combat_interact(interval=1)):
                 continue
-            if not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造'):
+            # Some abnormal rooms contain several events. Finishing one must
+            # not suppress the remaining question-mark plaques in this room.
+            if self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造'):
                 # Nearby event plaques put their labels against the top edge.
                 # Keep the world HUD on the left out of this search.
                 targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
@@ -753,8 +790,24 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if unknown:
                     target = min(unknown, key=lambda box: box.left)
                     logger.info(f'DU event target: {target.center}, score={target.score:.3f}')
-                    direction = RogueExit.screen2direction(target.center)
-                    self.move(direction, 0.5)
+                    direction = self.event_direction(target)
+                    near = target.center[1] < 110
+                    self.move(direction, 0.25 if near else 0.5, run=not near)
+                    searches = 0
+                    missing.reset()
+                    continue
+                # Revealed abnormal events use an eye plaque without a ???
+                # label; they still need interaction before the door wakes.
+                plaques = op.template_matches(str(op.templates / 'event_anomaly_board.png'),
+                                              (0.30, 0.10, 0.86, 0.75), confidence=0.80,
+                                              scales=np.geomspace(0.6, 3.5, 25))
+                if plaques:
+                    target = max(plaques, key=lambda box: box.score)
+                    direction = RogueExit.screen2direction(
+                        (target.center[0], min(580, target.top + target.height)), at_floor=True)
+                    logger.info(f'DU revealed event plaque: {target.center}, score={target.score:.3f}')
+                    self.move(direction, 0.25 if target.height > 220 else 0.5,
+                              run=target.height <= 220)
                     searches = 0
                     missing.reset()
                     continue
