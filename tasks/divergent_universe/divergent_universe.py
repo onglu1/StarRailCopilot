@@ -21,7 +21,7 @@ from tasks.divergent_universe.progress import Progress, ROOT
 from tasks.divergent_universe.selection import read_choices, choose
 from tasks.divergent_universe.assets import DU_INTERACT
 from tasks.dungeon.ui.nav import DungeonUINav
-from tasks.dungeon.keywords import KEYWORDS_DUNGEON_TAB
+from tasks.dungeon.keywords import KEYWORDS_DUNGEON_TAB, KEYWORDS_DUNGEON_NAV
 from tasks.map.control.joystick import JoystickContact
 from tasks.map.control.control import MapControl
 from tasks.rogue.route.exit import RogueExit
@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-events-14')
+        logger.attr('DU control revision', '2026-10-08-entry-16')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -211,6 +211,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return bool(self.op.text('开始游戏', (0.05, 0.65, 1, 1)))
 
     def go_to_lobby(self):
+        from tasks.base.page import page_guide
         op = self.op
         timeout = Timer(150, count=3).start()
         unknown = Timer(8, count=3).start()
@@ -259,6 +260,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     op.click_box(interact)
                 else:
                     self.dungeon_tab_goto(KEYWORDS_DUNGEON_TAB.Simulated_Universe)
+                unknown.reset()
+                continue
+            if self.ui_page_appear(page_guide):
+                # The universe tab remembers its last selected activity.
+                # A visible DU label in the sidebar does not select its row.
+                self.dungeon_tab_goto(KEYWORDS_DUNGEON_TAB.Simulated_Universe)
+                self.dungeon_nav_goto(KEYWORDS_DUNGEON_NAV.Divergent_Universe)
+                op.snapshot()
+                op.click_text(('前往参与', '前往'), (0.5, 0.65, 1, 1), interval=3)
                 unknown.reset()
                 continue
             if op.text('差分宇宙', (0.1, 0.28, 0.82, 0.73)):
@@ -674,9 +684,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
             return max(found, key=lambda box: box.score)
         # A character/umbrella can hide the eyes immediately after combat.
         # The portal's top frame remains visible in the same forward view.
-        tops = self.op.template_matches(str(self.op.templates / 'door_top.png'),
-                                        (0.3, 0, 0.9, 0.6), confidence=0.74,
-                                        scales=np.geomspace(0.4, 4.5, 35))
+        tops = []
+        for name in ('door_top', 'door_top_distant'):
+            tops = self.op.template_matches(str(self.op.templates / f'{name}.png'),
+                                            (0.3, 0, 0.9, 0.6), confidence=0.74,
+                                            scales=np.geomspace(0.4, 4.5, 35))
+            if tops:
+                break
         for top in tops:
             hsv = cv2.cvtColor(self.op.image[top.top:top.top + top.height,
                                              top.left:top.left + top.width], cv2.COLOR_RGB2HSV)
@@ -848,7 +862,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # projection and movement direction are the native SU method.
                 # DU has a much taller portal and no SU domain label. Its
                 # floor contact is the compatible native projection anchor.
-                ratio = 1 if door.source == 'door_edge' else 4 if door.source == 'door_top' else 2.45
+                ratio = 1 if door.source == 'door_edge' else 4 if door.source.startswith('door_top') else 2.45
                 bottom = door.top + door.height * ratio
                 # A close portal can extend below the screenshot. Keep its
                 # visible target in front of the native player foot plane.
