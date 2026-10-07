@@ -25,10 +25,12 @@ from tasks.dungeon.keywords import KEYWORDS_DUNGEON_TAB
 from tasks.map.control.joystick import JoystickContact
 from tasks.map.control.control import MapControl
 from tasks.rogue.route.exit import RogueExit
+from tasks.rogue.keywords import RogueEventTitle
 
 
 class DivergentUniverse(DungeonUINav, MapControl):
     INTERACT_BUTTON = DU_INTERACT
+    EVENT_NAMES = frozenset(normalize(event.cn) for event in RogueEventTitle.instances.values())
     CHOICES = {
         'mask': ('选择一张面具', '选择面具'),
         'blessing': ('选择祝福', '选取祝福', '获取祝福'),
@@ -131,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-events-7')
+        logger.attr('DU control revision', '2026-10-08-events-9')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -651,7 +653,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         # stable eye feature first: glow changes make a narrow HSV range lose
         # the portal between adjacent frames, and pink hair is not a portal.
         found = []
-        for name in ('door_eyes', 'door_eyes_narrow', 'door_eyes_side'):
+        for name in ('door_eyes', 'door_eyes_front', 'door_eyes_narrow', 'door_eyes_side'):
             eyes = self.op.template_matches(str(self.op.templates / f'{name}.png'),
                                             (0.14, 0.12, 0.93, 0.80), confidence=0.72,
                                             # Dense sizes plus perspective
@@ -700,6 +702,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
             cyan = cv2.inRange(nearby, np.array((75, 50, 140)), np.array((115, 255, 255)))
             coverage = np.count_nonzero(np.any(cyan, axis=1)) / h
             if coverage >= 0.5:
+                lines = cv2.HoughLinesP(cyan, 1, np.pi / 180, threshold=40,
+                                        minLineLength=h * 0.6, maxLineGap=8)
+                if lines is None or not any(abs(y2 - y1) >= h * 0.6
+                                             and abs(x2 - x1) <= abs(y2 - y1) * 0.2
+                                             for x1, y1, x2, y2 in lines[:, 0]):
+                    continue  # A blue pet beside pink hair has no straight portal border.
                 # Eye/window cutouts can split the pink edge. Its cyan border
                 # continues to the floor, so retain that full vertical extent.
                 border = hsv[:, max(0, x - 25):x + w + 26]
@@ -774,7 +782,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # Nearby event plaques put their labels against the top edge.
                 # Keep the world HUD on the left out of this search.
                 targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
-                unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)]
+                unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)
+                           or normalize(box.source) in self.EVENT_NAMES]
                 unknown += op.template_matches(str(op.templates / 'event_unknown.png'),
                                                 (0.30, 0, 0.80, 0.46), confidence=0.80)
                 if not unknown:
@@ -793,6 +802,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     direction = self.event_direction(target)
                     near = target.center[1] < 110
                     self.move(direction, 0.25 if near else 0.5, run=not near)
+                    last_direction = direction
                     searches = 0
                     missing.reset()
                     continue
@@ -800,7 +810,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # label; they still need interaction before the door wakes.
                 plaques = op.template_matches(str(op.templates / 'event_anomaly_board.png'),
                                               (0.30, 0.10, 0.86, 0.75), confidence=0.80,
-                                              scales=np.geomspace(0.6, 3.5, 25))
+                                              scales=np.geomspace(0.6, 3.5, 61))
                 if plaques:
                     target = max(plaques, key=lambda box: box.score)
                     direction = RogueExit.screen2direction(
@@ -808,6 +818,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     logger.info(f'DU revealed event plaque: {target.center}, score={target.score:.3f}')
                     self.move(direction, 0.25 if target.height > 220 else 0.5,
                               run=target.height <= 220)
+                    last_direction = direction
                     searches = 0
                     missing.reset()
                     continue
