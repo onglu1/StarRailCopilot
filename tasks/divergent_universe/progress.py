@@ -24,11 +24,13 @@ class Progress:
         temporary.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding='utf-8')
         temporary.replace(self.path)
 
-    def begin(self, mode):
+    def begin(self, mode, calculation='periodic'):
         if self.data['active'] is None:
-            self.data['active'] = dict(id=uuid.uuid4().hex, mode=mode, battles=0, station='战斗',
+            self.data['active'] = dict(id=uuid.uuid4().hex, mode=mode, calculation=calculation, battles=0, station='战斗',
                                        started=datetime.now().isoformat(timespec='seconds'), selections=0,
                                        pending_settlement=False)
+        else:
+            self.data['active'].setdefault('calculation', 'periodic')
         self.save('running')
         return self.data['active']
 

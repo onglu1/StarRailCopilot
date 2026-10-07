@@ -2863,6 +2863,47 @@
   },
   "DivergentUniverse": {
     "DivergentUniverse": {
+      "Calculation": {
+        "type": "select",
+        "value": "periodic",
+        "option": [
+          "periodic",
+          "standard"
+        ]
+      },
+      "DifficultyMode": {
+        "type": "select",
+        "value": "current",
+        "option": [
+          "current",
+          "specified",
+          "highest"
+        ]
+      },
+      "Difficulty": {
+        "type": "select",
+        "value": 5,
+        "option": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "PollutionMode": {
+        "type": "select",
+        "value": "current",
+        "option": [
+          "current",
+          "specified",
+          "highest"
+        ]
+      },
+      "Pollution": {
+        "type": "input",
+        "value": 0
+      },
       "Mode": {
         "type": "select",
         "value": "first_station",

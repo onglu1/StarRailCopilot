@@ -296,6 +296,11 @@ class GeneratedConfig:
     CurrencyWars_SaveEvidence = False
 
     # Group `DivergentUniverse`
+    DivergentUniverse_Calculation = 'periodic'  # periodic, standard
+    DivergentUniverse_DifficultyMode = 'current'  # current, specified, highest
+    DivergentUniverse_Difficulty = 5  # 1, 2, 3, 4, 5
+    DivergentUniverse_PollutionMode = 'current'  # current, specified, highest
+    DivergentUniverse_Pollution = 0
     DivergentUniverse_Mode = 'first_station'  # first_station, full
     DivergentUniverse_Runs = 1
     DivergentUniverse_TeamPreset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12

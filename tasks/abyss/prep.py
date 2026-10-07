@@ -92,7 +92,7 @@ class AbyssPrep(AbyssNav):
     def _abyss_preset_scroll_top(self):
         for _ in range(2):
             self.device.swipe((240, 240), (240, 620), name='PRESET_SCROLL_TOP')
-            self.device.sleep((0.4, 0.6))
+            self.wait_until_stable(PRESET_PANEL)
 
     def _abyss_click_preset(self, preset: int) -> bool:
         """
@@ -125,7 +125,7 @@ class AbyssPrep(AbyssNav):
             self.device.screenshot()
             before = crop(self.device.image, PRESET_SHIFT_STRIP, copy=True)
             self.device.swipe((240, 520), (240, 520 - PRESET_ROW_PITCH), name='PRESET_SCROLL')
-            self.device.sleep((0.5, 0.7))
+            self.wait_until_stable(PRESET_PANEL)
             self.device.screenshot()
             shift = abyss_panel_shift(before, self.device.image)
             if shift < 8:

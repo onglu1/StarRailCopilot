@@ -24,6 +24,7 @@ class ProcessManager:
         self.renderables_max_length = 400
         self.renderables_reduce_length = 80
         self._process: Process = None
+        self.func = None
         self._process_locks: Dict[str, threading.Lock] = {}
         self.thd_log_queue_handler: threading.Thread = None
 
@@ -31,6 +32,7 @@ class ProcessManager:
         if not self.alive:
             if func is None:
                 func = get_config_mod(self.config_name)
+            self.func = func
             self._process = Process(
                 target=ProcessManager.run_process,
                 args=(
@@ -188,25 +190,30 @@ class ProcessManager:
         if instances is None:
             instances = []
 
-        _instances = set()
+        _instances = {}
 
         for instance in instances:
             if isinstance(instance, str):
-                _instances.add(ProcessManager.get_manager(instance))
+                profile, separator, func = instance.partition(':')
+                if separator and func not in get_available_func():
+                    raise ValueError(f'Unknown startup tool: {func}')
+                manager = ProcessManager.get_manager(profile)
+                _instances[manager] = func if separator else get_config_mod(profile)
             elif isinstance(instance, ProcessManager):
-                _instances.add(instance)
+                _instances[instance] = instance.func or get_config_mod(instance.config_name)
 
         try:
             with open("./config/reloadalas", mode="r") as f:
                 for line in f.readlines():
                     line = line.strip()
-                    _instances.add(ProcessManager.get_manager(line))
+                    manager = ProcessManager.get_manager(line)
+                    _instances.setdefault(manager, get_config_mod(line))
         except FileNotFoundError:
             pass
 
-        for process in _instances:
+        for process, func in _instances.items():
             logger.info(f"Starting [{process.config_name}]")
-            process.start(func=get_config_mod(process.config_name), ev=ev)
+            process.start(func=func, ev=ev)
 
         try:
             os.remove("./config/reloadalas")

@@ -2117,6 +2117,39 @@
       "name": "Divergent Universe",
       "help": ""
     },
+    "Calculation": {
+      "name": "Calculation type",
+      "help": "Applied to the next run; a saved run retains its calculation type.",
+      "periodic": "Periodic calculation",
+      "standard": "Regular calculation"
+    },
+    "DifficultyMode": {
+      "name": "Base difficulty policy",
+      "help": "Applied before a new run; the selected value is checked on screen.",
+      "current": "Keep current",
+      "specified": "Specified",
+      "highest": "Highest available"
+    },
+    "Difficulty": {
+      "name": "Base difficulty",
+      "help": "Regular difficulty I–V.",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5"
+    },
+    "PollutionMode": {
+      "name": "Extra difficulty policy (Threshold Protocol)",
+      "help": "Applied before a new run; the selected value is checked on screen.",
+      "current": "Keep current",
+      "specified": "Specified",
+      "highest": "Highest available"
+    },
+    "Pollution": {
+      "name": "Threshold Protocol level",
+      "help": "0 disables the protocol; levels 1–4 increase difficulty. This is separate from the boss pollution badge."
+    },
     "Mode": {
       "name": "Mode",
       "help": "",
@@ -2164,8 +2197,8 @@
       "help": "Separate station names with >. Used during full exploration."
     },
     "ChoicePriority": {
-      "name": "Choice keyword priority",
-      "help": "Separate keywords with >. Uncollected entries take priority when enabled."
+      "name": "Tie-breaking keywords",
+      "help": "Uncollected > game recommendation > rarity > these keywords separated by >."
     },
     "MaxMinutes": {
       "name": "Minutes per run",

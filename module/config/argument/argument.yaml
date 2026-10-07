@@ -566,6 +566,19 @@ CurrencyWars:
   SaveEvidence: false
 
 DivergentUniverse:
+  Calculation:
+    value: periodic
+    option: [periodic, standard]
+  DifficultyMode:
+    value: current
+    option: [current, specified, highest]
+  Difficulty:
+    value: 5
+    option: [1, 2, 3, 4, 5]
+  PollutionMode:
+    value: current
+    option: [current, specified, highest]
+  Pollution: 0
   Mode:
     value: first_station
     option: [first_station, full]

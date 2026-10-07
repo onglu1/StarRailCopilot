@@ -397,6 +397,11 @@
   },
   "DivergentUniverse": {
     "DivergentUniverse": {
+      "Calculation": "periodic",
+      "DifficultyMode": "current",
+      "Difficulty": 5,
+      "PollutionMode": "current",
+      "Pollution": 0,
       "Mode": "first_station",
       "Runs": 1,
       "TeamPreset": 1,

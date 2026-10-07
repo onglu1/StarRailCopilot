@@ -2117,6 +2117,39 @@
       "name": "DivergentUniverse._info.name",
       "help": "DivergentUniverse._info.help"
     },
+    "Calculation": {
+      "name": "DivergentUniverse.Calculation.name",
+      "help": "DivergentUniverse.Calculation.help",
+      "periodic": "periodic",
+      "standard": "standard"
+    },
+    "DifficultyMode": {
+      "name": "DivergentUniverse.DifficultyMode.name",
+      "help": "DivergentUniverse.DifficultyMode.help",
+      "current": "current",
+      "specified": "specified",
+      "highest": "highest"
+    },
+    "Difficulty": {
+      "name": "DivergentUniverse.Difficulty.name",
+      "help": "DivergentUniverse.Difficulty.help",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5"
+    },
+    "PollutionMode": {
+      "name": "DivergentUniverse.PollutionMode.name",
+      "help": "DivergentUniverse.PollutionMode.help",
+      "current": "current",
+      "specified": "specified",
+      "highest": "highest"
+    },
+    "Pollution": {
+      "name": "DivergentUniverse.Pollution.name",
+      "help": "DivergentUniverse.Pollution.help"
+    },
     "Mode": {
       "name": "DivergentUniverse.Mode.name",
       "help": "DivergentUniverse.Mode.help",

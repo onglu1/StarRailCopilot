@@ -13,6 +13,8 @@ from tasks.rogue.blessing.ui import RogueUI
 
 
 class Login(LoginAndroidCloud, RogueUI, AgreementHandler, UIDHandler):
+    login_expected_end = None
+
     def _handle_app_login(self):
         """
         Pages:
@@ -60,6 +62,9 @@ class Login(LoginAndroidCloud, RogueUI, AgreementHandler, UIDHandler):
             # Game client requires at least 5s to start
             # The first few frames might be captured before app_stop(), ignore them
             if startup_timer.reached():
+                if self.login_expected_end is not None and self.login_expected_end():
+                    logger.info('Login resumed the expected task page')
+                    break
                 if self.ui_page_appear(page_main):
                     logger.info('Login to main confirm')
                     break
