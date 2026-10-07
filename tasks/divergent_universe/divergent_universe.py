@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-events-13')
+        logger.attr('DU control revision', '2026-10-08-events-14')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -144,6 +144,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self._node_done = False
         self._entry_prepared = False
         self._native_event = None
+        self._settlement_exit_wait = Timer(8)
         self._launch_attempts = 0
         self.combat_state_reset()
         if not self.device.app_is_running():
@@ -1015,6 +1016,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.active.pop('result', None)
                 self.progress.save('selecting')
             return None
+        if self.active.get('pending_settlement') and op.text(
+                ('当前尚未拥有存档', '是否确认退出'), (0.2, 0.3, 0.9, 0.6)):
+            if op.click_text('确认', (0.52, 0.60, 0.79, 0.70), exact=True, interval=3):
+                self._settlement_exit_wait.reset()
+            return True
         if op.text('确认退出游戏', (0.25, 0.3, 0.8, 0.65)):
             op.click_text('取消', (0.25, 0.4, 0.55, 0.7), exact=True)
             return True
@@ -1035,7 +1041,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if first_observation:
                 logger.attr('DU settlement', ending.source)
                 op.save('settlement_' + self.active['id'])
-            op.click_text(('返回', '返回主界面', '确认', '完成'), (0.1, 0.65, 1, 1), exact=True)
+            if self._settlement_exit_wait.reached():
+                op.click_text(('返回', '返回主界面', '确认', '完成'), (0.1, 0.65, 1, 1),
+                              exact=True, interval=5)
             return True
         if self.active.get('pending_settlement'):
             if self.lobby_visible():
@@ -1043,6 +1051,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if (self.active.get('settlement_confirmed') or self.active.get('settlement_observed')) and not self.world_visible():
                 if self.is_in_main() and op.text('差分宇宙', (0.5, 0.25, 1, 0.85)):
                     return self.active.get('result', 'farm')
+            if op.text(('祝福/全部', '奇物/全部'), (0.04, 0.035, 0.3, 0.11)):
+                op.back()
+                return True
             if op.click_text(('确认', '返回', '下一步'), (0.15, 0.45, 1, 1), exact=True):
                 return True
         return None
