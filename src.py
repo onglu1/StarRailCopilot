@@ -80,6 +80,11 @@ class StarRailCopilot(AzurLaneAutoScript):
         from tasks.apocalyptic_shadow.apocalyptic_shadow import ApocalypticShadow
         ApocalypticShadow(config=self.config, device=self.device, task="ApocalypticShadow").run()
 
+    # Currency Wars extension.
+    def currency_wars(self):
+        from tasks.currency_wars.currency_wars import CurrencyWars
+        CurrencyWars(config=self.config, device=self.device).run()
+
     def benchmark(self):
         from module.daemon.benchmark import run_benchmark
         run_benchmark(config=self.config)

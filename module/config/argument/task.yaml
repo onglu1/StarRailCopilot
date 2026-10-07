@@ -68,6 +68,10 @@ Weekly:
       - RogueStorage
       - RogueBlessing
       - RogueDebug
+    # Currency Wars extension
+    CurrencyWars:
+      - Scheduler
+      - CurrencyWars
 
 # ==================== Tool ====================
 

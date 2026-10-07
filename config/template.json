@@ -29,7 +29,7 @@
   },
   "Restart": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Restart",
       "ServerUpdate": "04:00"
@@ -242,7 +242,7 @@
   },
   "DataUpdate": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "DataUpdate",
       "ServerUpdate": "04:00"
@@ -322,6 +322,33 @@
     },
     "RogueDebug": {
       "DebugMode": false
+    }
+  },
+  "CurrencyWars": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "CurrencyWars",
+      "ServerUpdate": "04:00"
+    },
+    "CurrencyWars": {
+      "Mode": "standard",
+      "Difficulty": "lowest",
+      "Runs": 0,
+      "RepeatDaily": false,
+      "RunStyle": "precise",
+      "Checkpoints": "1-3,1-6,2-1,2-3,3-1,3-3,3-5",
+      "PreferUncollected": true,
+      "RequiredSynergies": null,
+      "Strategy": "random",
+      "ShareCode": null,
+      "RandomCodes": null,
+      "SequenceCodes": null,
+      "StrategyFile": null,
+      "Username": null,
+      "MaxMinutes": 120,
+      "RecoveryRetries": 3,
+      "SaveEvidence": false
     }
   },
   "Daemon": {

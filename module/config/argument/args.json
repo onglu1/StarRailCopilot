@@ -152,13 +152,11 @@
   "Restart": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
-        "value": true,
+        "type": "checkbox",
+        "value": false,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -181,13 +179,11 @@
   "Dungeon": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
+        "type": "checkbox",
         "value": true,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -1739,13 +1735,11 @@
   "DailyQuest": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
+        "type": "checkbox",
         "value": true,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -1784,13 +1778,11 @@
   "BattlePass": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
+        "type": "checkbox",
         "value": true,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -1877,13 +1869,11 @@
   "Assignment": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
+        "type": "checkbox",
         "value": true,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -2044,13 +2034,11 @@
   "DataUpdate": {
     "Scheduler": {
       "Enable": {
-        "type": "state",
-        "value": true,
+        "type": "checkbox",
+        "value": false,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -2499,6 +2487,134 @@
     },
     "RogueDebug": {
       "DebugMode": {
+        "type": "checkbox",
+        "value": false
+      }
+    }
+  },
+  "CurrencyWars": {
+    "Scheduler": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "NextRun": {
+        "type": "datetime",
+        "value": "2020-01-01 00:00:00",
+        "validate": "datetime"
+      },
+      "Command": {
+        "type": "input",
+        "value": "CurrencyWars",
+        "display": "hide"
+      },
+      "ServerUpdate": {
+        "type": "input",
+        "value": "04:00",
+        "display": "hide"
+      }
+    },
+    "CurrencyWars": {
+      "Mode": {
+        "type": "select",
+        "value": "standard",
+        "option": [
+          "standard",
+          "overclock"
+        ]
+      },
+      "Difficulty": {
+        "type": "select",
+        "value": "lowest",
+        "option": [
+          "lowest",
+          "highest",
+          "current"
+        ]
+      },
+      "Runs": {
+        "type": "input",
+        "value": 0
+      },
+      "RepeatDaily": {
+        "type": "checkbox",
+        "value": false
+      },
+      "RunStyle": {
+        "type": "select",
+        "value": "precise",
+        "option": [
+          "fast",
+          "precise"
+        ]
+      },
+      "Checkpoints": {
+        "type": "textarea",
+        "value": "1-3,1-6,2-1,2-3,3-1,3-3,3-5",
+        "valuetype": "str"
+      },
+      "PreferUncollected": {
+        "type": "checkbox",
+        "value": true
+      },
+      "RequiredSynergies": {
+        "type": "input",
+        "value": "",
+        "valuetype": "str"
+      },
+      "Strategy": {
+        "type": "select",
+        "value": "random",
+        "option": [
+          "random",
+          "code",
+          "code_pool",
+          "sequence",
+          "template",
+          "template2",
+          "template3",
+          "preset_pool",
+          "file"
+        ]
+      },
+      "ShareCode": {
+        "type": "input",
+        "value": "",
+        "valuetype": "str"
+      },
+      "RandomCodes": {
+        "type": "textarea",
+        "value": "",
+        "valuetype": "str"
+      },
+      "SequenceCodes": {
+        "type": "textarea",
+        "value": "",
+        "valuetype": "str"
+      },
+      "StrategyFile": {
+        "type": "input",
+        "value": "",
+        "valuetype": "str"
+      },
+      "Username": {
+        "type": "input",
+        "value": "",
+        "valuetype": "str"
+      },
+      "MaxMinutes": {
+        "type": "input",
+        "value": 120
+      },
+      "RecoveryRetries": {
+        "type": "input",
+        "value": 3
+      },
+      "SaveEvidence": {
         "type": "checkbox",
         "value": false
       }

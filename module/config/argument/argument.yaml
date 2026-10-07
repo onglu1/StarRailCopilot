@@ -502,3 +502,62 @@ Daemon:
     option: [ item_enemy, item, enemy, do_not_click ]
 PlannerScan:
   ResultAdd: false
+
+# Currency Wars extension
+CurrencyWars:
+  Mode:
+    value: standard
+    option: [standard, overclock]
+  Difficulty:
+    value: lowest
+    option: [lowest, highest, current]
+  Runs: 0
+  RepeatDaily: false
+  RunStyle:
+    value: precise
+    option:
+    - fast
+    - precise
+  Checkpoints:
+    value: '1-3,1-6,2-1,2-3,3-1,3-3,3-5'
+    valuetype: str
+    type: textarea
+  PreferUncollected: true
+  RequiredSynergies:
+    value: ''
+    valuetype: str
+    type: input
+  Strategy:
+    value: random
+    option:
+    - random
+    - code
+    - code_pool
+    - sequence
+    - template
+    - template2
+    - template3
+    - preset_pool
+    - file
+  ShareCode:
+    value: ''
+    valuetype: str
+    type: input
+  RandomCodes:
+    value: ''
+    valuetype: str
+    type: textarea
+  SequenceCodes:
+    value: ''
+    valuetype: str
+    type: textarea
+  StrategyFile:
+    value: ''
+    valuetype: str
+    type: input
+  Username:
+    value: ''
+    valuetype: str
+  MaxMinutes: 120
+  RecoveryRetries: 3
+  SaveEvidence: false

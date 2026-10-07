@@ -62,6 +62,10 @@
       "name": "Task.Rogue.name",
       "help": "Task.Rogue.help"
     },
+    "CurrencyWars": {
+      "name": "Currency Wars",
+      "help": "Standard/overclock games and takeover"
+    },
     "Daemon": {
       "name": "Task.Daemon.name",
       "help": "Task.Daemon.help"
@@ -2008,6 +2012,96 @@
     "ResultAdd": {
       "name": "PlannerScan.ResultAdd.name",
       "help": "PlannerScan.ResultAdd.help"
+    }
+  },
+  "CurrencyWars": {
+    "_info": {
+      "name": "Currency Wars",
+      "help": ""
+    },
+    "Mode": {
+      "name": "Mode",
+      "help": "",
+      "standard": "standard",
+      "overclock": "overclock"
+    },
+    "Difficulty": {
+      "name": "Difficulty",
+      "help": "",
+      "lowest": "lowest",
+      "highest": "highest",
+      "current": "current"
+    },
+    "Runs": {
+      "name": "Runs",
+      "help": ""
+    },
+    "RepeatDaily": {
+      "name": "RepeatDaily",
+      "help": ""
+    },
+    "RunStyle": {
+      "name": "CurrencyWars.RunStyle.name",
+      "help": "CurrencyWars.RunStyle.help",
+      "fast": "fast",
+      "precise": "precise"
+    },
+    "Checkpoints": {
+      "name": "CurrencyWars.Checkpoints.name",
+      "help": "CurrencyWars.Checkpoints.help"
+    },
+    "PreferUncollected": {
+      "name": "CurrencyWars.PreferUncollected.name",
+      "help": "CurrencyWars.PreferUncollected.help"
+    },
+    "RequiredSynergies": {
+      "name": "CurrencyWars.RequiredSynergies.name",
+      "help": "CurrencyWars.RequiredSynergies.help"
+    },
+    "Strategy": {
+      "name": "Strategy",
+      "help": "",
+      "random": "Random native strategy",
+      "code": "Native share code",
+      "code_pool": "code_pool",
+      "sequence": "sequence",
+      "template": "template",
+      "template2": "template2",
+      "template3": "template3",
+      "preset_pool": "preset_pool",
+      "file": "file"
+    },
+    "ShareCode": {
+      "name": "Share code",
+      "help": "Import a native game code and read its roster."
+    },
+    "RandomCodes": {
+      "name": "Random code pool",
+      "help": "One code per line; blank uses in-game recommendations."
+    },
+    "SequenceCodes": {
+      "name": "CurrencyWars.SequenceCodes.name",
+      "help": "CurrencyWars.SequenceCodes.help"
+    },
+    "StrategyFile": {
+      "name": "StrategyFile",
+      "help": ""
+    },
+    "Username": {
+      "name": "Username",
+      "help": ""
+    },
+    "MaxMinutes": {
+      "name": "MaxMinutes",
+      "help": ""
+    },
+    "RecoveryRetries": {
+      "name": "CurrencyWars.RecoveryRetries.name",
+      "help": "CurrencyWars.RecoveryRetries.help"
+    },
+    "SaveEvidence": {
+      "name": "SaveEvidence",
+      "help": ""
     }
   },
   "Gui": {

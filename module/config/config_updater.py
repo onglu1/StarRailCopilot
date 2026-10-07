@@ -818,6 +818,18 @@ class ConfigUpdater:
 
         if not is_template:
             new = self.config_redirect(old, new)
+            # Migrate the former overlapping Currency Wars switches once.
+            legacy = deep_get(old, 'CurrencyWars.CurrencyWars', {})
+            if 'RandomNative' in legacy or 'ImportCode' in legacy:
+                source = legacy.get('Strategy', 'random')
+                if source == 'random':
+                    if legacy.get('RandomCodes'):
+                        source = 'code_pool'
+                    elif legacy.get('RandomNative', True) is False:
+                        source = 'preset_pool'
+                elif source in ('template', 'template2', 'template3') and legacy.get('StrategyFile'):
+                    source = 'file'
+                deep_set(new, 'CurrencyWars.CurrencyWars.Strategy', source)
         new = self.update_state(new)
 
         return new
@@ -950,6 +962,17 @@ class ConfigUpdater:
         Yields:
             str: Arg path that should be hidden
         """
+        currency = deep_get(data, 'CurrencyWars.CurrencyWars', {})
+        source = currency.get('Strategy', 'random')
+        for argument, required in (('ShareCode', 'code'), ('RandomCodes', 'code_pool'), ('SequenceCodes', 'sequence'), ('StrategyFile', 'file')):
+            if source != required:
+                yield f'CurrencyWars.CurrencyWars.{argument}'
+        if currency.get('RunStyle') != 'fast':
+            yield 'CurrencyWars.CurrencyWars.Checkpoints'
+        if currency.get('Runs', 0) == 0:
+            yield 'CurrencyWars.CurrencyWars.RepeatDaily'
+            yield 'CurrencyWars.Scheduler.NextRun'
+            yield 'CurrencyWars.Scheduler.ServerUpdate'
         if deep_get(data, 'Dungeon.TrailblazePower.UseFuel') == False:
             yield 'Dungeon.TrailblazePower.FuelReserve'
         if deep_get(data, 'Dungeon.TrailblazePower.UseFuel') == False:
