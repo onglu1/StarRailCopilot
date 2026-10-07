@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-entry-17')
+        logger.attr('DU control revision', '2026-10-08-login-18')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -945,6 +945,18 @@ class DivergentUniverse(DungeonUINav, MapControl):
         op = self.op
         if self.world_visible():
             return False
+        from tasks.login.assets.assets_login import LOGIN_LOADING
+        login_page = self.is_in_login_confirm() or self.appear(LOGIN_LOADING)
+        if not login_page:
+            # A reconnect can begin with the train animation, before buttons
+            # appear. Its build footer is distinct from the in-game UID.
+            footer = op.read_line((0.02, 0.95, 0.47, 0.99), snapshot=False).source.replace(' ', '')
+            login_page = bool(re.search(r'CNPR[O0]DAndroid|D\d{7,}[-_]?A\d{7,}[-_]?L\d{7,}', footer))
+        if login_page:
+            logger.info('DU interrupted by login; resume through native Login')
+            self.progress.save('reconnecting')
+            self.login_from_current()
+            return True
         title = self.header_text()
         if any(word in title for word in ('方程展开', '祝福强化', '获得奇物', '获得祝福')):
             if not op.click_text(('确定', '确认', '继续', '点击空白处关闭'), (0.1, 0.6, 1, 1)):
