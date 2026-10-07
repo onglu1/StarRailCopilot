@@ -27,6 +27,8 @@ class EntrySettings:
                           name='关闭阈值说明')
 
         def selected():
+            if self.main.world_visible() or self.main.selection_kind() or self.main.is_combat_executing():
+                return True
             if not op.text(self.LAUNCH, (0.3, 0.65, 1, 1)):
                 return False
             periodic = op.text('周期演算', (0.48, 0.15, 1, 0.68))
@@ -44,6 +46,9 @@ class EntrySettings:
         op.wait_until(selected, action=select_mode, name='选择' + label)
         logger.attr('DU calculation', calculation)
         op.save('calculation_' + calculation)
+        if self.main.world_visible() or self.main.selection_kind() or self.main.is_combat_executing():
+            logger.info('DU entered the retained run directly from mode selection')
+            return
         if op.text('继续进度', (0.3, 0.65, 1, 1)):
             logger.info('DU continuing saved run; new difficulty settings apply to the next run')
             return

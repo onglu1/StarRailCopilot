@@ -93,6 +93,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                         completed += 1
                         failures = 0
                         logger.info(f'DU completed run {completed}: {result}')
+                        self.config.load()
+                        self.config.bind(self.config.task)
                     except TaskEnd:
                         self.progress.save('stopped')
                         raise
@@ -107,6 +109,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                         previous_progress = milestone
                         self.progress.data['error'] = str(error)
                         self.progress.save('error')
+                        logger.exception(f'DU task failed: {type(error).__name__}: {error}')
                         save_error_log(config=self.config, device=self.device)
                         if failures >= self.config.DivergentUniverse_RecoveryRetries:
                             raise RequestHumanTakeover(f'差分宇宙自动恢复后仍失败，已保留现场：{error}') from error
@@ -128,11 +131,17 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
+        logger.attr('DU control revision', '2026-10-08-events-4')
+        self.active = self.progress.data.get('active')
+        if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
+            if not self.active.get('event_completed'):
+                self.active['node_done'] = False
         folder = ROOT / 'log/divergent_universe' / self.config.config_name
         self.op = DivergentOperator(self.device, self.config, folder if self.config.DivergentUniverse_SaveEvidence else None)
         self.op.deadline = time.monotonic() + max(1, self.config.DivergentUniverse_MaxMinutes) * 60
         self._node_done = False
         self._entry_prepared = False
+        self._native_event = None
         self._launch_attempts = 0
         self.combat_state_reset()
         if not self.device.app_is_running():
@@ -145,6 +154,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.op._ocr_cache.clear()
             self.op.frame_cache.clear()
             return bool(self.world_visible() or self.selection_kind() or self.lobby_visible()
+                        or self.op.text('差分宇宙', (0.02, 0, 0.27, 0.065))
                         or self.op.text('差分宇宙', (0.58, 0.45, 0.96, 0.68)))
         login = Login(self.config, device=self.device)
         login.login_expected_end = resumed
@@ -186,9 +196,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
             from tasks.base.assets.assets_base_page import MAP_EXIT_OE
             # Common walking frames need only small template checks, no OCR.
             menu = self.op.template('world_menu', (0.09, 0.04, 0.20, 0.15), confidence=0.90)
-            self.op.frame_cache['world'] = bool(menu and (
-                self.appear(MAP_EXIT_OE)
-                or self.op.template('divergent_universe_quit', (0, 0, 0.13, 0.18))))
+            world = bool(menu and (self.appear(MAP_EXIT_OE)
+                         or self.op.template('divergent_universe_quit', (0, 0, 0.13, 0.18))))
+            if not world:
+                title = self.op.read_line((0.025, 0.005, 0.43, 0.055), snapshot=False).source
+                world = bool(re.search(r'\d+\s*/\s*\d+.*位面', title))
+            self.op.frame_cache['world'] = world
         return self.op.frame_cache['world']
 
     def lobby_visible(self):
@@ -201,6 +214,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         initial_saved = False
         while not timeout.reached():
             op.snapshot()
+            if op.image.mean() < 3:
+                continue
             if not initial_saved:
                 op.save('entry_initial')
                 initial_saved = True
@@ -220,6 +235,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                         return False
                 return True
             header = self.header_text()
+            if '事件' in header and op.text('差分宇宙', (0.02, 0, 0.26, 0.065)):
+                return True
             if op.text(('探索成功', '探索失败', '探索中断'), (0.05, 0.05, 0.95, 0.4), exact=True):
                 return True
             if op.text(('结束并结算', '退出并结算', '确定要结束进程'), (0.15, 0.2, 1, 1)):
@@ -246,6 +263,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     op.click_text('差分宇宙', (0.1, 0.28, 0.82, 0.73))
                 continue
             if self.handle_misc() or self.ui_additional():
+                continue
+            if self.is_in_login_confirm() or op.text(
+                    ('正在检查数据', '正在载入', '正在加载'), (0, 0.70, 1, 1)):
+                self.login_from_current()
+                unknown.reset()
                 continue
             if self.return_to_main():
                 unknown.reset()
@@ -332,6 +354,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
         while True:
             op.snapshot()
             if self.world_visible():
+                if self._native_event is not None:
+                    self._native_event.event_title = None
+                if self.active.pop('event_pending', False):
+                    self.active['event_completed'] = True
+                    self.active['node_done'] = True
+                    self._node_done = True
+                    self.progress.save('event_finished')
                 self.update_station_header()
                 if self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
                     self.quit_run()
@@ -428,6 +457,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                         (0.08, 0.42, 0.96, 0.50))
         names_before = tuple(normalize(b.source) for b in op.read_region(names_region, snapshot=False))
         confirmed = False
+        select_attempts = 1
+        confirm_attempts = 0
         changed_frames = 0
         timeout = Timer(45, count=3).start()
         while not timeout.reached():
@@ -451,13 +482,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if confirmed and names and names != names_before and button and not enabled:
                     return  # New named cards plus a disabled confirm identify the next set.
                 if not enabled:
-                    if not confirmed:
-                        op.click_point(choice.box.center[0] / 1280,
-                                       (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind)
+                    if not confirmed and select_attempts < 3:
+                        if op.click_point(choice.box.center[0] / 1280,
+                                          (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind):
+                            select_attempts += 1
                     continue
-            if op.click_text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃'),
+            if confirm_attempts < 3 and op.click_text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃'),
                              (0.05, 0.65, 1, 1), exact=True):
                 confirmed = True
+                confirm_attempts += 1
         raise RuntimeError(f'差分宇宙{kind}选择未确认')
 
     def confirm_enabled(self, button):
@@ -514,13 +547,24 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.op.check()
         # The timer bounds a touch gesture, not a wait for the next page.
         # Screenshots continue during movement and can stop the gesture early.
-        gesture = Timer(seconds).start()
+        gesture = Timer(seconds)
         with JoystickContact(self) as stick:
             stick.set(direction, run=run)
+            gesture.reset()
             while not gesture.reached():
                 self.op.snapshot()
-                if self.appear(DU_INTERACT) or not self.world_visible():
+                if self.interaction_visible() or not self.world_visible():
                     break
+
+    def interaction_visible(self):
+        from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
+        return self.appear(DU_INTERACT) or self.appear(DUNGEON_COMBAT_INTERACT)
+
+    def handle_combat_interact(self, interval=2):
+        from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
+        if super().handle_combat_interact(interval=interval):
+            return True
+        return self.appear_then_click(DUNGEON_COMBAT_INTERACT, interval=interval)
 
     def fight_station(self):
         op = self.op
@@ -548,7 +592,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 return
             if not self.world_visible():
                 if self.handle_misc():
-                    continue
+                    return
                 continue
             if self.find_door():
                 # On reconnect the game may have saved the cleared room before
@@ -671,7 +715,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             step += 1
             # Handle a nearby exit before slower selection OCR. The prompt can
             # disappear as the last movement animation finishes.
-            if self.appear(DU_INTERACT) and op.text(
+            if self.interaction_visible() and op.text(
                     ('随意门', '前往下一区域', '战利品', '事件', '奖励'), (0.58, 0.48, 0.92, 0.70)):
                 if self.handle_combat_interact(interval=1):
                     continue
@@ -683,20 +727,32 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     return
                 if op.text(('探索成功', '探索失败', '探索中断'), (0.04, 0.05, 0.95, 0.4), exact=True):
                     return
-                self.handle_misc()
+                if self.handle_misc():
+                    return
                 continue
             if (not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
                     and self.handle_combat_interact(interval=1)):
                 continue
             if not self._node_done and self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造'):
-                targets = op.read_region((0.30, 0.12, 0.80, 0.46), snapshot=False)
+                # Nearby event plaques put their labels against the top edge.
+                # Keep the world HUD on the left out of this search.
+                targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
                 unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)]
                 unknown += op.template_matches(str(op.templates / 'event_unknown.png'),
-                                                (0.30, 0.10, 0.80, 0.46), confidence=0.80)
-                named = [box for box in targets if len(re.findall(r'[\u4e00-\u9fff]', box.source)) >= 2
-                         and box.source not in ('造物调试台', '随意门') and box.score >= 0.8]
-                if unknown or named:
-                    target = min(unknown or named, key=lambda box: box.left)
+                                                (0.30, 0, 0.80, 0.46), confidence=0.80)
+                if not unknown:
+                    sample = cv2.imread(str(op.templates / 'event_unknown.png'), cv2.IMREAD_GRAYSCALE)
+                    sample = cv2.inRange(sample, 185, 255)
+                    frame = cv2.inRange(cv2.cvtColor(op.image[:332, 384:1024], cv2.COLOR_RGB2GRAY), 185, 255)
+                    for scale in (0.75, 0.85, 1.0, 1.15):
+                        glyph = cv2.resize(sample, None, fx=scale, fy=scale)
+                        values = cv2.matchTemplate(frame, glyph, cv2.TM_CCOEFF_NORMED)
+                        _, score, _, (x, y) = cv2.minMaxLoc(values)
+                        if score >= 0.72:
+                            unknown.append(Box(x + 384, y, glyph.shape[1], glyph.shape[0], 'event_unknown', score))
+                if unknown:
+                    target = min(unknown, key=lambda box: box.left)
+                    logger.info(f'DU event target: {target.center}, score={target.score:.3f}')
                     direction = RogueExit.screen2direction(target.center)
                     self.move(direction, 0.5)
                     searches = 0
@@ -792,14 +848,32 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 op.back()
             return True
         if '事件' in title:
-            self._node_done = True
-            self.active['node_done'] = True
-            if op.click_text(('确认', '确定', '继续'), (0.3, 0.4, 1, 1), exact=True):
+            if not self.active.get('event_pending'):
+                self.active['event_pending'] = True
+                self.progress.save('event')
+            from tasks.rogue.event.event import RogueEvent
+            from tasks.rogue.assets.assets_rogue_event import CHOOSE_OPTION_CONFIRM, CHOOSE_STORY
+            from tasks.rogue.assets.assets_rogue_ui import PAGE_EVENT
+            if self._native_event is None:
+                self._native_event = RogueEvent(self.config, device=self.device)
+                self._native_event.event_title = None
+            handler = self._native_event
+            if handler.appear(CHOOSE_OPTION_CONFIRM):
+                if handler.appear_then_click(CHOOSE_OPTION_CONFIRM, interval=2):
+                    handler.interval_reset([PAGE_EVENT, CHOOSE_STORY])
+                return True
+            if handler.handle_event_option() or handler.options:
+                return True
+            confirm = op.text(('确认', '确定', '继续'), (0.3, 0.4, 1, 1), exact=True)
+            if confirm:
+                op.click_box(confirm)
                 return True
             arrow = op.template('event_select', (0.3, 0.2, 1, 0.9))
             star = op.template('event_selection', (0.3, 0.2, 1, 0.9))
             if star or arrow:
                 op.click_box(star or arrow)
+            elif handler.handle_event_continue():
+                return True
             elif op.template('event_next', (0.3, 0.4, 1, 1)):
                 op.click_point(0.78, 0.79, tag='DU_EVENT_DIALOGUE')
             return True
@@ -820,6 +894,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.active['node_done'] = False
             self.active.pop('navigation_reentry', None)
             self.active.pop('navigation_reentry_completed', None)
+            self.active.pop('event_completed', None)
         self.active['node'] = node
         for station in ('战斗', '精英', '首领', '转化', '商店', '事件', '铸造', '奖励', '休整', '异常', '财富'):
             if station in text:
