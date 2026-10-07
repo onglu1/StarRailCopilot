@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-events-9')
+        logger.attr('DU control revision', '2026-10-08-events-13')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -295,6 +295,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def start_or_resume(self):
         op = self.op
+        if self.active.get('pending_settlement'):
+            return False  # Blurred result pages are not a new mode-selection screen.
         from tasks.divergent_universe.entry import EntrySettings
         launch_labels = EntrySettings.LAUNCH
         if not self._entry_prepared and (op.text(launch_labels, (0.3, 0.65, 1, 1))
@@ -655,13 +657,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
         found = []
         for name in ('door_eyes', 'door_eyes_front', 'door_eyes_narrow', 'door_eyes_side'):
             eyes = self.op.template_matches(str(self.op.templates / f'{name}.png'),
-                                            (0.14, 0.12, 0.93, 0.80), confidence=0.72,
+                                            (0.14, 0, 0.93, 0.80), confidence=0.72,
                                             # Dense sizes plus perspective
                                             # variants cover far and side views.
                                             scales=np.geomspace(0.4, 4.5, 35))
             for eye in eyes:
-                if eye.top + eye.height * 2.45 <= 260:
-                    continue  # The inferred floor must be below the horizon.
                 crop = self.op.image[eye.top:eye.top + eye.height, eye.left:eye.left + eye.width]
                 hsv = cv2.cvtColor(crop, cv2.COLOR_RGB2HSV)
                 pink = cv2.inRange(hsv, np.array((135, 40, 80)), np.array((179, 255, 255)))
@@ -674,11 +674,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         # A character/umbrella can hide the eyes immediately after combat.
         # The portal's top frame remains visible in the same forward view.
         tops = self.op.template_matches(str(self.op.templates / 'door_top.png'),
-                                        (0.3, 0.08, 0.9, 0.6), confidence=0.74,
+                                        (0.3, 0, 0.9, 0.6), confidence=0.74,
                                         scales=np.geomspace(0.4, 4.5, 35))
         for top in tops:
-            if top.top + top.height * 4 <= 260:
-                continue
             hsv = cv2.cvtColor(self.op.image[top.top:top.top + top.height,
                                              top.left:top.left + top.width], cv2.COLOR_RGB2HSV)
             pink = cv2.inRange(hsv, np.array((130, 40, 80)), np.array((179, 255, 255)))
@@ -745,9 +743,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.device.click_record_clear()
         searches = 0
         side_steps = 0
+        repositioned = False
         last_direction = None
         missing = Timer(2, count=2).start()
-        timeout = Timer(150, count=3).start()
+        timeout = Timer(300, count=3).start()
         step = 0
         while not timeout.reached():
             op.snapshot()
@@ -808,9 +807,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     continue
                 # Revealed abnormal events use an eye plaque without a ???
                 # label; they still need interaction before the door wakes.
-                plaques = op.template_matches(str(op.templates / 'event_anomaly_board.png'),
-                                              (0.30, 0.10, 0.86, 0.75), confidence=0.80,
-                                              scales=np.geomspace(0.6, 3.5, 61))
+                plaques = []
+                for template in ('event_unknown_board', 'event_anomaly_board', 'event_reward_board'):
+                    plaques = op.template_matches(str(op.templates / f'{template}.png'),
+                                                  (0.30, 0.10, 0.86, 0.75), confidence=0.80,
+                                                  scales=np.geomspace(0.6, 3.5, 61))
+                    if plaques:
+                        break
                 if plaques:
                     target = max(plaques, key=lambda box: box.score)
                     direction = RogueExit.screen2direction(
@@ -848,7 +851,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 bottom = door.top + door.height * ratio
                 # A close portal can extend below the screenshot. Keep its
                 # visible target in front of the native player foot plane.
-                bottom = min(bottom, 610)
+                # Final-room doors stand above stairs: their visible base can
+                # be above the current floor's horizon. Project toward them
+                # on the walkable plane until approaching raises the camera.
+                bottom = max(280, min(bottom, 610))
                 direction = RogueExit.screen2direction((door.center[0], bottom), at_floor=True)
                 # screen2direction is a ground-plane joystick direction, not
                 # a camera yaw. Feed it to SRC's joystick directly; turning
@@ -866,6 +872,19 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     continue
                 searches += 1
                 if searches >= 9:
+                    if (not repositioned and self.active['station'] in
+                            ('事件', '奖励', '异常', '财富', '铸造')):
+                        # SRA retries an event scan from closer range. DU hides
+                        # plaque labels at a distance, so rotating at the same
+                        # spawn point forever cannot reveal them.
+                        logger.info('DU event labels not visible; approach once and rescan')
+                        self.move(0, 0.6)
+                        repositioned = True
+                        searches = 0
+                        missing.reset()
+                        timeout.reset()
+                        self.device.click_record_clear()
+                        continue
                     if not self.active.get('navigation_reentry_completed'):
                         self.reenter_station()
                         return
