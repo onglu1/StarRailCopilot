@@ -44,6 +44,7 @@ def read_choices(op, kind):
     labels = op.read_region((0.06, 0.16, 0.98, 0.84), snapshot=False)
     markers = [b for b in labels if normalize(b.source).lower() in ('未收集', '未收录', '未获得', '首次获得', 'new')]
     markers += op.template_matches(str(TEMPLATES / 'collection.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
+    markers += op.template_matches(str(TEMPLATES / 'collection_android.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
     from tasks.rogue.assets.assets_rogue_ui import FLAG_UNRECORD
     sample = FLAG_UNRECORD.buttons[0].image_luma
     gray = cv2.cvtColor(op.image[85:580, 80:1250], cv2.COLOR_RGB2GRAY)
