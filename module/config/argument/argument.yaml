@@ -238,6 +238,60 @@ PlannerTarget:
     option: [ 6, 5, 4, 3, 2, 1 ]
 
 
+PureFiction:
+  ChallengeMode:
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
+  MaxRetry:
+    value: 2
+  SwapOnRetry: true
+  Team1Preset:
+    value: 1
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+  Team2Preset:
+    value: 2
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+  Node1Buff:
+    value: '1'
+    option: [ '1', '2', '3', random ]
+  Node2Buff:
+    value: '1'
+    option: [ '1', '2', '3', random ]
+
+MemoryOfChaos:
+  ChallengeMode:
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
+  MaxRetry:
+    value: 2
+  SwapOnRetry: true
+  Team1Preset:
+    value: 1
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+  Team2Preset:
+    value: 2
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+
+ApocalypticShadow:
+  ChallengeMode:
+    value: highest
+    option: [ highest, push, assign ]
+  AssignedStage:
+    value: 1
+  MaxRetry:
+    value: 2
+  SwapOnRetry: true
+  Team1Preset:
+    value: 1
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+  Team2Preset:
+    value: 2
+    option: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+
 Weekly:
   Name:
     # Dungeon names will be injected in config updater

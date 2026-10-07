@@ -33,7 +33,10 @@
     "page": "tool",
     "tasks": [
       "Daemon",
-      "PlannerScan"
+      "PlannerScan",
+      "PureFiction",
+      "MemoryOfChaos",
+      "ApocalypticShadow"
     ]
   }
 }

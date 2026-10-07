@@ -69,6 +69,18 @@
     "PlannerScan": {
       "name": "Character Planner",
       "help": ""
+    },
+    "PureFiction": {
+      "name": "Pure Fiction",
+      "help": "Auto challenge Pure Fiction"
+    },
+    "MemoryOfChaos": {
+      "name": "Forgotten Hall",
+      "help": "Auto challenge Memory of Chaos"
+    },
+    "ApocalypticShadow": {
+      "name": "Apocalyptic Shadow",
+      "help": "Auto challenge Apocalyptic Shadow"
     }
   },
   "Scheduler": {
@@ -1339,6 +1351,193 @@
       "3": "3",
       "2": "2",
       "1": "1"
+    }
+  },
+  "PureFiction": {
+    "_info": {
+      "name": "Pure Fiction Settings",
+      "help": "Auto challenge with in-game team presets"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
+    },
+    "MaxRetry": {
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, stops when used up"
+    },
+    "SwapOnRetry": {
+      "name": "Swap node teams between rounds",
+      "help": "When checked, retries on the same stage swap which preset fights which node"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "Node1Buff": {
+      "name": "Node 1 buff",
+      "help": "Which Pure Fiction buff to take on this node, or pick randomly",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "random": "Random"
+    },
+    "Node2Buff": {
+      "name": "Node 2 buff",
+      "help": "Which Pure Fiction buff to take on this node, or pick randomly",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "random": "Random"
+    }
+  },
+  "MemoryOfChaos": {
+    "_info": {
+      "name": "Forgotten Hall Settings",
+      "help": "Auto challenge Memory of Chaos with in-game team presets"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
+    },
+    "MaxRetry": {
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, stops when used up"
+    },
+    "SwapOnRetry": {
+      "name": "Swap node teams between rounds",
+      "help": "When checked, retries on the same stage swap which preset fights which node"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    }
+  },
+  "ApocalypticShadow": {
+    "_info": {
+      "name": "Apocalyptic Shadow Settings",
+      "help": "Auto challenge with in-game team presets, first axiom auto-selected"
+    },
+    "ChallengeMode": {
+      "name": "Challenge strategy",
+      "help": "highest: only the highest unlocked stage; push: hammer the first non-full-star stage; assign: only the stage set below",
+      "highest": "Default (highest unlocked stage)",
+      "push": "Push (first non-3-star stage)",
+      "assign": "Assigned stage only"
+    },
+    "AssignedStage": {
+      "name": "Assigned stage",
+      "help": "Stage index, used by the \"assign\" strategy"
+    },
+    "MaxRetry": {
+      "name": "Max rounds per stage",
+      "help": "Max rounds on the same stage within one run, stops when used up"
+    },
+    "SwapOnRetry": {
+      "name": "Swap node teams between rounds",
+      "help": "When checked, retries on the same stage swap which preset fights which node"
+    },
+    "Team1Preset": {
+      "name": "Team preset index for node 1",
+      "help": "Index in the in-game preset team list, top to bottom",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
+    },
+    "Team2Preset": {
+      "name": "Team preset index for node 2",
+      "help": "Nodes cannot share characters, make sure the two presets do not overlap",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12"
     }
   },
   "Weekly": {

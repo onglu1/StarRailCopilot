@@ -168,6 +168,32 @@ class GeneratedConfig:
     PlannerTarget_MemoSkillLevel = 6  # 6, 5, 4, 3, 2, 1
     PlannerTarget_MemoTalentLevel = 6  # 6, 5, 4, 3, 2, 1
 
+    # Group `PureFiction`
+    PureFiction_ChallengeMode = 'highest'  # highest, push, assign
+    PureFiction_AssignedStage = 1
+    PureFiction_MaxRetry = 2
+    PureFiction_SwapOnRetry = True
+    PureFiction_Team1Preset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    PureFiction_Team2Preset = 2  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    PureFiction_Node1Buff = 1  # 1, 2, 3, random
+    PureFiction_Node2Buff = 1  # 1, 2, 3, random
+
+    # Group `MemoryOfChaos`
+    MemoryOfChaos_ChallengeMode = 'highest'  # highest, push, assign
+    MemoryOfChaos_AssignedStage = 1
+    MemoryOfChaos_MaxRetry = 2
+    MemoryOfChaos_SwapOnRetry = True
+    MemoryOfChaos_Team1Preset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    MemoryOfChaos_Team2Preset = 2  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+
+    # Group `ApocalypticShadow`
+    ApocalypticShadow_ChallengeMode = 'highest'  # highest, push, assign
+    ApocalypticShadow_AssignedStage = 1
+    ApocalypticShadow_MaxRetry = 2
+    ApocalypticShadow_SwapOnRetry = True
+    ApocalypticShadow_Team1Preset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    ApocalypticShadow_Team2Preset = 2  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+
     # Group `Weekly`
     Weekly_Name = 'Echo_of_War_The_Comedy_of_Doom'  # Echo_of_War_The_Comedy_of_Doom, Echo_of_War_Rusted_Crypt_of_the_Iron_Carcass, Echo_of_War_Glance_of_Twilight, Echo_of_War_Inner_Beast_Battlefield, Echo_of_War_Salutations_of_Ashen_Dreams, Echo_of_War_Borehole_Planet_Past_Nightmares, Echo_of_War_Divine_Seed, Echo_of_War_End_of_the_Eternal_Freeze, Echo_of_War_Destruction_Beginning
     Weekly_Team = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9
