@@ -256,3 +256,8 @@ adb_port.ini
 !popup.exe
 *.zip
 .vscode/*
+
+# Local automation state and portable runtime
+/state/
+/runtime/
+/evidence/

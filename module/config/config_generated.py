@@ -275,3 +275,22 @@ class GeneratedConfig:
 
     # Group `PlannerScan`
     PlannerScan_ResultAdd = False
+
+    # Group `CurrencyWars`
+    CurrencyWars_Mode = 'standard'  # standard, overclock
+    CurrencyWars_Difficulty = 'lowest'  # lowest, highest, current
+    CurrencyWars_Runs = 0
+    CurrencyWars_RepeatDaily = False
+    CurrencyWars_RunStyle = 'precise'  # fast, precise
+    CurrencyWars_Checkpoints = '1-3,1-6,2-1,2-3,3-1,3-3,3-5'
+    CurrencyWars_PreferUncollected = True
+    CurrencyWars_RequiredSynergies = None
+    CurrencyWars_Strategy = 'random'  # random, code, code_pool, sequence, template, template2, template3, preset_pool, file
+    CurrencyWars_ShareCode = None
+    CurrencyWars_RandomCodes = None
+    CurrencyWars_SequenceCodes = None
+    CurrencyWars_StrategyFile = None
+    CurrencyWars_Username = None
+    CurrencyWars_MaxMinutes = 120
+    CurrencyWars_RecoveryRetries = 3
+    CurrencyWars_SaveEvidence = False
