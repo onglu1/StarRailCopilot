@@ -3,6 +3,17 @@ from module.base.button import Button, ButtonWrapper
 # This file was auto-generated, do not modify it manually. To generate:
 # ``` python -m dev_tools.button_extract ```
 
+APOCALYPTIC_SHADOW_CHECK = ButtonWrapper(
+    name='APOCALYPTIC_SHADOW_CHECK',
+    cn=Button(
+        file='./assets/cn/base/page/APOCALYPTIC_SHADOW_CHECK.png',
+        area=(120, 110, 216, 146),
+        search=(100, 90, 236, 166),
+        color=(48, 54, 60),
+        button=(120, 110, 216, 146),
+    ),
+    en=None,
+)
 ASSIGNMENT_CHECK = ButtonWrapper(
     name='ASSIGNMENT_CHECK',
     share=Button(
@@ -398,6 +409,17 @@ PLANNER_CHECK = ButtonWrapper(
             button=(40, 48, 74, 74),
         ),
     ],
+)
+PURE_FICTION_CHECK = ButtonWrapper(
+    name='PURE_FICTION_CHECK',
+    cn=Button(
+        file='./assets/cn/base/page/PURE_FICTION_CHECK.png',
+        area=(112, 30, 218, 68),
+        search=(92, 10, 238, 88),
+        color=(50, 86, 130),
+        button=(112, 30, 218, 68),
+    ),
+    en=None,
 )
 ROGUE_CHECK = ButtonWrapper(
     name='ROGUE_CHECK',
