@@ -22,7 +22,7 @@ Deploy:
     SSLVerify: true
     # Update Alas at startup
     # [In most cases] Use true
-    AutoUpdate: true
+    AutoUpdate: false
     # Whether to keep local changes during update
     # User settings, logs and screenshots will be kept, no mather this is true or false
     # [Developer] Use true, if you modified the code
@@ -40,7 +40,7 @@ Deploy:
     PypiMirror: null
     # Install dependencies at startup
     # [In most cases] Use true
-    InstallDependencies: true
+    InstallDependencies: false
     # Path to requirements.txt
     # [In most cases] Use 'requirements.txt'
     # [In AidLux] Use './deploy/AidLux/{version}/requirements.txt', version is default to 0.92
@@ -88,17 +88,17 @@ Deploy:
   Update:
     # Use auto update and builtin updater feature
     # This may cause problem https://github.com/LmeSzinc/AzurLaneAutoScript/issues/876
-    EnableReload: true
+    EnableReload: false
     # Check update every X minute
     # [Disable] 0
     # [Default] 5
-    CheckUpdateInterval: 5
+    CheckUpdateInterval: 0
     # Scheduled restart time
     # If there are updates, Alas will automatically restart and update at this time every day
     # and run all alas instances that running before restarted
     # [Disable] null
     # [Default] 03:50
-    AutoRestartTime: 03:50
+    AutoRestartTime: null
 
   Misc:
     # Enable discord rich presence

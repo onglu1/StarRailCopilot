@@ -685,7 +685,7 @@ class ConfigGenerator:
     def generate_deploy_template():
         template = poor_yaml_read(DEPLOY_TEMPLATE)
         cn = {
-            'Repository': 'cn',
+            'Repository': 'cn' if template['Repository'] in ('global', 'cn') else template['Repository'],
             'PypiMirror': 'https://pypi.tuna.tsinghua.edu.cn/simple',
             'Language': 'zh-CN',
         }

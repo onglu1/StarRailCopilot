@@ -1,6 +1,6 @@
 # 货币战争与自动深渊整合版
 
-本分支合并了 `abyss` 分支的最新工具实现和 Android 货币战争模块，框架与原货币战争目录使用同一上游版本。
+本仓库 `master` 已同步上游 `e2c7f08`，再通过 cherry-pick 加入 `abyss` 分支的最新工具实现和 Android 货币战争模块。
 
 ## 启动
 
@@ -15,7 +15,7 @@ $env:SRC_PYTHON = 'D:/path/to/existing/SRC/toolkit/python.exe'
 ./start.bat
 ```
 
-通过 `SRC_WEBUI_PORT` 可更换端口。已有一体包若使用自身更新器，请将更新仓库和分支指向本 fork 的相应分支，避免更新后切回上游版本。
+通过 `SRC_WEBUI_PORT` 可更换端口。已有一体包若使用自身更新器，请将更新仓库设为 `https://github.com/onglu1/StarRailCopilot`、分支设为 `master`，避免更新后切回上游版本。
 
 ## WebUI 入口
 
