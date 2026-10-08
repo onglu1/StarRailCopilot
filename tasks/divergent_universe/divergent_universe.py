@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-entry-22')
+        logger.attr('DU control revision', '2026-10-08-login-23')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -153,13 +153,18 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def login_from_current(self, restart=False):
         from tasks.login.login import Login
+        timeout = Timer(300, count=3).start()
         def resumed():
             self.op.image = self.device.image
             self.op._ocr_cache.clear()
             self.op.frame_cache.clear()
-            return bool(self.world_visible() or self.selection_kind() or self.lobby_visible()
-                        or self.op.text('差分宇宙', (0.02, 0, 0.27, 0.065))
-                        or self.op.text('差分宇宙', (0.58, 0.45, 0.96, 0.68)))
+            if (self.world_visible() or self.selection_kind() or self.lobby_visible()
+                    or self.op.text('差分宇宙', (0.02, 0, 0.27, 0.065))
+                    or self.op.text('差分宇宙', (0.58, 0.45, 0.96, 0.68))):
+                return True
+            if timeout.reached():
+                raise RuntimeError('差分宇宙登录等待超时，准备按恢复次数重试')
+            return False
         login = Login(self.config, device=self.device)
         login.login_expected_end = resumed
         if restart:
