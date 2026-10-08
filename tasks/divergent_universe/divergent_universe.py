@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-login-18')
+        logger.attr('DU control revision', '2026-10-08-combat-19')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -379,6 +379,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self._node_done = True
                     self.progress.save('event_finished')
                 self.update_station_header()
+                if self._node_done and self.active['station'] in ('战斗', '精英', '首领', '转化'):
+                    enemy = op.read_line((0.42, 0.035, 0.75, 0.10), snapshot=False).source
+                    if re.search(r'等级\s*\d+', enemy):
+                        logger.info('DU enemy remains after reconnect; resume this battle')
+                        self._node_done = False
+                        self.active['node_done'] = False
+                        self.progress.save('combat_pending')
                 if self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
                     self.quit_run()
                 elif not self._node_done and any(t in self.active['station'] for t in ('战斗', '精英', '首领', '转化')):
@@ -656,8 +663,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self._du_combat_deadline = time.monotonic() + 600
         super().combat_execute(expected_end=expected_end or self.combat_expected_end)
         self.active['battles'] += 1
-        self._node_done = True
-        self.active['node_done'] = True
+        from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN
+        self._node_done = not self.appear(COMBAT_AGAIN)
+        self.active['node_done'] = self._node_done
         self.progress.save('combat_finished')
 
     def find_door(self):
@@ -945,6 +953,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
         op = self.op
         if self.world_visible():
             return False
+        from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN, COMBAT_EXIT
+        if self.appear(COMBAT_AGAIN) and self.appear(COMBAT_EXIT):
+            # Native combat returns on the retry screen too. Leave the failed
+            # battle through its native button; do not mark this room cleared.
+            self._node_done = False
+            self.active['node_done'] = False
+            self.progress.save('combat_retry')
+            self.appear_then_click(COMBAT_EXIT, interval=3)
+            return True
         from tasks.login.assets.assets_login import LOGIN_LOADING
         login_page = self.is_in_login_confirm() or self.appear(LOGIN_LOADING)
         if not login_page:
