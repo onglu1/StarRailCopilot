@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-entry-21')
+        logger.attr('DU control revision', '2026-10-08-entry-22')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -547,18 +547,32 @@ class DivergentUniverse(DungeonUINav, MapControl):
             remaining = refresh_count()
             if not refresh or remaining is None or remaining <= 0:
                 break
-            popup_seen = False
+            reroll_retry = Timer(2, count=2)
+            reroll_attempts = 0
             def rerolled():
                 items = candidates_ready()
                 current = refresh_count()
                 return items if items and current is not None and current < remaining else False
             def reroll_action():
-                nonlocal popup_seen
+                nonlocal reroll_attempts
                 if self.handle_popup_confirm():
-                    popup_seen = True
-                elif not popup_seen and refresh_count() == remaining:
-                    op.click_text(('刷新', '重掷', '重抽'), (0.1, 0.65, 0.95, 1), interval=2)
-            candidates = op.wait_until(rerolled, action=reroll_action, name='站点刷新')
+                    reroll_retry.reset()
+                elif (reroll_attempts < 3 and reroll_retry.reached()
+                      and refresh_count() == remaining):
+                    if op.click_text(('刷新', '重掷', '重抽'), (0.1, 0.65, 0.95, 1), interval=2):
+                        reroll_attempts += 1
+                        reroll_retry.reset()
+            try:
+                candidates = op.wait_until(rerolled, action=reroll_action, name='站点刷新')
+            except RuntimeError as error:
+                # Reroll is optional. If the game rejected it but still offers
+                # valid stations, proceed with those instead of restarting.
+                available = candidates_ready()
+                if str(error).startswith('站点刷新超时') and available:
+                    logger.warning('DU reroll not applied; continue with visible stations')
+                    candidates = available
+                    break
+                raise
         target = target or candidates[0]
         self.active['station'] = next((word for word in station_types if word in target.source), target.source)
         op.click_box(target)
