@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-combat-19')
+        logger.attr('DU control revision', '2026-10-08-combat-20')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -145,6 +145,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self._entry_prepared = False
         self._native_event = None
         self._settlement_exit_wait = Timer(8)
+        self._du_auto_off_confirm = Timer(1, count=2).start()
         self._launch_attempts = 0
         self.combat_state_reset()
         if not self.device.app_is_running():
@@ -652,9 +653,25 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     or self.op.text(('获得祝福', '获得奇物', '方程展开'), (0, 0, 1, 0.24))
                     or self.op.text(('探索成功', '探索失败', '探索中断'), (0.04, 0.05, 0.95, 0.4), exact=True))
 
+    def handle_combat_state(self, auto=True, speed_2x=True):
+        # Native combat may optimistically cache auto=True while the button is
+        # hidden by an animation. Revalidate a visibly disabled button across
+        # frames, then let native combat perform its normal toggle/retry.
+        if auto and self._combat_auto_checked and self.is_combat_executing():
+            if self.is_combat_auto():
+                self._du_auto_off_confirm.reset()
+            elif self._du_auto_off_confirm.reached():
+                logger.info('DU auto combat is visibly off; recheck native controls')
+                self._combat_auto_checked = False
+                self._du_auto_off_confirm.reset()
+        else:
+            self._du_auto_off_confirm.reset()
+        return super().handle_combat_state(auto=auto, speed_2x=speed_2x)
+
     def combat_execute(self, expected_end=None):
         self.progress.save('combat')
         self._du_combat_deadline = time.monotonic() + 600
+        self._du_auto_off_confirm = Timer(1, count=2).start()
         super().combat_execute(expected_end=expected_end or self.combat_expected_end)
         self.active['battles'] += 1
         from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN
