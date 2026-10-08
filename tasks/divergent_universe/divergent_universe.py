@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-login-23')
+        logger.attr('DU control revision', '2026-10-08-forge-24')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -853,7 +853,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # Keep the world HUD on the left out of this search.
                 targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
                 unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)
-                           or normalize(box.source) in self.EVENT_NAMES]
+                           or normalize(box.source) in self.EVENT_NAMES
+                           or (self.active['station'] == '铸造'
+                               and re.search(r'[（(]区域[）)]', box.source))]
                 unknown += op.template_matches(str(op.templates / 'event_unknown.png'),
                                                 (0.30, 0, 0.80, 0.46), confidence=0.80)
                 if not unknown:
@@ -879,7 +881,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # Revealed abnormal events use an eye plaque without a ???
                 # label; they still need interaction before the door wakes.
                 plaques = []
-                for template in ('event_unknown_board', 'event_anomaly_board', 'event_reward_board'):
+                board_templates = ('event_unknown_board', 'event_anomaly_board', 'event_reward_board')
+                if self.active['station'] == '铸造':
+                    board_templates = ('event_forge_board',) + board_templates
+                for template in board_templates:
                     plaques = op.template_matches(str(op.templates / f'{template}.png'),
                                                   (0.30, 0.10, 0.86, 0.75), confidence=0.80,
                                                   scales=np.geomspace(0.6, 3.5, 61))
