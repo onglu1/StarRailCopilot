@@ -379,13 +379,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self._node_done = True
                     self.progress.save('event_finished')
                 self.update_station_header()
-                if self._node_done and self.active['station'] in ('战斗', '精英', '首领', '转化'):
-                    enemy = op.read_line((0.42, 0.035, 0.75, 0.10), snapshot=False).source
-                    if re.search(r'等级\s*\d+', enemy):
-                        logger.info('DU enemy remains after reconnect; resume this battle')
-                        self._node_done = False
-                        self.active['node_done'] = False
-                        self.progress.save('combat_pending')
+                self.check_remaining_enemy()
                 if self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
                     self.quit_run()
                 elif not self._node_done and any(t in self.active['station'] for t in ('战斗', '精英', '首领', '转化')):
@@ -762,6 +756,17 @@ class DivergentUniverse(DungeonUINav, MapControl):
             return RogueExit.screen2direction((x + w / 2, y + h), at_floor=True)
         return RogueExit.screen2direction(target.center)
 
+    def check_remaining_enemy(self):
+        if self._node_done and self.active['station'] in ('战斗', '精英', '首领', '转化'):
+            enemy = self.op.read_line((0.42, 0.035, 0.75, 0.10), snapshot=False).source
+            if re.search(r'等级\s*\d+', enemy):
+                logger.info('DU enemy remains after reconnect; resume this battle')
+                self._node_done = False
+                self.active['node_done'] = False
+                self.progress.save('combat_pending')
+                return True
+        return False
+
     def navigate_station(self):
         op = self.op
         self.progress.save('navigating')
@@ -800,6 +805,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if self.handle_misc():
                     return
                 continue
+            if self.check_remaining_enemy():
+                return
             if (self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
                     and self.handle_combat_interact(interval=1)):
                 continue
