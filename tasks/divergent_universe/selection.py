@@ -84,6 +84,15 @@ def read_choices(op, kind):
     # and contain unrelated keywords such as "exploration interrupted".
     title_region = (0.08, 0.49, 0.96, 0.55) if kind == 'miracle' else (0.08, 0.42, 0.96, 0.50)
     labels = op.read_region(title_region, snapshot=False)
+    if kind == 'miracle':
+        # Gold backgrounds and confetti can break the card's outer contour.
+        # Its title still locates the card without guessing a default column.
+        anchors = []
+        for label in sorted(labels, key=lambda b: b.center[0]):
+            if label.source.strip() and all(abs(label.center[0] - x) > 100 for x in anchors):
+                anchors.append(label.center[0])
+        if 1 <= len(anchors) <= 5 and len(anchors) > len(cards):
+            cards = [Box(max(80, min(950, x - 125)), 155, 250, 435, 'DU_TITLE_CARD') for x in anchors]
     markers = [b for b in labels if normalize(b.source).lower() in ('未收集', '未收录', '未获得', '首次获得', 'new')]
     markers += op.template_matches(str(TEMPLATES / 'collection.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
     markers += op.template_matches(str(TEMPLATES / 'collection_android.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
