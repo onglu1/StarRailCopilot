@@ -133,7 +133,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
     def _initialize(self):
-        logger.attr('DU control revision', '2026-10-08-combat-20')
+        logger.attr('DU control revision', '2026-10-08-entry-21')
         self.active = self.progress.data.get('active')
         if self.active and self.active.get('station') in ('事件', '异常', '奖励', '财富', '铸造'):
             if not self.active.get('event_completed'):
@@ -312,7 +312,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         from tasks.divergent_universe.entry import EntrySettings
         launch_labels = EntrySettings.LAUNCH
         if not self._entry_prepared and (op.text(launch_labels, (0.3, 0.65, 1, 1))
-                                        or op.text(('常规演算', '周期演算'), (0, 0, 0.48, 0.88))):
+                                        or op.text('模式选择', (0, 0, 0.3, 0.13), exact=True)):
             from tasks.divergent_universe.entry import EntrySettings
             EntrySettings(self).prepare(self.active.get('calculation', 'periodic'))
             self._entry_prepared = True
