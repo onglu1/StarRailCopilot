@@ -1081,6 +1081,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if not self.active.get('event_pending'):
                 self.active['event_pending'] = True
                 self.progress.save('event')
+                # A confirmed map-to-dialogue transition ends navigation;
+                # its camera swipes must not count as repeated dialogue input.
+                self.device.click_record_clear()
+                self.device.stuck_record_clear()
             from tasks.rogue.event.event import RogueEvent
             from tasks.rogue.assets.assets_rogue_event import CHOOSE_OPTION_CONFIRM, CHOOSE_STORY
             from tasks.rogue.assets.assets_rogue_ui import PAGE_EVENT
@@ -1102,10 +1106,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
             star = op.template('event_selection', (0.3, 0.2, 1, 0.9))
             if star or arrow:
                 op.click_box(star or arrow)
-            elif handler.handle_event_continue():
-                return True
-            elif op.template('event_next', (0.3, 0.4, 1, 1)):
-                op.click_point(0.78, 0.79, tag='DU_EVENT_DIALOGUE')
+            else:
+                next_story = op.template('event_next', (0.3, 0.4, 1, 1))
+                if next_story:
+                    op.click_box(next_story)
+                else:
+                    # Native PAGE_EVENT continues at BLESSING_CONFIRM, which
+                    # lies outside DU's shorter dialogue panel. Only reuse
+                    # the explicitly detected native story control here.
+                    handler.appear_then_click(CHOOSE_STORY, interval=2)
             return True
         if op.click_text(('点击空白处关闭', '点击空白处继续'), (0, 0.5, 1, 1)):
             return True
