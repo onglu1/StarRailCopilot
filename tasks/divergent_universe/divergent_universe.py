@@ -510,6 +510,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         timeout = Timer(45, count=3).start()
         while not timeout.reached():
             op.snapshot()
+            if kind == 'next_station' and self.handle_station_warning():
+                continue
             current = self.selection_kind()
             if current != kind:
                 if current or self.world_visible() or self.is_combat_executing() or self.lobby_visible():
@@ -621,6 +623,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
         if self.appear(DU_INTERACT):
             return True
+        if (getattr(self, 'active', None) or {}).get('station') in ('事件', '奖励', '异常', '财富', '铸造'):
+            if self.appear(DUNGEON_COMBAT_INTERACT):
+                return True
         # Shops contain NPC conversations (for example Ruan Mei). Their bubble
         # must not cancel every movement gesture toward the actual exit.
         return bool(self.appear(DUNGEON_COMBAT_INTERACT) and self.op.text(
@@ -829,6 +834,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         side_steps = 0
         repositioned = False
         last_direction = None
+        last_direction_steps = 0
         door_anchor = None
         door_stalls = 0
         detours = 0
@@ -873,8 +879,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
                 unknown = [box for box in targets if re.fullmatch(r'[?？\s]{2,}', box.source)
                            or normalize(box.source) in self.EVENT_NAMES
-                           or (self.active['station'] == '铸造'
-                               and re.search(r'[（(]区域[）)]', box.source))]
+                           # Standard/star-tier rooms also have named regional
+                           # events absent from the native SU title catalogue.
+                           or re.search(r'[（(]区域[）)]', box.source)]
                 unknown += op.template_matches(str(op.templates / 'event_unknown.png'),
                                                 (0.30, 0, 0.80, 0.46), confidence=0.80)
                 if not unknown:
@@ -894,15 +901,17 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     near = target.center[1] < 110
                     self.move(direction, 0.25 if near else 0.5, run=not near)
                     last_direction = direction
+                    last_direction_steps = 0
                     searches = 0
                     missing.reset()
                     continue
                 # Revealed abnormal events use an eye plaque without a ???
                 # label; they still need interaction before the door wakes.
                 plaques = []
-                board_templates = ('event_unknown_board', 'event_anomaly_board', 'event_reward_board')
-                if self.active['station'] == '铸造':
-                    board_templates = ('event_forge_board',) + board_templates
+                # Regional events use the same blue framed artwork as forge
+                # rooms, including when the title is clipped above the screen.
+                board_templates = ('event_unknown_board', 'event_anomaly_board',
+                                   'event_reward_board', 'event_forge_board')
                 for template in board_templates:
                     plaques = op.template_matches(str(op.templates / f'{template}.png'),
                                                   (0.30, 0.10, 0.86, 0.75), confidence=0.80,
@@ -917,6 +926,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self.move(direction, 0.25 if target.height > 220 else 0.5,
                               run=target.height <= 220)
                     last_direction = direction
+                    last_direction_steps = 0
                     searches = 0
                     missing.reset()
                     continue
@@ -976,9 +986,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 near = door.source == 'door_edge' or door.height > 70
                 self.move(direction, 0.25 if near else 0.6, run=not near)
                 last_direction = direction
+                last_direction_steps = 0
             elif last_direction is not None:
                 self.move(last_direction, 0.3)
-                last_direction = None
+                # Retain a recently observed target through brief occlusion;
+                # each short native movement still stops on an interaction.
+                last_direction_steps += 1
+                if last_direction_steps >= 3:
+                    last_direction = None
             else:
                 # Keep checking this view while the post-combat animation or
                 # a stale screenshot clears; turn only after repeated misses.
@@ -1039,10 +1054,19 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return bool(self.op.text('造物调试台', (0.04, 0.035, 0.32, 0.11), exact=True)
                     and self.op.text('选择加权奇物', (0.58, 0.38, 0.97, 0.53)))
 
+    def handle_station_warning(self):
+        if (self.op.text('最后一次', (0.2, 0.35, 0.85, 0.56))
+                and self.op.text('储蓄间', (0.2, 0.35, 0.85, 0.56))):
+            self.handle_popup_confirm()
+            return True
+        return False
+
     def handle_misc(self):
         op = self.op
         if self.world_visible():
             return False
+        if self.handle_station_warning():
+            return True
         if self.forge_panel_visible():
             # This optional setup panel is not a map or a forced reward choice.
             # Mark completion only after the close is observed back on the map.
