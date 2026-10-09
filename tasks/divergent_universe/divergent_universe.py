@@ -690,6 +690,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.op.frame_cache.clear()
         return bool(self.selection_kind() or self.world_visible()
                     or self.op.text(('获得祝福', '获得奇物', '方程展开'), (0, 0, 1, 0.24))
+                    # Conversion rooms end on their own reward overlay. The
+                    # main loop then closes it through the observed prompt.
+                    or self.op.text('转化结束', (0.3, 0.2, 0.72, 0.37), exact=True)
                     or self.op.text(('探索成功', '探索失败', '探索中断'), (0.04, 0.05, 0.95, 0.4), exact=True))
 
     def handle_combat_state(self, auto=True, speed_2x=True):
