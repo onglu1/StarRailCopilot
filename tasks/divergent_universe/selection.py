@@ -79,6 +79,9 @@ def choice_rarity(image, card, kind):
 
 
 def read_choices(op, kind):
+    key = ('choices', kind)
+    if key in op.frame_cache:
+        return list(op.frame_cache[key])
     cards = card_boxes(op.image)
     # Only names are needed for tie-breaking; full descriptions are expensive
     # and contain unrelated keywords such as "exploration interrupted".
@@ -123,6 +126,7 @@ def read_choices(op, kind):
                           and card.top - 90 <= b.center[1] <= card.top + card.height)
         choices.append(Choice(card, ' '.join(inside)[:180], any(near(b) for b in markers),
                               any(near(b) for b in recommended), choice_rarity(op.image, card, kind)))
+    op.frame_cache[key] = tuple(choices)
     return choices
 
 

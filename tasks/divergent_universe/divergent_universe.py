@@ -31,6 +31,8 @@ from tasks.rogue.keywords import RogueEventTitle
 class DivergentUniverse(DungeonUINav, MapControl):
     INTERACT_BUTTON = DU_INTERACT
     EVENT_NAMES = frozenset(normalize(event.cn) for event in RogueEventTitle.instances.values())
+    REWARD_TITLES = ('方程展开', '祝福强化', '获得奇物', '获得祝福',
+                     '获得物品', '信标已部署', '站点卡升级')
     CHOICES = {
         'mask': ('选择一张面具', '选择面具'),
         'blessing': ('选择祝福', '选取祝福', '获取祝福'),
@@ -175,8 +177,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         if 'header' not in self.op.frame_cache:
             title = self.op.read_line((0.055, 0.046, 0.365, 0.096), snapshot=False).source
             known = [label for labels in self.CHOICES.values() for label in labels]
-            known += ['选择下一站', '选择下一个站点', '欢愉假面', '方程展开', '祝福强化',
-                      '获得奇物', '获得祝福', '事件', '常规演算', '周期演算', '模式选择']
+            known += list(self.REWARD_TITLES) + ['选择下一站', '选择下一个站点', '欢愉假面',
+                      '事件', '常规演算', '周期演算', '模式选择', '星阶模式', '造物调试台']
             if not any(label in normalize(title) for label in known):
                 title = self.op.read_line((0.16, 0.11, 0.85, 0.17), snapshot=False).source
             if not any(label in normalize(title) for label in known):
@@ -410,7 +412,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 continue
             # Once the native event page is identified, avoid repeatedly OCRing
             # settlement dialogs and launch controls before every dialogue tap.
-            if not self.selection_kind() and '事件' in self.header_text() and self.handle_misc():
+            if (not self.selection_kind()
+                    and any(word in self.header_text() for word in ('事件',) + self.REWARD_TITLES)
+                    and self.handle_misc()):
                 idle_since = time.monotonic()
                 continue
             result = self.handle_settlement()
@@ -623,6 +627,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
         if self.appear(DU_INTERACT):
             return True
+        if self.loot_interaction():
+            return True
         if (getattr(self, 'active', None) or {}).get('station') in ('事件', '奖励', '异常', '财富', '铸造'):
             if self.appear(DUNGEON_COMBAT_INTERACT):
                 return True
@@ -635,7 +641,16 @@ class DivergentUniverse(DungeonUINav, MapControl):
         from tasks.combat.assets.assets_combat_interact import DUNGEON_COMBAT_INTERACT
         if super().handle_combat_interact(interval=interval):
             return True
-        return self.appear_then_click(DUNGEON_COMBAT_INTERACT, interval=interval)
+        if self.appear_then_click(DUNGEON_COMBAT_INTERACT, interval=interval):
+            return True
+        return self.op.click_box(self.loot_interaction(), interval=interval)
+
+    def loot_interaction(self):
+        # DU treasure prompts have a chest icon, not the native NPC bubble or
+        # portal arrow. Match their visible label only on the walking screen.
+        if (getattr(self, 'active', None) or {}).get('station') in ('财富', '奖励') and self.world_visible():
+            return self.op.text('战利品', (0.60, 0.52, 0.85, 0.65))
+        return None
 
     def fight_station(self):
         op = self.op
@@ -841,7 +856,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         door_anchor = None
         door_stalls = 0
         detours = 0
-        missing = Timer(2, count=2).start()
+        # Confirm absence on two fresh frames, not three full template scans.
+        missing = Timer(2, count=1).start()
         timeout = Timer(300, count=3).start()
         step = 0
         while not timeout.reached():
@@ -1061,8 +1077,19 @@ class DivergentUniverse(DungeonUINav, MapControl):
         raise RuntimeError('差分宇宙暂离后未能返回入口，当前进度已保留')
 
     def forge_panel_visible(self):
-        return bool(self.op.text('造物调试台', (0.04, 0.035, 0.32, 0.11), exact=True)
+        return bool('造物调试台' in self.header_text()
                     and self.op.text('选择加权奇物', (0.58, 0.38, 0.97, 0.53)))
+
+    def reward_close_button(self):
+        labels = ('点击空白处关闭', '点击空白处继续')
+        # Normal rewards and conversion results use different footer heights.
+        # Keep the existing region OCR as a fallback for other layouts.
+        for region in ((550 / 1280, 639 / 720, 730 / 1280, 673 / 720),
+                       (550 / 1280, 581 / 720, 730 / 1280, 615 / 720)):
+            box = self.op.read_line(region, snapshot=False)
+            if normalize(box.source) in labels:
+                return box
+        return self.op.text(labels, (0, 0.5, 1, 1))
 
     def handle_station_warning(self):
         if (self.op.text('最后一次', (0.2, 0.35, 0.85, 0.56))
@@ -1075,6 +1102,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
         op = self.op
         if self.world_visible():
             return False
+        # A recognized reward/event page does not need login and unrelated
+        # popup OCR before every dialogue or close action.
+        if self.handle_known_page():
+            return True
         if self.handle_station_warning():
             return True
         if self.forge_panel_visible():
@@ -1106,9 +1137,17 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.progress.save('reconnecting')
             self.login_from_current()
             return True
+        if op.click_box(self.reward_close_button()):
+            return True
+        return self.handle_tutorial()
+
+    def handle_known_page(self):
+        op = self.op
         title = self.header_text()
-        if any(word in title for word in ('方程展开', '祝福强化', '获得奇物', '获得祝福')):
-            if not op.click_text(('确定', '确认', '继续', '点击空白处关闭'), (0.1, 0.6, 1, 1)):
+        if any(word in title for word in self.REWARD_TITLES):
+            if op.click_box(self.reward_close_button()):
+                return True
+            if not op.click_text(('确定', '确认', '继续'), (0.1, 0.6, 1, 1)):
                 op.back()
             return True
         if '事件' in title:
@@ -1150,9 +1189,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     # the explicitly detected native story control here.
                     handler.appear_then_click(CHOOSE_STORY, interval=2)
             return True
-        if op.click_text(('点击空白处关闭', '点击空白处继续'), (0, 0.5, 1, 1)):
-            return True
-        return self.handle_tutorial()
+        return False
 
     def update_station_header(self):
         labels = self.op.read_region((0.025, 0, 0.5, 0.065), snapshot=False)

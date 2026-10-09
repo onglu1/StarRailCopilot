@@ -3,10 +3,12 @@ import json
 from pathlib import Path
 import time
 
+import cv2
+
 from module.base.button import ClickButton
 from module.base.timer import Timer
 
-from tasks.currency_wars.operator import MobileOperator
+from tasks.currency_wars.operator import Box, MobileOperator
 
 
 class DivergentOperator(MobileOperator):
@@ -17,6 +19,7 @@ class DivergentOperator(MobileOperator):
         self.templates = Path(__file__).parent / 'templates'
         self._click_intervals = {}
         self.frame_cache = {}
+        self._scaled_templates = {}
 
     def snapshot(self, ocr=False):
         from tasks.base.assets.assets_base_popup import MONTHLY_CARD_REWARD, MONTHLY_CARD_GET_ITEM
@@ -85,6 +88,77 @@ class DivergentOperator(MobileOperator):
     def template(self, name, region=(0, 0, 1, 1), confidence=0.86):
         matches = self.template_matches(str(self.templates / f'{name}.png'), region, confidence)
         return matches[0] if matches else None
+
+    def read_line(self, region, snapshot=True):
+        if snapshot:
+            self.snapshot()
+        key = ('line', tuple(region))
+        if key not in self._ocr_cache:
+            self._ocr_cache[key] = super().read_line(region, snapshot=False)
+        return self._ocr_cache[key]
+
+    def template_matches(self, path, region=(0, 0, 1, 1), confidence=0.83,
+                         scales=(2 / 3, 0.75, 0.85, 1.0)):
+        scales = tuple(scales)
+        result_key = ('template_matches', str(path), tuple(region), confidence, scales)
+        if result_key in self.frame_cache:
+            return list(self.frame_cache[result_key])
+        if path not in self._templates:
+            self._templates[path] = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
+        template = self._templates[path]
+        if template is None:
+            return []
+        x1, y1, x2, y2 = self.region_pixels(region)
+        key = ('navigation_gray', tuple(region))
+        if key not in self.frame_cache:
+            gray = cv2.cvtColor(self.image[y1:y2, x1:x2], cv2.COLOR_RGB2GRAY)
+            self.frame_cache[key] = gray, None
+        frame, small_frame = self.frame_cache[key]
+        dense = len(scales) > 8
+        if dense and small_frame is None:
+            small_frame = cv2.resize(frame, None, fx=0.5, fy=0.5)
+            self.frame_cache[key] = frame, small_frame
+        matches = []
+        for scale in scales:
+            key = (path, float(scale))
+            if key not in self._scaled_templates:
+                sample = cv2.resize(template, None, fx=scale, fy=scale)
+                h, w = sample.shape
+                self._scaled_templates[key] = sample, cv2.resize(sample, (max(1, w // 2), max(1, h // 2)))
+            sample, small_sample = self._scaled_templates[key]
+            h, w = sample.shape
+            if h >= frame.shape[0] or w >= frame.shape[1]:
+                continue
+            # Tiny features keep the original matcher. Larger templates use
+            # a cheap candidate pass, then the original full-resolution score.
+            reduced = dense and min(h, w) >= 16
+            search = small_frame if reduced else frame
+            needle = small_sample if reduced else sample
+            nh, nw = needle.shape
+            values = cv2.matchTemplate(search, needle, cv2.TM_CCOEFF_NORMED)
+            threshold = max(0.45, confidence - 0.20) if reduced else confidence
+            while True:
+                _, score, _, (px, py) = cv2.minMaxLoc(values)
+                if score < threshold or len(matches) > 30:
+                    break
+                values[max(0, py - nh // 2):py + nh // 2 + 1,
+                       max(0, px - nw // 2):px + nw // 2 + 1] = 0
+                if reduced:
+                    left, top = max(0, px * 2 - 4), max(0, py * 2 - 4)
+                    crop = frame[top:min(frame.shape[0], py * 2 + h + 5),
+                                 left:min(frame.shape[1], px * 2 + w + 5)]
+                    if crop.shape[0] < h or crop.shape[1] < w:
+                        continue
+                    verified = cv2.matchTemplate(crop, sample, cv2.TM_CCOEFF_NORMED)
+                    _, score, _, (dx, dy) = cv2.minMaxLoc(verified)
+                    px, py = left + dx, top + dy
+                if score >= confidence:
+                    candidate = Box(x1 + px, y1 + py, w, h, Path(path).stem, score)
+                    if all(candidate.distance(box) > min(w, h) / 2 for box in matches):
+                        matches.append(candidate)
+        matches.sort(key=lambda box: box.left)
+        self.frame_cache[result_key] = tuple(matches)
+        return list(matches)
 
     def save(self, name):
         if self.evidence_dir is None:
