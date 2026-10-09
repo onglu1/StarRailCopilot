@@ -938,6 +938,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if door_anchor is not None and np.max(np.abs(anchor - door_anchor)) < 12:
                     door_stalls += 1
                 else:
+                    if door_anchor is not None:
+                        # JoystickContact sends native touches directly, so
+                        # renew the watchdog only on observed target movement.
+                        self.device.stuck_record_clear()
                     door_stalls = 0
                     door_anchor = anchor
                 if door_stalls >= 4:
@@ -947,6 +951,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     if detours >= 3:
                         raise RuntimeError('随意门可见但绕障后仍无法接近，保留当前站点')
                     logger.info('DU exit did not move after four approaches; sidestep obstacle')
+                    # A bounded recovery step starts a new movement attempt;
+                    # the room timeout and three-detour limit still apply.
+                    self.device.stuck_record_clear()
                     self.move(90 if detours < 2 else -90, 0.6, run=False)
                     detours += 1
                     door_anchor = None
