@@ -232,6 +232,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if self.world_visible() or self.selection_kind():
                 logger.info('DU resume current exploration')
                 return True
+            if self.active and self.forge_panel_visible():
+                return True
             if self.is_combat_executing():
                 if self.progress.data.get('active'):
                     return True
@@ -323,6 +325,16 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self._entry_prepared = True
             return True
         launch = op.text(('启动「差分宇宙」', '启动差分宇宙', '进入星阶模式'), (0.3, 0.65, 1, 1))
+        if launch and self.active.get('node') and not op.text('继续进度', (0.3, 0.65, 1, 1)):
+            # The game offers a fresh start, so the old local checkpoint is
+            # no longer resumable. Keep it separately, without a win/loss.
+            self.progress.supersede('Game entry offers a new exploration instead of retained progress')
+            self.active = self.progress.begin(self.config.DivergentUniverse_Mode,
+                                              self.config.DivergentUniverse_Calculation)
+            self._entry_prepared = False
+            self._node_done = False
+            logger.info('DU stale checkpoint retained as unconfirmed; apply configured calculation')
+            return True
         if launch and op.template('download_empty', (0.43, 0.78, 0.72, 0.96), confidence=0.93):
             self.prepare_downloads()
             return True
@@ -386,7 +398,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self.progress.save('event_finished')
                 self.update_station_header()
                 self.check_remaining_enemy()
-                if self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
+                if self.active.get('stop_requested'):
+                    self.quit_run()
+                elif self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
                     self.quit_run()
                 elif not self._node_done and any(t in self.active['station'] for t in ('战斗', '精英', '首领', '转化')):
                     self.fight_station()
@@ -411,7 +425,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.handle_choice(kind)
                 idle_since = time.monotonic()
                 continue
-            if self.active['mode'] == 'first_station' and op.text(('结束并结算', '退出并结算'), (0.05, 0.2, 1, 1)):
+            if (self.active['mode'] == 'first_station' or self.active.get('stop_requested')) and op.text(
+                    ('结束并结算', '退出并结算'), (0.05, 0.2, 1, 1)):
                 self.quit_run()
                 continue
             if self.is_combat_executing():
@@ -814,6 +829,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         side_steps = 0
         repositioned = False
         last_direction = None
+        door_anchor = None
+        door_stalls = 0
+        detours = 0
         missing = Timer(2, count=2).start()
         timeout = Timer(300, count=3).start()
         step = 0
@@ -843,12 +861,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 continue
             if self.check_remaining_enemy():
                 return
-            if (self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造')
+            forge_finished = self.active['station'] == '铸造' and self.active.get('event_completed')
+            if (self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造') and not forge_finished
                     and self.handle_combat_interact(interval=1)):
                 continue
             # Some abnormal rooms contain several events. Finishing one must
             # not suppress the remaining question-mark plaques in this room.
-            if self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造'):
+            if self.active['station'] in ('事件', '奖励', '异常', '财富', '铸造') and not forge_finished:
                 # Nearby event plaques put their labels against the top edge.
                 # Keep the world HUD on the left out of this search.
                 targets = op.read_region((0.30, 0, 0.80, 0.46), snapshot=False)
@@ -905,6 +924,25 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if door:
                 searches = 0
                 missing.reset()
+                anchor = np.array((door.center[0], door.top, door.height))
+                if door_anchor is not None and np.max(np.abs(anchor - door_anchor)) < 12:
+                    door_stalls += 1
+                else:
+                    door_stalls = 0
+                    door_anchor = anchor
+                if door_stalls >= 4:
+                    # A fixed exit after repeated movement means an obstacle,
+                    # for example the large chest in a wealth room. SRC owns
+                    # the lateral joystick movement and screenshot polling.
+                    if detours >= 3:
+                        raise RuntimeError('随意门可见但绕障后仍无法接近，保留当前站点')
+                    logger.info('DU exit did not move after four approaches; sidestep obstacle')
+                    self.move(90 if detours < 2 else -90, 0.6, run=False)
+                    detours += 1
+                    door_anchor = None
+                    door_stalls = 0
+                    last_direction = None
+                    continue
                 if (door.source == 'door_edge' and door.height > 240
                         and abs(door.center[0] - 640) < 200 and side_steps < 3):
                     # The DU prop interacts from its front. Its cyan glow is
@@ -997,10 +1035,22 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 op.click_text('确认', (0.4, 0.4, 0.9, 0.9), exact=True)
         raise RuntimeError('差分宇宙暂离后未能返回入口，当前进度已保留')
 
+    def forge_panel_visible(self):
+        return bool(self.op.text('造物调试台', (0.04, 0.035, 0.32, 0.11), exact=True)
+                    and self.op.text('选择加权奇物', (0.58, 0.38, 0.97, 0.53)))
+
     def handle_misc(self):
         op = self.op
         if self.world_visible():
             return False
+        if self.forge_panel_visible():
+            # This optional setup panel is not a map or a forced reward choice.
+            # Mark completion only after the close is observed back on the map.
+            from tasks.base.assets.assets_base_page import GUIDE_CLOSE
+            self.active['event_pending'] = True
+            self.progress.save('closing_forge_panel')
+            self.appear_then_click(GUIDE_CLOSE, interval=2)
+            return True
         from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN, COMBAT_EXIT
         if self.appear(COMBAT_AGAIN) and self.appear(COMBAT_EXIT):
             # Native combat returns on the retry screen too. Leave the failed
@@ -1132,7 +1182,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
             first_observation = not self.active.get('settlement_observed')
             self.active['pending_settlement'] = True
             self.active['settlement_observed'] = True
-            self.active['result'] = 'win' if '成功' in ending.source else 'farm' if self.active['mode'] == 'first_station' else 'loss'
+            self.active['result'] = ('win' if '成功' in ending.source else
+                                     'interrupted' if self.active.get('stop_requested') else
+                                     'farm' if self.active['mode'] == 'first_station' else 'loss')
             self.progress.save('settling')
             if first_observation:
                 logger.attr('DU settlement', ending.source)

@@ -40,3 +40,12 @@ class Progress:
             self.data['history'].append(dict(active, result=result, finished=datetime.now().isoformat(timespec='seconds')))
         self.data['active'] = None
         self.save('settled')
+
+    def supersede(self, reason):
+        """Keep an obsolete checkpoint without inventing a game settlement."""
+        active = self.data.get('active')
+        if active:
+            self.data.setdefault('unconfirmed', []).append(dict(
+                active, reason=reason, observed=datetime.now().isoformat(timespec='seconds')))
+        self.data['active'] = None
+        self.save('checkpoint_superseded')
