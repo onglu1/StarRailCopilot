@@ -422,15 +422,20 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self._node_done = True
                     self.progress.save('event_finished')
                 self.update_station_header()
-                self.check_remaining_enemy()
                 if self.active.get('stop_requested'):
                     self.quit_run()
                 elif self.active['mode'] == 'first_station' and (self.active['battles'] > 0 or self._node_done):
+                    # Technique rewards count as the first encounter too. A
+                    # second enemy must not erase that completed encounter and
+                    # send farming mode through a full-room exit search.
+                    logger.info('DU first encounter completed; settle first-station rewards')
                     self.quit_run()
-                elif not self._node_done and any(t in self.active['station'] for t in ('战斗', '精英', '首领', '转化', '储蓄间')):
-                    self.fight_station()
                 else:
-                    self.navigate_station()
+                    self.check_remaining_enemy()
+                    if not self._node_done and any(t in self.active['station'] for t in ('战斗', '精英', '首领', '转化', '储蓄间')):
+                        self.fight_station()
+                    else:
+                        self.navigate_station()
                 idle_since = time.monotonic()
                 continue
             kind = self.selection_kind()
