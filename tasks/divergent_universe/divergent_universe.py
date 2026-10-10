@@ -1362,6 +1362,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
         timeout = Timer(60, count=3).start()
         while not timeout.reached():
             op.snapshot()
+            # An enemy can interrupt opening the exit menu or confirmation.
+            # Let the main loop run SRC combat before requesting the exit again.
+            if self.is_combat_executing():
+                logger.info('DU exit interrupted by combat; return to native combat handling')
+                return
             # The quit menu can linger for a frame after requesting settlement.
             # A resumed first-station task may already be at its confirmation.
             if self.handle_settlement():
@@ -1371,7 +1376,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.progress.save('settling')
                 # A stale walking/menu frame must not send another back tap
                 # that closes the confirmation while it is opening.
-                op.wait_until(lambda: self.settlement_confirmation()
+                op.wait_until(lambda: self.is_combat_executing() or self.settlement_confirmation()
                               or self.settlement_title() or self.lobby_visible(),
                               name='结束演算确认')
                 return
@@ -1379,7 +1384,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 return
             if self.world_visible():
                 if op.back():
-                    op.wait_until(lambda: op.text(('结束并结算', '退出并结算', '确定要结束进程'),
+                    op.wait_until(lambda: self.is_combat_executing()
+                                  or op.text(('结束并结算', '退出并结算', '确定要结束进程'),
                                                  (0.05, 0.2, 1, 1))
                                   or self.settlement_title(), name='结束演算菜单')
             else:
