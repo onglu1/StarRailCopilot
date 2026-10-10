@@ -769,7 +769,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.active['battles'] += 1
         from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN
         ending = self.settlement_title()
-        self._node_done = not (self.appear(COMBAT_AGAIN) or (ending and ending.source == '战斗失败'))
+        self._node_done = not (self.appear(COMBAT_AGAIN) or (ending and normalize(ending.source) == '战斗失败'))
         self.active['node_done'] = self._node_done
         self.progress.save('combat_finished')
 
@@ -1321,7 +1321,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def settlement_title(self):
         ending = self.op.text(self.SETTLEMENT_TITLES, (0.05, 0.05, 0.95, 0.4), exact=True)
-        if ending and ending.source == '战斗失败' and not self.op.text(
+        if ending and normalize(ending.source) == '战斗失败' and not self.op.text(
                 '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True):
             return None
         if ending and any(t in ending.source for t in ('星阶提升', '智瞳点亮')) and not self.op.text(
@@ -1348,20 +1348,23 @@ class DivergentUniverse(DungeonUINav, MapControl):
         if op.text('确认退出游戏', (0.25, 0.3, 0.8, 0.65)):
             op.click_text('取消', (0.25, 0.4, 0.55, 0.7), exact=True)
             return True
-        if op.text('确定要结束进程', (0.2, 0.2, 0.9, 0.5)):
+        if op.text(('确定要结束进程', '结束本场战斗并重置'), (0.2, 0.2, 0.9, 0.5)):
             self.active['pending_settlement'] = True
             if op.click_text('确认', (0.5, 0.5, 0.85, 0.86), exact=True):
                 self.active['settlement_confirmed'] = True
+                self._settlement_exit_wait.reset()
                 self.progress.save('settling')
             return True
         ending = self.settlement_title()
         if ending:
-            if ending.source == '战斗失败':
+            if normalize(ending.source) == '战斗失败':
                 # This is a battle result, not a completed exploration. Finish
                 # through the observed DU exit and await the real settlement.
                 self._node_done = self.active['node_done'] = False
-                if op.click_text('终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True, interval=3):
-                    self.active.update(pending_settlement=True, settlement_confirmed=True, result='loss')
+                self.active.pop('settlement_observed', None)
+                if self._settlement_exit_wait.reached() and op.click_text(
+                        '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True, interval=3):
+                    self.active.update(pending_settlement=True, result='loss')
                     self.progress.save('settling_defeat')
                 return True
             first_observation = not self.active.get('settlement_observed')
