@@ -716,13 +716,20 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if self.handle_misc():
                     return
                 continue
-            if self.find_door():
+            enemy_visible = self.enemy_visible()
+            if not enemy_visible and self.find_door():
                 # On reconnect the game may have saved the cleared room before
                 # our local reward checkpoint. Follow its visible exit first.
                 self.navigate_station()
                 return
             if attempt == 4:
-                self.rotation_swipe(-40, box=self.ROTATION_BOX)
+                if enemy_visible:
+                    # A DU chest can block the direct path to a visible enemy.
+                    # Keep the camera on that enemy and sidestep using SRC.
+                    logger.info('DU enemy still visible after approach; sidestep the obstruction')
+                    self.move(-90, 0.8)
+                else:
+                    self.rotation_swipe(-40, box=self.ROTATION_BOX)
             self.move(0, 0.65 if attempt == 0 else 0.35)
             if self.world_visible():
                 self.handle_map_A()
@@ -895,10 +902,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return any(abs(x + w / 2 - tx) < w * 0.3 and ty < y < ty + 150
                    for x, y, w, h in self.op.frame_cache[key])
 
+    def enemy_visible(self):
+        enemy = self.op.read_line((0.42, 0.035, 0.75, 0.10), snapshot=False).source
+        return bool(re.search(r'等级\s*\d+', enemy))
+
     def check_remaining_enemy(self):
         if self._node_done and self.active['station'] in ('战斗', '精英', '首领', '转化', '储蓄间'):
-            enemy = self.op.read_line((0.42, 0.035, 0.75, 0.10), snapshot=False).source
-            if re.search(r'等级\s*\d+', enemy):
+            if self.enemy_visible():
                 logger.info('DU enemy remains after reconnect; resume this battle')
                 self._node_done = False
                 self.active['node_done'] = False
