@@ -40,6 +40,8 @@ class TextSystem(TextSystem_):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_recognizer.rec_batch_num = 1
+        from module.ocr.runtime import configure_inference
+        configure_inference(self, args[0] if args else kwargs['lang'])
 
 
 class OcrModel:

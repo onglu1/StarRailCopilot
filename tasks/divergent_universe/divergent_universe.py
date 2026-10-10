@@ -72,7 +72,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.op.snapshot()
             self.op.wait_until(lambda: self.op.text(EntrySettings.LAUNCH, (0.3, 0.65, 1, 1))
                                or self.op.text(('常规演算', '周期演算'), (0, 0, 0.48, 0.88)),
-                               action=lambda: self.op.click_text('开始游戏', (0.05, 0.65, 1, 1)) or self.op.back(),
+                               action=lambda: self.op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94)) or self.op.back(),
                                name='演算入口')
             EntrySettings(self).prepare(self.config.DivergentUniverse_Calculation)
 
@@ -223,7 +223,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return self.op.frame_cache['world']
 
     def lobby_visible(self):
-        return bool(self.op.text('开始游戏', (0.05, 0.65, 1, 1)))
+        return bool(self.op.text('开始游戏', (0.70, 0.84, 0.88, 0.94)))
 
     def go_to_lobby(self):
         from tasks.base.page import page_guide
@@ -334,18 +334,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def start_or_resume(self):
         op = self.op
-        if self.active.get('pending_settlement'):
-            return False  # Blurred result pages are not a new mode-selection screen.
         from tasks.divergent_universe.entry import EntrySettings
         launch_labels = EntrySettings.LAUNCH
-        if not self._entry_prepared and (op.text(launch_labels, (0.3, 0.65, 1, 1))
-                                        or op.text('模式选择', (0, 0, 0.3, 0.13), exact=True)):
-            from tasks.divergent_universe.entry import EntrySettings
-            EntrySettings(self).prepare(self.active.get('calculation', 'periodic'))
-            self._entry_prepared = True
-            return True
         launch = op.text(('启动「差分宇宙」', '启动差分宇宙', '进入星阶模式'), (0.3, 0.65, 1, 1))
-        if launch and self.active.get('node') and not op.text('继续进度', (0.3, 0.65, 1, 1)):
+        if (launch and (self.active.get('node') or self.active.get('pending_settlement'))
+                and not op.text('继续进度', (0.3, 0.65, 1, 1))):
             # The game offers a fresh start, so the old local checkpoint is
             # no longer resumable. Keep it separately, without a win/loss.
             self.progress.supersede('Game entry offers a new exploration instead of retained progress')
@@ -355,11 +348,18 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self._node_done = False
             logger.info('DU stale checkpoint retained as unconfirmed; apply configured calculation')
             return True
+        if self.active.get('pending_settlement'):
+            return False  # Continue the requested exit, not a new exploration.
+        if not self._entry_prepared and (op.text(launch_labels, (0.3, 0.65, 1, 1))
+                                        or op.text('模式选择', (0, 0, 0.3, 0.13), exact=True)):
+            EntrySettings(self).prepare(self.active.get('calculation', 'periodic'))
+            self._entry_prepared = True
+            return True
         if launch and op.template('download_empty', (0.43, 0.78, 0.72, 0.96), confidence=0.93):
             self.prepare_downloads()
             return True
         if self.lobby_visible():
-            op.click_text('开始游戏', (0.05, 0.65, 1, 1))
+            op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
             return True
         if op.text(launch_labels, (0.3, 0.65, 1, 1)):
             op.click_text(launch_labels, (0.3, 0.65, 1, 1))
@@ -470,6 +470,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def handle_choice(self, kind):
         op = self.op
+        if (not self._node_done and self.active.get('node')
+                and any(t in self.active.get('station', '') for t in ('战斗', '精英', '首领', '转化'))
+                and op.text('你战胜了', (0.32, 0.115, 0.70, 0.17))):
+            # A map technique can show a reward before fight_station sees it,
+            # including after a worker resumes halfway through the rewards.
+            self._node_done = self.active['node_done'] = True
+            self.progress.save('station_rewards')
         if kind == 'next_station':
             self.choose_station()
             return
@@ -510,12 +517,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 return choices if ready else False
             # Require consistent card contents across frames, not an assumed
             # animation duration. New badges can appear after the card title.
+            detection_started = time.monotonic()
             choices = op.wait_until(choices_ready, name=kind + '卡片内容')
             if choices is page_changed:
                 return  # The reward animation has already advanced to another page.
             op.save('choice_' + kind)
             choice = choose(choices, self.config.DivergentUniverse_PreferUncollected, priorities, discard=kind == 'discard')
-            logger.info(f'DU choose {kind}: uncollected={choice.uncollected}, recommended={choice.recommended}, rarity={choice.rarity}, {choice.title}')
+            logger.info(f'DU choose {kind}: uncollected={choice.uncollected}, recommended={choice.recommended}, rarity={choice.rarity}, {choice.title}, detection={time.monotonic() - detection_started:.3f}s')
             op.click_point(choice.box.center[0] / 1280, (choice.box.top + choice.box.height * 0.3) / 720,
                            tag='DU_CHOICE_' + kind)
             self.confirm_selection(kind, choice=choice)
@@ -560,7 +568,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             # never return to the outer loop and select another card here.
             if choice is not None:
                 # Retry the selected card only while confirmation remains grey.
-                button = op.text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃', '摧毁', '推毁'), (0.05, 0.65, 1, 1), exact=True)
+                button = self.choice_confirm_button()
                 enabled = button and self.confirm_enabled(button)
                 if confirmed and names and names != names_before and button and not enabled:
                     return  # New named cards plus a disabled confirm identify the next set.
@@ -570,11 +578,17 @@ class DivergentUniverse(DungeonUINav, MapControl):
                                           (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind):
                             select_attempts += 1
                     continue
-            if confirm_attempts < 3 and op.click_text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃', '摧毁', '推毁'),
-                             (0.05, 0.65, 1, 1), exact=True):
+            if confirm_attempts < 3 and op.click_box(self.choice_confirm_button()):
                 confirmed = True
                 confirm_attempts += 1
         raise RuntimeError(f'差分宇宙{kind}选择未确认')
+
+    def choice_confirm_button(self):
+        labels = ('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃', '摧毁', '推毁')
+        # Normal cards share this footer. Keep the broader fallback for
+        # alternate layouts, without rereading the entire lower third first.
+        return (self.op.text(labels, (0.73, 0.84, 0.97, 0.95), exact=True)
+                or self.op.text(labels, (0.05, 0.83, 0.97, 0.96), exact=True))
 
     def confirm_enabled(self, button):
         # Enabled DU confirmations have a light fill; disabled ones are dark.
@@ -1336,8 +1350,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.progress.save('settling')
                 # A stale walking/menu frame must not send another back tap
                 # that closes the confirmation while it is opening.
-                op.wait_until(lambda: op.text(('确定要结束进程', '结束本场战斗并重置'),
-                                             (0.2, 0.2, 0.9, 0.5))
+                op.wait_until(lambda: self.settlement_confirmation()
                               or self.settlement_title() or self.lobby_visible(),
                               name='结束演算确认')
                 return
@@ -1353,7 +1366,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         raise RuntimeError('未能打开差分宇宙结束并结算入口')
 
     def settlement_title(self):
-        ending = self.op.text(self.SETTLEMENT_TITLES, (0.05, 0.05, 0.95, 0.4), exact=True)
+        ending = (self.op.text(self.SETTLEMENT_TITLES, (0.07, 0.30, 0.28, 0.40), exact=True)
+                  or self.op.text(self.SETTLEMENT_TITLES, (0.05, 0.05, 0.95, 0.4), exact=True))
         if ending and normalize(ending.source) == '战斗失败' and not self.op.text(
                 '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True):
             return None
@@ -1361,6 +1375,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 '确认结算', (0.25, 0.80, 0.78, 0.98), exact=True):
             return None
         return ending
+
+    def settlement_confirmation(self):
+        # In-room exits include a reward table; the retained-run entry uses
+        # a compact modal with the same question one row lower on the screen.
+        for region in ((0.40, 0.335, 0.61, 0.395), (0.40, 0.48, 0.61, 0.535)):
+            question = self.op.read_line(region, snapshot=False)
+            if '确定要结束进程' in normalize(question.source):
+                return question
+        return self.op.text('结束本场战斗并重置', (0.2, 0.2, 0.9, 0.5))
 
     def handle_settlement(self):
         op = self.op
@@ -1381,9 +1404,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
         if op.text('确认退出游戏', (0.25, 0.3, 0.8, 0.65)):
             op.click_text('取消', (0.25, 0.4, 0.55, 0.7), exact=True)
             return True
-        if op.text(('确定要结束进程', '结束本场战斗并重置'), (0.2, 0.2, 0.9, 0.5)):
+        confirmation = self.settlement_confirmation()
+        if confirmation:
             self.active['pending_settlement'] = True
-            if op.click_text('确认', (0.5, 0.5, 0.85, 0.86), exact=True):
+            region = (0.5, 0.5, 0.85, 0.86)
+            if '确定要结束进程' in normalize(confirmation.source):
+                region = (0.52, 0.60, 0.77, 0.72) if confirmation.top > 300 else (0.52, 0.73, 0.77, 0.83)
+            if op.click_text('确认', region, exact=True):
                 self.active['settlement_confirmed'] = True
                 self._settlement_exit_wait.reset()
                 self.progress.save('settling')
@@ -1422,8 +1449,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
             return True
         if self.active.get('pending_settlement'):
             if self.lobby_visible():
-                return self.active.get('result', 'farm')
-            if (self.active.get('settlement_confirmed') or self.active.get('settlement_observed')) and not self.world_visible():
+                if self.active.get('settlement_observed'):
+                    return self.active.get('result', 'farm')
+                # Login/reentry also returns here while the run is retained.
+                # Open its entry to finish the requested exit, without counting
+                # the lobby itself as evidence of a game settlement.
+                op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
+                return True
+            if self.active.get('settlement_observed') and not self.world_visible():
                 if self.is_in_main() and op.text('差分宇宙', (0.5, 0.25, 1, 0.85)):
                     return self.active.get('result', 'farm')
             if op.text(('祝福/全部', '奇物/全部'), (0.04, 0.035, 0.3, 0.11)):

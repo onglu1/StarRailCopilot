@@ -104,20 +104,29 @@ def read_choices(op, kind):
         if 1 <= len(anchors) <= 5 and len(anchors) > len(cards):
             cards = [Box(max(80, min(950, x - 125)), 155, 250, 435, 'DU_TITLE_CARD') for x in anchors]
     markers = [b for b in labels if normalize(b.source).lower() in ('未收集', '未收录', '未获得', '首次获得', 'new')]
-    markers += op.template_matches(str(TEMPLATES / 'collection.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
-    markers += op.template_matches(str(TEMPLATES / 'collection_android.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
+    marker_region = (0.06, 0.12, 0.98, 0.82)
+    if cards:
+        # Collection/recommendation badges sit at the cards' upper corners.
+        # Derive their search band from the detected cards, not descriptions.
+        marker_region = (max(0, min(c.left for c in cards) - 20) / 1280,
+                         max(0, min(c.top for c in cards) - 20) / 720,
+                         min(1280, max(c.left + c.width for c in cards) + 20) / 1280,
+                         min(720, max(c.top + c.height * 0.34 for c in cards) + 20) / 720)
+    markers += op.template_matches(str(TEMPLATES / 'collection.png'), marker_region, confidence=0.87)
+    markers += op.template_matches(str(TEMPLATES / 'collection_android.png'), marker_region, confidence=0.87)
     from tasks.rogue.assets.assets_rogue_ui import FLAG_UNRECORD
     sample = FLAG_UNRECORD.buttons[0].image_luma
-    gray = cv2.cvtColor(op.image[85:580, 80:1250], cv2.COLOR_RGB2GRAY)
+    x1, y1, x2, y2 = op.region_pixels(marker_region)
+    gray = cv2.cvtColor(op.image[y1:y2, x1:x2], cv2.COLOR_RGB2GRAY)
     matches = cv2.matchTemplate(gray, sample, cv2.TM_CCOEFF_NORMED)
     for _ in range(5):
         _, score, _, (x, y) = cv2.minMaxLoc(matches)
         if score < 0.88:
             break
-        markers.append(Box(x + 80, y + 85, sample.shape[1], sample.shape[0], 'DU_UNRECORDED', score))
+        markers.append(Box(x + x1, y + y1, sample.shape[1], sample.shape[0], 'DU_UNRECORDED', score))
         matches[max(0, y - 25):y + 26, max(0, x - 25):x + 26] = 0
     recommended = [b for b in labels if '推荐' in b.source]
-    recommended += op.template_matches(str(TEMPLATES / 'recommended_blessing.png'), (0.06, 0.12, 0.98, 0.82), confidence=0.87)
+    recommended += op.template_matches(str(TEMPLATES / 'recommended_blessing.png'), marker_region, confidence=0.87)
     if not cards and markers:
         # A marker is an observed card anchor even if animations obscure its
         # border. Click inside the card below the marker, not a guessed column.

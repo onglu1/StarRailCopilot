@@ -1,9 +1,11 @@
 """Reuse SRC screenshots, OCR, popup handling and touch controls for DU."""
 import json
+from collections import OrderedDict
 from pathlib import Path
 import time
 
 import cv2
+import numpy as np
 
 from module.base.button import ClickButton
 from module.base.timer import Timer
@@ -12,6 +14,13 @@ from tasks.currency_wars.operator import Box, MobileOperator
 
 
 class DivergentOperator(MobileOperator):
+    @staticmethod
+    def region_pixels(region):
+        if len(region) != 4 or not (0 <= region[0] < region[2] <= 1
+                                   and 0 <= region[1] < region[3] <= 1):
+            raise ValueError(f'DU recognition region outside the image: {region}')
+        return MobileOperator.region_pixels(region)
+
     def __init__(self, device, config, evidence_dir=None):
         super().__init__(device, config, evidence_dir)
         # Currency Wars button templates must not suppress DU OCR fallbacks.
@@ -94,8 +103,36 @@ class DivergentOperator(MobileOperator):
             self.snapshot()
         key = ('line', tuple(region))
         if key not in self._ocr_cache:
-            self._ocr_cache[key] = super().read_line(region, snapshot=False)
+            self._ocr_cache[key] = self._reuse_ocr(key, region,
+                lambda: MobileOperator.read_line(self, region, snapshot=False))
         return self._ocr_cache[key]
+
+    def read_region(self, region, snapshot=True):
+        if snapshot:
+            self.snapshot()
+        key = tuple(region)
+        if key not in self._ocr_cache:
+            self._ocr_cache[key] = self._reuse_ocr(('region', key), region,
+                lambda: MobileOperator.read_region(self, region, snapshot=False))
+        return self._ocr_cache[key]
+
+    def _reuse_ocr(self, key, region, reader):
+        x1, y1, x2, y2 = self.region_pixels(region)
+        crop = self.image[y1:y2, x1:x2]
+        cache = self.__dict__.setdefault('_stable_ocr', OrderedDict())
+        previous = cache.get(key)
+        if previous is not None and np.array_equal(crop, previous[0]):
+            cache.move_to_end(key)
+            return previous[1]
+        result = reader()
+        # Reuse only byte-identical small regions across screenshots. Changed
+        # cards/buttons always invalidate, and large unknown pages aren't kept.
+        if crop.nbytes <= 512 * 1024:
+            cache[key] = (crop.copy(), result)
+            cache.move_to_end(key)
+            while len(cache) > 16:
+                cache.popitem(last=False)
+        return result
 
     def template_matches(self, path, region=(0, 0, 1, 1), confidence=0.83,
                          scales=(2 / 3, 0.75, 0.85, 1.0)):

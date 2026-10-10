@@ -41,7 +41,7 @@ class EntrySettings:
             elif op.text(self.LAUNCH, (0.3, 0.65, 1, 1)):
                 op.back()
             elif self.main.lobby_visible():
-                op.click_text('开始游戏', (0.05, 0.65, 1, 1))
+                op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
 
         op.wait_until(selected, action=select_mode, name='选择' + label)
         logger.attr('DU calculation', calculation)
