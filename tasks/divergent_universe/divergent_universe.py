@@ -1007,8 +1007,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
                                    'event_reward_board', 'event_forge_board')
                 for template in board_templates:
                     plaques = op.template_matches(str(op.templates / f'{template}.png'),
-                                                  (0.30, 0.10, 0.86, 0.75),
-                                                  confidence=0.88 if template.endswith('_glyph') else 0.80,
+                                                  (0.14, 0.10, 0.94, 0.75),
+                                                  confidence=0.88 if template == 'event_unknown_glyph' else 0.80,
                                                   scales=np.geomspace(0.6, 3.5, 61))
                     if plaques:
                         break
