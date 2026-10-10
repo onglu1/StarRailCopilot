@@ -734,9 +734,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
     def combat_expected_end(self):
         # The generic SRC combat loop owns screenshots and auto/speed controls;
         # only its DU-specific end screens belong in this adapter.
+        # Native damage-change detection renews the stuck timer while a fight
+        # progresses. A fixed battle deadline would restart long boss fights.
         self.op.check()
-        if time.monotonic() > self._du_combat_deadline:
-            raise RuntimeError('差分宇宙战斗等待超时')
         self.op.image = self.device.image
         self.op._ocr_cache.clear()
         self.op.frame_cache.clear()
@@ -764,7 +764,6 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def combat_execute(self, expected_end=None):
         self.progress.save('combat')
-        self._du_combat_deadline = time.monotonic() + 600
         self._du_auto_off_confirm = Timer(1, count=2).start()
         super().combat_execute(expected_end=expected_end or self.combat_expected_end)
         self.active['battles'] += 1
