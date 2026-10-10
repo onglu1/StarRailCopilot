@@ -223,6 +223,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         op = self.op
         timeout = Timer(150, count=3).start()
         unknown = Timer(8, count=3).start()
+        entering_du = Timer(10, count=3)
         initial_saved = False
         while not timeout.reached():
             op.snapshot()
@@ -264,10 +265,16 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     ('稳态数组', '拟合等级', '模因拓扑', '差分图鉴', '演算记录'))):
                 op.back()
                 continue
+            # The world HUD can linger after opening DU. Check the expected
+            # DU pages above on every screenshot before falling back to the
+            # native guide route; do not route away during this transition.
+            if entering_du.started() and not entering_du.reached():
+                continue
             if self.is_in_main():
                 interact = op.text('差分宇宙', (0.5, 0.25, 1, 0.82))
                 if interact:
-                    op.click_box(interact)
+                    if op.click_box(interact):
+                        entering_du.reset()
                 else:
                     self.dungeon_tab_goto(KEYWORDS_DUNGEON_TAB.Simulated_Universe)
                 unknown.reset()
@@ -278,12 +285,16 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.dungeon_tab_goto(KEYWORDS_DUNGEON_TAB.Simulated_Universe)
                 self.dungeon_nav_goto(KEYWORDS_DUNGEON_NAV.Divergent_Universe)
                 op.snapshot()
-                op.click_text(('前往参与', '前往'), (0.5, 0.65, 1, 1), interval=3)
+                if op.click_text(('前往参与', '前往'), (0.5, 0.65, 1, 1), interval=3):
+                    entering_du.reset()
                 unknown.reset()
                 continue
             if op.text('差分宇宙', (0.1, 0.28, 0.82, 0.73)):
                 if not op.click_text(('前往参与', '前往'), (0.5, 0.65, 1, 1)):
-                    op.click_text('差分宇宙', (0.1, 0.28, 0.82, 0.73))
+                    if op.click_text('差分宇宙', (0.1, 0.28, 0.82, 0.73)):
+                        entering_du.reset()
+                else:
+                    entering_du.reset()
                 continue
             if self.handle_misc() or self.ui_additional():
                 continue
