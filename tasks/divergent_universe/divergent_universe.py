@@ -46,7 +46,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         'miracle': ('选择惊世奇迹', '选择奇迹', '选择你的奇迹'),
         'area': ('选择区域', '人才管理阶段'),
         'effect': ('选择基础效果',),
-        'discard': ('丢弃奇物', '丢弃祝福'),
+        'discard': ('丢弃奇物', '丢弃祝福', '奇物损毁', '摧毁奇物'),
     }
 
     def prepare_entry(self):
@@ -560,7 +560,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             # never return to the outer loop and select another card here.
             if choice is not None:
                 # Retry the selected card only while confirmation remains grey.
-                button = op.text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃'), (0.05, 0.65, 1, 1), exact=True)
+                button = op.text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃', '摧毁', '推毁'), (0.05, 0.65, 1, 1), exact=True)
                 enabled = button and self.confirm_enabled(button)
                 if confirmed and names and names != names_before and button and not enabled:
                     return  # New named cards plus a disabled confirm identify the next set.
@@ -570,7 +570,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                                           (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind):
                             select_attempts += 1
                     continue
-            if confirm_attempts < 3 and op.click_text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃'),
+            if confirm_attempts < 3 and op.click_text(('确定', '确认', '确认选择', '选择', '丢弃', '确认丢弃', '摧毁', '推毁'),
                              (0.05, 0.65, 1, 1), exact=True):
                 confirmed = True
                 confirm_attempts += 1
