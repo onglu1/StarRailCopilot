@@ -45,7 +45,7 @@ class MapControl(Combat, AimDetectorMixin):
         self.rotation_swipe(self.minimap.rotation_diff(target))
         return True
 
-    def rotation_swipe(self, rotation_diff):
+    def rotation_swipe(self, rotation_diff, box=None):
         """Apply SRC's calibrated camera gesture.
 
         ``rotation_diff`` uses Minimap.rotation_diff's sign: current minus
@@ -55,7 +55,8 @@ class MapControl(Combat, AimDetectorMixin):
         diff = rotation_diff * self.minimap.ROTATION_SWIPE_MULTIPLY
         diff = min(diff, self.minimap.ROTATION_SWIPE_MAX_DISTANCE)
         diff = max(diff, -self.minimap.ROTATION_SWIPE_MAX_DISTANCE)
-        self.device.swipe_vector((-diff, 0), box=ROTATION_SWIPE_AREA.area, duration=(0.2, 0.5))
+        self.device.swipe_vector((-diff, 0), box=ROTATION_SWIPE_AREA.area if box is None else box,
+                                 duration=(0.2, 0.5))
 
     def rotation_set(self, target, threshold=15, skip_first_screenshot=False):
         """

@@ -85,8 +85,15 @@ def read_choices(op, kind):
     cards = card_boxes(op.image)
     # Only names are needed for tie-breaking; full descriptions are expensive
     # and contain unrelated keywords such as "exploration interrupted".
-    title_region = (0.08, 0.49, 0.96, 0.55) if kind == 'miracle' else (0.08, 0.42, 0.96, 0.50)
+    title_region = (0.08, 0.49, 0.96, 0.55) if kind in ('miracle', 'area') else (0.08, 0.42, 0.96, 0.50)
     labels = op.read_region(title_region, snapshot=False)
+    if kind == 'area':
+        # Recruitment cards have a lower name strip and no collection or star
+        # markers. Their region names use the configured station priority.
+        choices = [Choice(card, ' '.join(b.source for b in labels
+                   if card.left <= b.center[0] <= card.left + card.width)) for card in cards]
+        op.frame_cache[key] = tuple(choices)
+        return choices
     if kind == 'miracle':
         # Gold backgrounds and confetti can break the card's outer contour.
         # Its title still locates the card without guessing a default column.
