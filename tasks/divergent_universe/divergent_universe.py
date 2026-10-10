@@ -1374,6 +1374,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
                         '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True, interval=3):
                     self.active.update(pending_settlement=True, result='loss')
                     self.progress.save('settling_defeat')
+                    # A frame captured before the modal opens can still show
+                    # the defeat footer. Clicking it again dismisses the modal.
+                    # Observe the requested transition before any further tap.
+                    self._settlement_exit_wait.reset()
+                    op.wait_until(lambda: op.text('结束本场战斗并重置', (0.2, 0.2, 0.9, 0.5)),
+                                  name='战败退出确认')
                 return True
             first_observation = not self.active.get('settlement_observed')
             self.active['pending_settlement'] = True
