@@ -1,10 +1,43 @@
 """Bound OCR CPU work and use the optional CUDA runtime when available."""
 import os
+from types import MethodType
 import cv2
+import numpy as np
 import onnxruntime as ort
 from pponnxcr.utility import get_model_data
 
 from module.logger import logger
+
+
+def cuda_recognizer_resize(recognizer, image, max_wh_ratio):
+    from pponnxcr.rec.predict_rec import TextRecognizer
+    width = recognizer.rec_image_shape[2]
+    # Very narrow CUDA convolutions are slower than the model's 320px input
+    # width on this runtime. Pad blank space; never stretch the characters.
+    normalized = TextRecognizer.resize_norm_img(recognizer, image, max_wh_ratio)
+    if normalized.shape[2] < width:
+        normalized = np.pad(normalized, ((0, 0), (0, 0), (0, width - normalized.shape[2])))
+    return normalized
+
+
+class TightDetectionResize:
+    """Keep PP-OCR's scale/coordinates, padding only to the network stride."""
+    def __init__(self, limit_side_len):
+        self.limit_side_len = limit_side_len
+
+    def __call__(self, image):
+        src_h, src_w = image.shape[:2]
+        ratio = min(1.0, self.limit_side_len / max(src_h, src_w))
+        if ratio < 1:
+            image = cv2.resize(image, (round(src_w * ratio), round(src_h * ratio)))
+        height, width = image.shape[:2]
+        # Two strides of black context preserve characters near crop edges.
+        # Minimal alignment alone clipped a stroke in a real blessing name.
+        target_h = min(self.limit_side_len, (height + 31) // 32 * 32 + 64)
+        target_w = min(self.limit_side_len, (width + 31) // 32 * 32 + 64)
+        return {'image': cv2.copyMakeBorder(image, 0, target_h - height, 0, target_w - width,
+                                            cv2.BORDER_CONSTANT, value=(0, 0, 0)),
+                'shape': np.array([src_h, src_w, ratio])}
 
 
 def configure_inference(model, lang):
@@ -41,4 +74,10 @@ def configure_inference(model, lang):
             session = ort.InferenceSession(get_model_data(lang, name), options, providers=providers)
         part.predictor = session
         part.input_tensor = session.get_inputs()[0]
+        if name == 'rec' and session.get_providers()[0] == 'CUDAExecutionProvider':
+            part.resize_norm_img = MethodType(cuda_recognizer_resize, part)
         logger.attr(f'OCR {name} runtime', f'{session.get_providers()[0]}, CPU threads=2, spinning=off')
+    detector = model.text_detector
+    if all(not isinstance(size, int) for size in detector.input_tensor.shape[2:]):
+        operations = detector.preprocess_op.ops
+        detector.preprocess_op.ops = (TightDetectionResize(operations[0].limit_side_len), *operations[1:])

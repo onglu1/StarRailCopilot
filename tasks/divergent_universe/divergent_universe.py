@@ -229,7 +229,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         from tasks.base.page import page_guide
         op = self.op
         timeout = Timer(150, count=3).start()
-        unknown = Timer(8, count=3).start()
+        # An in-flight settlement normally loads for ~18 seconds. Preserve
+        # its detection window when a worker resumes during that transition.
+        unknown = Timer(45 if self.active and self.active.get('pending_settlement') else 8, count=3).start()
         entering_du = Timer(10, count=3)
         initial_saved = False
         while not timeout.reached():
@@ -335,10 +337,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
     def start_or_resume(self):
         op = self.op
         from tasks.divergent_universe.entry import EntrySettings
-        launch_labels = EntrySettings.LAUNCH
-        launch = op.text(('启动「差分宇宙」', '启动差分宇宙', '进入星阶模式'), (0.3, 0.65, 1, 1))
+        entry = EntrySettings(self)
+        launch = entry.launch_button()
+        retained = launch and '继续进度' in normalize(launch.source)
         if (launch and (self.active.get('node') or self.active.get('pending_settlement'))
-                and not op.text('继续进度', (0.3, 0.65, 1, 1))):
+                and not retained):
             # The game offers a fresh start, so the old local checkpoint is
             # no longer resumable. Keep it separately, without a win/loss.
             self.progress.supersede('Game entry offers a new exploration instead of retained progress')
@@ -348,11 +351,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self._node_done = False
             logger.info('DU stale checkpoint retained as unconfirmed; apply configured calculation')
             return True
-        if self.active.get('pending_settlement'):
+        mode_selection = '模式选择' in self.header_text()
+        if self.active.get('pending_settlement') and not mode_selection:
             return False  # Continue the requested exit, not a new exploration.
-        if not self._entry_prepared and (op.text(launch_labels, (0.3, 0.65, 1, 1))
-                                        or op.text('模式选择', (0, 0, 0.3, 0.13), exact=True)):
-            EntrySettings(self).prepare(self.active.get('calculation', 'periodic'))
+        if (not self._entry_prepared and launch) or mode_selection:
+            entry.prepare(self.active.get('calculation', 'periodic'))
             self._entry_prepared = True
             return True
         if launch and op.template('download_empty', (0.43, 0.78, 0.72, 0.96), confidence=0.93):
@@ -361,8 +364,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         if self.lobby_visible():
             op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
             return True
-        if op.text(launch_labels, (0.3, 0.65, 1, 1)):
-            op.click_text(launch_labels, (0.3, 0.65, 1, 1))
+        if launch:
+            op.click_box(launch)
             return True
         return False
 
@@ -430,10 +433,28 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     self.navigate_station()
                 idle_since = time.monotonic()
                 continue
+            kind = self.selection_kind()
+            if kind:
+                self.handle_settlement()  # Clear an unconfirmed stale exit on a real choice page.
+                self.progress.save('selecting_' + kind)
+                self.handle_choice(kind)
+                idle_since = time.monotonic()
+                continue
+            header = self.header_text()
+            if '乐园漫记' in header and self.lobby_visible():
+                if self.active.get('pending_settlement') and self.active.get('settlement_observed'):
+                    return self.active.get('result', 'farm')
+                op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
+                idle_since = time.monotonic()
+                continue
+            if (not self.active.get('node') and not self.active.get('pending_settlement')
+                    and any(title in header for title in ('模式选择', '周期演算', '常规演算', '星阶模式'))
+                    and self.start_or_resume()):
+                idle_since = time.monotonic()
+                continue
             # Once the native event page is identified, avoid repeatedly OCRing
             # settlement dialogs and launch controls before every dialogue tap.
-            if (not self.selection_kind()
-                    and any(word in self.header_text() for word in ('事件',) + self.REWARD_TITLES)
+            if (any(word in header for word in ('事件',) + self.REWARD_TITLES)
                     and self.handle_misc()):
                 idle_since = time.monotonic()
                 continue
@@ -441,12 +462,6 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if isinstance(result, str):
                 return result
             if result:
-                idle_since = time.monotonic()
-                continue
-            kind = self.selection_kind()
-            if kind:
-                self.progress.save('selecting_' + kind)
-                self.handle_choice(kind)
                 idle_since = time.monotonic()
                 continue
             if (self.active['mode'] == 'first_station' or self.active.get('stop_requested')) and op.text(
@@ -518,6 +533,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             # Require consistent card contents across frames, not an assumed
             # animation duration. New badges can appear after the card title.
             detection_started = time.monotonic()
+            choices_ready()  # The caller already captured and classified the first real frame.
             choices = op.wait_until(choices_ready, name=kind + '卡片内容')
             if choices is page_changed:
                 return  # The reward animation has already advanced to another page.

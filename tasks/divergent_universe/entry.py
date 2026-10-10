@@ -7,6 +7,7 @@ import numpy as np
 from module.base.timer import Timer
 from module.exception import RequestHumanTakeover
 from module.logger import logger
+from tasks.currency_wars.operator import normalize
 
 
 class EntrySettings:
@@ -16,6 +17,13 @@ class EntrySettings:
         self.main = main
         self.op = main.op
         self.config = main.config
+
+    def launch_button(self):
+        # Current Android entry uses a right footer; star mode centers it.
+        # Retained progress is on the lower-left mode card.
+        return (self.op.text(self.LAUNCH, (0.68, 0.84, 0.99, 0.96))
+                or self.op.text(self.LAUNCH, (0.30, 0.84, 0.72, 0.96))
+                or self.op.text('继续进度', (0.25, 0.70, 0.55, 0.81)))
 
     def prepare(self, calculation):
         op = self.op
@@ -29,17 +37,26 @@ class EntrySettings:
         def selected():
             if self.main.world_visible() or self.main.selection_kind() or self.main.is_combat_executing():
                 return True
-            if not op.text(self.LAUNCH, (0.3, 0.65, 1, 1)):
+            header = self.main.header_text()
+            if '模式选择' in header or not self.launch_button():
                 return False
+            if '周期演算' in header:
+                return calculation == 'periodic'
+            if '常规演算' in header or '星阶模式' in header:
+                return calculation == 'standard'
             periodic = op.text('周期演算', (0.48, 0.15, 1, 0.68))
             return bool(periodic) if calculation == 'periodic' else bool(
                 not periodic and op.text(('常规演算', '难度'), (0.45, 0, 1, 0.68)))
 
         def select_mode():
-            if op.text('模式选择', (0, 0, 0.3, 0.13)):
-                op.click_text(label, (0, 0.13, 0.48, 0.88))
-            elif op.text(self.LAUNCH, (0.3, 0.65, 1, 1)):
-                op.back()
+            if '模式选择' in self.main.header_text():
+                op.click_text(label, (0.32, 0.12, 0.46, 0.55))
+            elif self.launch_button():
+                header = self.main.header_text()
+                wrong_mode = ('周期演算' in header if calculation == 'standard' else
+                              any(title in header for title in ('常规演算', '星阶模式')))
+                if wrong_mode:
+                    op.back()
             elif self.main.lobby_visible():
                 op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))
 
@@ -49,7 +66,8 @@ class EntrySettings:
         if self.main.world_visible() or self.main.selection_kind() or self.main.is_combat_executing():
             logger.info('DU entered the retained run directly from mode selection')
             return
-        if op.text('继续进度', (0.3, 0.65, 1, 1)):
+        launch = self.launch_button()
+        if launch and '继续进度' in normalize(launch.source):
             logger.info('DU continuing saved run; new difficulty settings apply to the next run')
             return
         if calculation == 'standard':
