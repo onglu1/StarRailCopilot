@@ -1334,11 +1334,20 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if op.click_text(('结束并结算', '退出并结算'), (0.05, 0.2, 1, 1)):
                 self.active['pending_settlement'] = True
                 self.progress.save('settling')
+                # A stale walking/menu frame must not send another back tap
+                # that closes the confirmation while it is opening.
+                op.wait_until(lambda: op.text(('确定要结束进程', '结束本场战斗并重置'),
+                                             (0.2, 0.2, 0.9, 0.5))
+                              or self.settlement_title() or self.lobby_visible(),
+                              name='结束演算确认')
                 return
             if self.settlement_title():
                 return
             if self.world_visible():
-                op.back()
+                if op.back():
+                    op.wait_until(lambda: op.text(('结束并结算', '退出并结算', '确定要结束进程'),
+                                                 (0.05, 0.2, 1, 1))
+                                  or self.settlement_title(), name='结束演算菜单')
             else:
                 self.handle_misc()
         raise RuntimeError('未能打开差分宇宙结束并结算入口')
