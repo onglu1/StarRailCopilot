@@ -1003,16 +1003,24 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 plaques = []
                 # Regional events use the same blue framed artwork as forge
                 # rooms, including when the title is clipped above the screen.
-                board_templates = ('event_unknown_board', 'event_anomaly_board',
+                board_templates = ('event_unknown_glyph', 'event_unknown_board', 'event_anomaly_board',
                                    'event_reward_board', 'event_forge_board')
                 for template in board_templates:
                     plaques = op.template_matches(str(op.templates / f'{template}.png'),
-                                                  (0.30, 0.10, 0.86, 0.75), confidence=0.80,
+                                                  (0.30, 0.10, 0.86, 0.75),
+                                                  confidence=0.88 if template == 'event_unknown_glyph' else 0.80,
                                                   scales=np.geomspace(0.6, 3.5, 61))
                     if plaques:
                         break
                 if plaques:
                     target = max(plaques, key=lambda box: box.score)
+                    if target.source == 'event_unknown_glyph':
+                        # The outer frame changes with lighting/perspective.
+                        # Restore its extent from the stable inner artwork so
+                        # native floor projection still aims at the plaque base.
+                        scale = target.width / 50
+                        target = Box(round(target.left - 13 * scale), round(target.top - 14 * scale),
+                                     round(77 * scale), round(107 * scale), 'event_unknown_board', target.score)
                     direction = RogueExit.screen2direction(
                         (target.center[0], min(580, target.top + target.height)), at_floor=True)
                     logger.info(f'DU revealed event plaque: {target.center}, score={target.score:.3f}')
