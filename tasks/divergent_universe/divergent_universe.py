@@ -1327,6 +1327,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
         timeout = Timer(60, count=3).start()
         while not timeout.reached():
             op.snapshot()
+            # The quit menu can linger for a frame after requesting settlement.
+            # A resumed first-station task may already be at its confirmation.
+            if self.handle_settlement():
+                return
             if op.click_text(('结束并结算', '退出并结算'), (0.05, 0.2, 1, 1)):
                 self.active['pending_settlement'] = True
                 self.progress.save('settling')
