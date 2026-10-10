@@ -36,7 +36,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
     REWARD_TITLES = ('方程展开', '祝福强化', '获得奇物', '获得祝福',
                      '获得物品', '信标已部署', '站点卡升级')
     SETTLEMENT_TITLES = ('探索成功', '探索失败', '探索结束', '探索终止',
-                         '探索中断', '演算结束', '星阶提升', '智瞳点亮')
+                         '探索中断', '演算结束', '星阶提升', '智瞳点亮', '战斗失败')
     CHOICES = {
         'mask': ('选择一张面具', '选择面具'),
         'blessing': ('选择祝福', '选取祝福', '获取祝福'),
@@ -768,7 +768,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
         super().combat_execute(expected_end=expected_end or self.combat_expected_end)
         self.active['battles'] += 1
         from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN
-        self._node_done = not self.appear(COMBAT_AGAIN)
+        ending = self.settlement_title()
+        self._node_done = not (self.appear(COMBAT_AGAIN) or (ending and ending.source == '战斗失败'))
         self.active['node_done'] = self._node_done
         self.progress.save('combat_finished')
 
@@ -1320,6 +1321,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def settlement_title(self):
         ending = self.op.text(self.SETTLEMENT_TITLES, (0.05, 0.05, 0.95, 0.4), exact=True)
+        if ending and ending.source == '战斗失败' and not self.op.text(
+                '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True):
+            return None
         if ending and any(t in ending.source for t in ('星阶提升', '智瞳点亮')) and not self.op.text(
                 '确认结算', (0.25, 0.80, 0.78, 0.98), exact=True):
             return None
@@ -1352,6 +1356,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
             return True
         ending = self.settlement_title()
         if ending:
+            if ending.source == '战斗失败':
+                # This is a battle result, not a completed exploration. Finish
+                # through the observed DU exit and await the real settlement.
+                self._node_done = self.active['node_done'] = False
+                if op.click_text('终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True, interval=3):
+                    self.active.update(pending_settlement=True, settlement_confirmed=True, result='loss')
+                    self.progress.save('settling_defeat')
+                return True
             first_observation = not self.active.get('settlement_observed')
             self.active['pending_settlement'] = True
             self.active['settlement_observed'] = True
