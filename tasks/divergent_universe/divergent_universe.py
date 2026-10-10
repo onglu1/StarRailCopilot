@@ -34,7 +34,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
     ROTATION_BOX = (410, 180, 990, 300)
     EVENT_NAMES = frozenset(normalize(event.cn) for event in RogueEventTitle.instances.values())
     REWARD_TITLES = ('方程展开', '祝福强化', '获得奇物', '获得祝福',
-                     '获得物品', '信标已部署', '站点卡升级')
+                     '获得物品', '信标已部署', '站点卡升级', '已修复以下奇物')
     SETTLEMENT_TITLES = ('探索成功', '探索失败', '探索结束', '探索终止',
                          '探索中断', '演算结束', '星阶提升', '智瞳点亮', '战斗失败')
     CHOICES = {
@@ -748,7 +748,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.op._ocr_cache.clear()
         self.op.frame_cache.clear()
         return bool(self.selection_kind() or self.world_visible()
-                    or self.op.text(('获得祝福', '获得奇物', '方程展开'), (0, 0, 1, 0.24))
+                    or self.op.text(('获得祝福', '获得奇物', '方程展开', '已修复以下奇物'), (0, 0, 1, 0.24))
                     # Conversion rooms end on their own reward overlay. The
                     # main loop then closes it through the observed prompt.
                     or self.op.text('转化结束', (0.3, 0.2, 0.72, 0.37), exact=True)
