@@ -1359,6 +1359,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def quit_run(self):
         op = self.op
+        def retry_menu():
+            # A tap during the reward animation can be ignored. Retry only
+            # the observed world exit icon; a generic back could close a
+            # menu which has opened since a delayed screenshot was captured.
+            if self.world_visible() and op.click_box(
+                    op.template('divergent_universe_quit', (0, 0, 0.13, 0.18)), interval=5):
+                logger.info('DU exit menu not visible; retry observed world exit button')
+
         timeout = Timer(60, count=3).start()
         while not timeout.reached():
             op.snapshot()
@@ -1387,7 +1395,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     op.wait_until(lambda: self.is_combat_executing()
                                   or op.text(('结束并结算', '退出并结算', '确定要结束进程'),
                                                  (0.05, 0.2, 1, 1))
-                                  or self.settlement_title(), name='结束演算菜单')
+                                  or self.settlement_title(), action=retry_menu, name='结束演算菜单')
             else:
                 self.handle_misc()
         raise RuntimeError('未能打开差分宇宙结束并结算入口')
