@@ -169,11 +169,25 @@ class DivergentOperator(MobileOperator):
             # Tiny features keep the original matcher. Larger templates use
             # a cheap candidate pass, then the original full-resolution score.
             reduced = dense and min(h, w) >= 16
-            search = small_frame if reduced else frame
-            needle = small_sample if reduced else sample
+            factor = (4 if reduced and min(h, w) >= 32
+                      and Path(path).stem.startswith(('door_', 'event_')) else 2)
+            if reduced and factor == 4:
+                quarter_key = ('navigation_quarter', tuple(region))
+                if quarter_key not in self.frame_cache:
+                    self.frame_cache[quarter_key] = cv2.resize(frame, None, fx=0.25, fy=0.25)
+                sample_key = (path, float(scale), 'quarter')
+                if sample_key not in self._scaled_templates:
+                    self._scaled_templates[sample_key] = cv2.resize(sample, (max(1, w // 4), max(1, h // 4)))
+                search, needle = self.frame_cache[quarter_key], self._scaled_templates[sample_key]
+            else:
+                search = small_frame if reduced else frame
+                needle = small_sample if reduced else sample
             nh, nw = needle.shape
             values = cv2.matchTemplate(search, needle, cv2.TM_CCOEFF_NORMED)
-            threshold = max(0.45, confidence - 0.20) if reduced else confidence
+            # The coarser pass only proposes candidates. Acceptance still
+            # uses the original pixels, scale and confidence below.
+            threshold = (max(0.35, confidence - 0.30) if reduced and factor == 4
+                         else max(0.45, confidence - 0.20) if reduced else confidence)
             while True:
                 _, score, _, (px, py) = cv2.minMaxLoc(values)
                 if score < threshold or len(matches) > 30:
@@ -181,9 +195,9 @@ class DivergentOperator(MobileOperator):
                 values[max(0, py - nh // 2):py + nh // 2 + 1,
                        max(0, px - nw // 2):px + nw // 2 + 1] = 0
                 if reduced:
-                    left, top = max(0, px * 2 - 4), max(0, py * 2 - 4)
-                    crop = frame[top:min(frame.shape[0], py * 2 + h + 5),
-                                 left:min(frame.shape[1], px * 2 + w + 5)]
+                    left, top = max(0, px * factor - 2 * factor), max(0, py * factor - 2 * factor)
+                    crop = frame[top:min(frame.shape[0], py * factor + h + 2 * factor + 1),
+                                 left:min(frame.shape[1], px * factor + w + 2 * factor + 1)]
                     if crop.shape[0] < h or crop.shape[1] < w:
                         continue
                     verified = cv2.matchTemplate(crop, sample, cv2.TM_CCOEFF_NORMED)

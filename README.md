@@ -1,5 +1,7 @@
 > **本 fork：货币战争、差分宇宙与自动深渊。** 货币战争入口在「每周」，差分宇宙、虚构叙事、混沌回忆和末日幻影入口在「工具」。Windows 可用根目录 `start.bat` 启动 WebUI。详见 [整合版使用说明](doc/currency-wars-and-abyss.md) 和 [差分宇宙设置](doc/divergent-universe.md)。
 
+差分宇宙整局已完成双开固定版本验收：两台各连续5局全部真实通关，非战斗关卡耗时P50为51.29秒、P90为90.92秒，包含故障恢复。支持先重启续局、同关反复失败后正常结算重开；无法恢复时有界停止留证。见[验收记录与适用范围](docs/DU_UNATTENDED_RELEASE.md)。
+
 **| [English](README_en.md) | 简体中文 | [Español](README_es.md) | [日本語](README_ja.md) |**
 
 

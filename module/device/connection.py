@@ -786,8 +786,17 @@ class Connection(ConnectionAttr):
             return True
 
         # Try to connect
-        for _ in range(3):
-            msg = self.adb_client.connect(self.serial)
+        for attempt in range(3):
+            try:
+                msg = self.adb_client.connect(self.serial)
+            except ConnectionResetError as error:
+                # A concurrently replaced ADB server can close this request.
+                # Keep the existing three-connect budget and retry this
+                # serial without restarting the shared server or emulator.
+                if attempt == 2:
+                    raise
+                logger.warning(f'ADB connect reset for {self.serial}; retry {attempt + 1}/2: {error}')
+                continue
             logger.info(msg)
             # Connected to 127.0.0.1:59865
             # Already connected to 127.0.0.1:59865

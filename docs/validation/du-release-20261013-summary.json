@@ -1,0 +1,137 @@
+{
+  "audited_at": "2026-10-13T13:14:12.339437",
+  "build": "1a57ba85a763ad5649e2bd051c49c9fb59b02ef009a0a22b2df27803acff0c55",
+  "runtime_hash_unchanged": true,
+  "completed": 10,
+  "wins": 10,
+  "rooms": 130,
+  "noncombat_p50_s": 51.293,
+  "noncombat_p90_s": 90.921,
+  "noncombat_max_s": 378.059,
+  "rooms_under_60": 84,
+  "rooms_under_120": 123,
+  "whole_run_p50_min": 26.096097213029864,
+  "whole_run_range_min": [
+    20.192435399691263,
+    33.772539699077605
+  ],
+  "natural_faults": 3,
+  "natural_restarts": 3,
+  "natural_restarts_crossed": 3,
+  "controlled_live_chains_verified": true,
+  "gate_passed": true,
+  "runs": [
+    {
+      "sample": "A1",
+      "profile": "A",
+      "started": "2026-10-13T10:51:14.704275",
+      "finished": "2026-10-13T11:18:41.658932",
+      "wall_min": 27.449,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "A2",
+      "profile": "A",
+      "started": "2026-10-13T11:18:42.438473",
+      "finished": "2026-10-13T11:45:25.367296",
+      "wall_min": 26.715,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "A3",
+      "profile": "A",
+      "started": "2026-10-13T11:45:26.178522",
+      "finished": "2026-10-13T12:18:10.276118",
+      "wall_min": 32.735,
+      "result": "win",
+      "faults": 1,
+      "restarts": 1,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "A4",
+      "profile": "A",
+      "started": "2026-10-13T12:18:10.756330",
+      "finished": "2026-10-13T12:41:36.674585",
+      "wall_min": 23.432,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "A5",
+      "profile": "A",
+      "started": "2026-10-13T12:41:37.175735",
+      "finished": "2026-10-13T13:10:31.273730",
+      "wall_min": 28.902,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "B1",
+      "profile": "B",
+      "started": "2026-10-13T10:57:35.173250",
+      "finished": "2026-10-13T11:22:28.473062",
+      "wall_min": 24.888,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "B2",
+      "profile": "B",
+      "started": "2026-10-13T11:22:29.175152",
+      "finished": "2026-10-13T11:45:55.670797",
+      "wall_min": 23.442,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "B3",
+      "profile": "B",
+      "started": "2026-10-13T11:45:56.429585",
+      "finished": "2026-10-13T12:11:25.032427",
+      "wall_min": 25.477,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "B4",
+      "profile": "B",
+      "started": "2026-10-13T12:11:25.670538",
+      "finished": "2026-10-13T12:31:37.216662",
+      "wall_min": 20.192,
+      "result": "win",
+      "faults": 0,
+      "restarts": 0,
+      "all_restarts_crossed": true
+    },
+    {
+      "sample": "B5",
+      "profile": "B",
+      "started": "2026-10-13T12:31:38.000733",
+      "finished": "2026-10-13T13:05:24.353115",
+      "wall_min": 33.773,
+      "result": "win",
+      "faults": 2,
+      "restarts": 2,
+      "all_restarts_crossed": true
+    }
+  ],
+  "scope": "Two fixed configured Android emulators; first five new full runs each. Profile labels and run identifiers anonymized; no account data.",
+  "recovery_boundaries": "3 total restart attempts per room; 600 seconds per recovery stage; first resume original run, then settle repeated room failure. Stop with retained evidence if login or real settlement cannot be confirmed."
+}
