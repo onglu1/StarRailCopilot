@@ -10,7 +10,7 @@ import numpy as np
 from module.base.button import ClickButton
 from module.base.timer import Timer
 
-from tasks.currency_wars.operator import Box, MobileOperator
+from tasks.currency_wars.operator import Box, MobileOperator, normalize
 
 
 class DivergentOperator(MobileOperator):
@@ -63,8 +63,17 @@ class DivergentOperator(MobileOperator):
         px, py = round(x * 1280), round(y * 720)
         if not (0 <= px < 1280 and 0 <= py < 720):
             raise ValueError(f'Invalid click coordinates: {(x, y)}')
-        key = (tag, px // 40, py // 40)
+        identity = normalize(tag)
+        # OCR boxes can jitter across a 40px bucket boundary, e.g. y39→40
+        # or x1199→1201. Reuse a nearby control's timer instead of sending a
+        # second input during the first input's page transition.
+        key = min((key for key in self._click_intervals if key[0] == identity
+                   and abs(key[1]-px) <= 24 and abs(key[2]-py) <= 24),
+                  key=lambda item: (item[1]-px)**2+(item[2]-py)**2, default=None)
+        if key is None:
+            key = (identity, px, py)
         timer = self._click_intervals.setdefault(key, Timer(interval))
+        timer.limit = interval
         if not timer.reached():
             return False
         self.device.click(ClickButton((px - 2, py - 2, px + 2, py + 2), name=tag or 'DU_CLICK'))

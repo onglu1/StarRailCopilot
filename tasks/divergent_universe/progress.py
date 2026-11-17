@@ -19,22 +19,61 @@ class Progress:
         self.session_id = uuid.uuid4().hex
         # Capture the loaded worker's source once; later disk deployments must
         # not relabel events produced by an older, still-running worker.
-        source = Path(__file__).parent
-        build = hashlib.sha256()
-        for name in ('progress.py', 'divergent_universe.py', 'operator.py', 'selection.py', 'entry.py', 'events.py'):
-            build.update(name.encode())
-            build.update((source / name).read_bytes().replace(b'\r\n', b'\n'))
-        # Connection initialization is part of restart reliability too.
-        # Attribute its fixes to the loaded worker, not an older cohort.
-        for relative in ('module/device/connection.py', 'module/logger/error.py', 'dev_tools/du_recovery_probe.py'):
-            build.update(relative.encode())
-            build.update((source.parent.parent / relative).read_bytes().replace(b'\r\n', b'\n'))
-        for template in sorted((source / 'templates').glob('*.png')):
-            build.update(('templates/' + template.name).encode())
-            build.update(template.read_bytes())
-        self.build = build.hexdigest()
+        self.build = self.disk_build()
         self._event_key = None
         self.record('session_started')
+
+    def disk_build(self):
+        """Hash only changed source inputs; inspect metadata at checkpoint boundaries."""
+        source = Path(__file__).parent
+        inputs = []
+        for name in ('progress.py', 'divergent_universe.py', 'operator.py', 'selection.py', 'entry.py', 'events.py',
+                     'star.py','star_team.py','star_policy.py','star_guides.json','star_catalog.json','star_workshop.py','star_inventory.py','star_shop.py', 'star_revival.py', 'star_effects.py', 'star_combat.py',
+                     'preparation_recovery.py', 'environment_recovery.py'):
+            inputs.append((name, source / name))
+        # Connection initialization is part of restart reliability too.
+        # Attribute its fixes to the loaded worker, not an older cohort.
+        for relative in ('module/device/connection.py', 'module/logger/error.py', 'dev_tools/du_recovery_probe.py',
+                         'tasks/rogue/route/exit.py'):
+            inputs.append((relative, source.parent.parent / relative))
+        for template in sorted((source / 'templates').glob('*.png')):
+            inputs.append(('templates/' + template.name, template))
+        stamps = tuple((name, path.stat().st_mtime_ns, path.stat().st_size) for name, path in inputs)
+        if stamps != getattr(self, '_disk_stamps', None):
+            build = hashlib.sha256()
+            for name, path in inputs:
+                data = path.read_bytes()
+                build.update(name.encode())
+                build.update(data if path.suffix == '.png' else data.replace(b'\r\n', b'\n'))
+            self._disk_stamps, self._disk_build = stamps, build.hexdigest()
+        return self._disk_build
+
+    def observe_execution(self, created=False):
+        active = self.data.get('active') or {}
+        if active.get('mode') != 'star':
+            return
+        proof = active.setdefault('execution', dict(tracked_from_start=created, worker_builds=[], disk_changed=False))
+        if self.build not in proof['worker_builds']:
+            proof['worker_builds'].append(self.build)
+        try:
+            current = self.disk_build()
+        except OSError as error:
+            # Source auditing must not restart a healthy game when an editor
+            # briefly replaces/locks a file. Retain the sample as unverified.
+            proof['disk_changed'] = True
+            detail = f'{type(error).__name__}: {error}'
+            if proof.get('source_check_error') != detail:
+                proof['source_check_error'] = detail
+                self.record('star_runtime_source_check_failed', error=detail)
+            return
+        if current != self.build:
+            # A later lazy import can load a different file than startup.
+            # Keep the outcome, but do not call this a frozen-version sample.
+            proof['disk_changed'] = True
+            seen = proof.setdefault('changed_disk_builds', [])
+            if current not in seen:
+                seen.append(current)
+                self.record('star_runtime_source_changed', startup_build=self.build, disk_build=current)
 
     def record(self, event, **details):
         """Append observed transitions; telemetry never completes a run."""
@@ -50,6 +89,7 @@ class Progress:
             stream.write(json.dumps(row, ensure_ascii=False, separators=(',', ':')) + '\n')
 
     def save(self, phase=None):
+        self.observe_execution()
         self.data.update(pid=os.getpid(), updated=datetime.now().isoformat(timespec='seconds'))
         if phase:
             self.data['phase'] = phase
@@ -94,6 +134,7 @@ class Progress:
                                        pending_settlement=False)
         else:
             self.data['active'].setdefault('calculation', 'periodic')
+        self.observe_execution(created=created)
         self.save('running')
         self.record('run_started' if created else 'run_resumed')
         return self.data['active']
@@ -103,6 +144,7 @@ class Progress:
         if active:
             if not active.get('settlement_observed'):
                 raise RuntimeError('未观察到真实结算，不能完成当前探索记录')
+            self.observe_execution()
             self.data['history'].append(dict(active, result=result, finished=datetime.now().isoformat(timespec='seconds')))
             self.record('run_finished', result=result, settlement_observed=True,
                         settlement_confirmed=active.get('settlement_confirmed', False))

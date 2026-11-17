@@ -2909,7 +2909,8 @@
         "value": "first_station",
         "option": [
           "first_station",
-          "full"
+          "full",
+          "star"
         ]
       },
       "Runs": {
@@ -2971,6 +2972,19 @@
       "SaveEvidence": {
         "type": "checkbox",
         "value": false
+      },
+      "StarStrategy": {
+        "type": "select",
+        "value": "phainon",
+        "option": [
+          "phainon",
+          "aglaea",
+          "followup",
+          "aglaea_sustain",
+          "dot",
+          "followup_fuxuan",
+          "dot_blackswan"
+        ]
       }
     }
   }

@@ -142,7 +142,11 @@ class RogueExit(CombatInteract):
         )
         if planar_door[1] < 0:
             logger.warning('screen2direction: planer_door at back')
-        if abs(planar_door[0]) < 5:
+        if at_floor and planar_door[1] < 0:
+            # A nearby NPC can stand behind the player with its feet below
+            # the frame. Preserve the quadrant instead of walking away.
+            direction = np.rad2deg(np.arctan2(planar_door[0], planar_door[1]))
+        elif abs(planar_door[0]) < 5:
             direction = 0
         else:
             direction = np.rad2deg(np.arctan(planar_door[0] / planar_door[1]))

@@ -301,7 +301,8 @@ class GeneratedConfig:
     DivergentUniverse_Difficulty = 5  # 1, 2, 3, 4, 5
     DivergentUniverse_PollutionMode = 'current'  # current, specified, highest
     DivergentUniverse_Pollution = 0
-    DivergentUniverse_Mode = 'first_station'  # first_station, full
+    DivergentUniverse_Mode = 'first_station'  # first_station, full, star
+    DivergentUniverse_StarStrategy = 'phainon'  # phainon, aglaea, followup, aglaea_sustain, dot, followup_fuxuan, dot_blackswan
     DivergentUniverse_Runs = 1
     DivergentUniverse_TeamPreset = 1  # 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
     DivergentUniverse_PreferUncollected = True

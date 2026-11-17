@@ -15,6 +15,14 @@ from tasks.currency_wars.operator import Box, normalize
 TEMPLATES = Path(__file__).parent / 'templates'
 
 
+def next_choice_set(names,before,confirmed,button_visible,button_enabled,previous,count):
+    """An enlarged selected title is not proof of the next reward set."""
+    ready=confirmed and bool(names) and names!=before and button_visible and not button_enabled
+    current=tuple(names) if ready else None
+    count=count+1 if current is not None and current==previous else 1 if current is not None else 0
+    return current,count,count>=2
+
+
 @dataclass
 class Choice:
     box: Box
@@ -22,6 +30,8 @@ class Choice:
     uncollected: bool = False
     recommended: bool = False
     rarity: int = 0
+    paths: tuple = ()
+    requirements: tuple = ()
 
 
 def card_boxes(image):

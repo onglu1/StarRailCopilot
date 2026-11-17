@@ -581,7 +581,10 @@ DivergentUniverse:
   Pollution: 0
   Mode:
     value: first_station
-    option: [first_station, full]
+    option: [first_station, full, star]
+  StarStrategy:
+    value: phainon
+    option: [phainon, aglaea, followup, aglaea_sustain, dot, followup_fuxuan, dot_blackswan]
   Runs: 1
   TeamPreset:
     value: 1

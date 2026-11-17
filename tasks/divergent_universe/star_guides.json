@@ -1,0 +1,712 @@
+{
+  "target": "X10",
+  "guides": [
+    {
+      "key": "phainon",
+      "label": "白厄",
+      "title": "把对面创世就不用再创世了",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP8ciyEOhDAUBee3W7MXWLmAwL4TgMEQ/BdfcBIMjgMTPGnVTCaZDBjw+e6iCzGGmF2UIUQfYnMxuVhcpDvD0x6zs1RcBZL9qh8trH94AwAA//8pb/5MVgAAAA$$UNI",
+      "candidate_team": [
+        "白厄",
+        "昔涟",
+        "阮•梅",
+        "开拓者·记忆"
+      ],
+      "availability_verified": false,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104010,
+          3103008,
+          3103014,
+          3102014
+        ],
+        "secondary_equation_ids": [
+          3103010,
+          3103009,
+          3102026,
+          3102013,
+          3102019
+        ],
+        "weighted_curio_ids": [
+          1011,
+          1013
+        ],
+        "teams": [
+          [
+            [
+              1408
+            ],
+            [
+              1415
+            ],
+            [
+              1303,
+              1403
+            ],
+            [
+              8008
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "白厄"
+          ],
+          [
+            "昔涟"
+          ],
+          [
+            "阮•梅",
+            "缇宝"
+          ],
+          [
+            "开拓者·记忆"
+          ]
+        ]
+      ],
+      "core_equations": [
+        "拒火者",
+        "彗星调教师",
+        "以太骇客",
+        "车库屠龙者"
+      ],
+      "selected_team_ids": [
+        1408,
+        1415,
+        1303,
+        8008
+      ],
+      "selected_team_names": [
+        "白厄",
+        "昔涟",
+        "阮•梅",
+        "Trailblazer•记忆"
+      ],
+      "team_adaptation": "Verify the original supplied guide composition before launch. Prior substitutions did not preserve its documented opening turn-delay and highlight synergy. Remembrance Trailblazer availability must be confirmed in the actual game, not inferred from an earlier missed portrait.",
+      "previous_team_variants": [
+        {
+          "member_ids": [
+            1408,
+            1415,
+            1303,
+            1313
+          ],
+          "members": [
+            "白厄",
+            "昔涟",
+            "阮•梅",
+            "星期日"
+          ],
+          "qualified_runs": [
+            "437dabf4562d4266bbdee61232e6cc49",
+            "2f1cf4dcc54d4026924de0b67e91b5fe",
+            "273c4c4e7b9f4f41b08dbb8b221ba68b"
+          ],
+          "evidence": "early defeats at nodes 3,3,4; first result recorder unconfirmed, next two real loss settlements"
+        },
+        {
+          "member_ids": [
+            1408,
+            1415,
+            1409,
+            1313
+          ],
+          "members": [
+            "白厄",
+            "昔涟",
+            "风堇",
+            "星期日"
+          ],
+          "qualified_runs": [
+            "760833b4a4134af6844fde278ba2159a",
+            "90fc043aa6344d528fb8fd0e0b0f2d07",
+            "1321c6785dfb4b6a871de25d0df9fe1f",
+            "beb3844981014d178a012ca8cbdeb26a",
+            "e398eba20bdb44f2862dcece17e650d2",
+            "4bd4e24133db479cb2bcce967b669786",
+            "4bfddd9013004aca8fdb2215dab8d623",
+            "1fd5c35f20dc45bb8c6cbf6858080545",
+            "bce5fe5616ec45ff9fff3e0269f8cd8e",
+            "460b0c5b7d3840e9b16c3d70f94dc141",
+            "3abe907194c9450c8afdbe35b4e92797"
+          ],
+          "evidence": "Multiple real losses including first-plane bosses; development interruptions retained separately. No full victory. Active run keeps its original team/loadout.",
+          "recorded_at": "2026-10-14T14:26:22.815665"
+        },
+        {
+          "member_ids": [
+            1408,
+            1415,
+            1208,
+            1313
+          ],
+          "members": [
+            "白厄",
+            "昔涟",
+            "符玄",
+            "星期日"
+          ],
+          "qualified_runs": [
+            "6ce38c22547b46febb349e77f1f62f73",
+            "5608e96e9f0843fa9d175a705fea297a",
+            "aed686c772374ed4883ddd281e3e571e",
+            "bedc3ce94c9d456992cc01f727eb21d5",
+            "cfd0e54661374477a9d0ec80fad3d520",
+            "42604758715243518249da59ca07fe20"
+          ],
+          "evidence": "No complete wins; some runs lacked expanded core and included development reloads. Do not infer isolated team causality. Native revival device once showed no targets despite missing health bar cues.",
+          "recorded_at": "2026-10-14T16:58:41.151656"
+        }
+      ]
+    },
+    {
+      "key": "followup",
+      "label": "红A、飞霄",
+      "title": "免费也是战舰",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP9iZmBgYGRgYGBhi9VnkI/UZ1CI1GfwDNVnYFWL1GdQjNRnsA7VZ7AM1WcwCdVnYPrBzMDwCqSHiZHxOzMDAyOjFCuIFAeTbWDyCAuI9JAHkdVwcUAAAAD//64NTAlpAAAA$$UNI",
+      "candidate_team": [
+        "飞霄",
+        "Trailblazer•记忆",
+        "缇宝",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": true,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104006,
+          3103007,
+          3103008,
+          3102025
+        ],
+        "secondary_equation_ids": [
+          3103014,
+          3103009,
+          3102011,
+          3102009,
+          3102004
+        ],
+        "weighted_curio_ids": [
+          1016,
+          1002
+        ],
+        "teams": [
+          [
+            [
+              1015
+            ],
+            [
+              1306
+            ],
+            [
+              1303
+            ],
+            [
+              1414
+            ]
+          ],
+          [
+            [
+              1220
+            ],
+            [
+              8008
+            ],
+            [
+              1403
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "Archer"
+          ],
+          [
+            "花火"
+          ],
+          [
+            "阮•梅"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ],
+        [
+          [
+            "飞霄"
+          ],
+          [
+            "开拓者·记忆"
+          ],
+          [
+            "缇宝"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ]
+      ],
+      "selected_team_names": [
+        "飞霄",
+        "Trailblazer•记忆",
+        "缇宝",
+        "丹恒•腾荒"
+      ],
+      "selected_team_ids": [
+        1220,
+        8008,
+        1403,
+        1414
+      ],
+      "team_adaptation": "Second team explicitly present in the supplied guide. Verify actual four members and matching guide before launch; ordinary attacks only. Original Archer alternative remains in team_alternatives.",
+      "core_equations": [
+        "除魔士",
+        "铁臂侠",
+        "彗星调教师",
+        "逐影机神"
+      ],
+      "core_names_evidence": "Actual game imported/exported guide, wly/star_guide_details_followup.json, 2026-10-14 21:07. Code bytes verified; team/applied verification are separate.",
+      "availability_evidence": {
+        "members": [
+          "飞霄",
+          "Trailblazer•记忆",
+          "缇宝",
+          "丹恒•腾荒"
+        ],
+        "member_ids": [
+          1220,
+          8008,
+          1403,
+          1414
+        ],
+        "screenshot": null,
+        "observed": "2026-10-14T21:09:45",
+        "evidence_note": "Historical screenshot retained locally; not distributed. Every new run must verify its actual downloaded team."
+      }
+    },
+    {
+      "key": "followup_fuxuan",
+      "label": "飞霄符玄对照",
+      "title": "免费也是战舰",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP9iZmBgYGRgYGBhi9VnkI/UZ1CI1GfwDNVnYFWL1GdQjNRnsA7VZ7AM1WcwCdVnYPrBzMDwCqSHiZHxOzMDAyOjFCuIFAeTbWDyCAuI9JAHkdVwcUAAAAD//64NTAlpAAAA$$UNI",
+      "candidate_team": [
+        "飞霄",
+        "Trailblazer•记忆",
+        "缇宝",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": false,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104006,
+          3103007,
+          3103008,
+          3102025
+        ],
+        "secondary_equation_ids": [
+          3103014,
+          3103009,
+          3102011,
+          3102009,
+          3102004
+        ],
+        "weighted_curio_ids": [
+          1016,
+          1002
+        ],
+        "teams": [
+          [
+            [
+              1015
+            ],
+            [
+              1306
+            ],
+            [
+              1303
+            ],
+            [
+              1414
+            ]
+          ],
+          [
+            [
+              1220
+            ],
+            [
+              8008
+            ],
+            [
+              1403
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "Archer"
+          ],
+          [
+            "花火"
+          ],
+          [
+            "阮•梅"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ],
+        [
+          [
+            "飞霄"
+          ],
+          [
+            "开拓者·记忆"
+          ],
+          [
+            "缇宝"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ]
+      ],
+      "selected_team_names": [
+        "飞霄",
+        "Trailblazer•记忆",
+        "缇宝",
+        "符玄"
+      ],
+      "selected_team_ids": [
+        1220,
+        8008,
+        1403,
+        1208
+      ],
+      "team_adaptation": "Keep the supplied followup code, primary equation and damage/support trio. Replace Dan Heng with Fu Xuan to compare damage mitigation and healing after repeated protocol-5 node-14 losses. Actual availability and all four slots must be verified; no success claim.",
+      "core_equations": [
+        "除魔士",
+        "铁臂侠",
+        "彗星调教师",
+        "逐影机神"
+      ],
+      "core_names_evidence": "Actual game imported/exported guide, wly/star_guide_details_followup.json, 2026-10-14 21:07. Code bytes verified; team/applied verification are separate.",
+      "availability_evidence": {
+        "members": [
+          "飞霄",
+          "Trailblazer•记忆",
+          "缇宝",
+          "丹恒•腾荒"
+        ],
+        "member_ids": [
+          1220,
+          8008,
+          1403,
+          1414
+        ],
+        "screenshot": null,
+        "observed": "2026-10-14T21:09:45",
+        "evidence_note": "Historical screenshot retained locally; not distributed. Every new run must verify its actual downloaded team."
+      },
+      "import_key": "followup"
+    },
+    {
+      "key": "aglaea",
+      "label": "阿格莱雅",
+      "title": "熟悉的阿雅大人",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP8cyyEWQFAQRuH7PBOsgqQIf1EcK7CACRNshM56WYFjynfTrUAB2m4XQ4g+xOLCxhBTiNXF5mJ20bwVnnxKOezPnZ7pZfAFAAD//3I2ZEZRAAAA$$UNI",
+      "candidate_team": [
+        "阿格莱雅",
+        "昔涟",
+        "缇宝",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": false,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104009,
+          3103008,
+          3103007,
+          3102009
+        ],
+        "secondary_equation_ids": [
+          3103014,
+          3103019,
+          3102011,
+          3102025,
+          3102004
+        ],
+        "weighted_curio_ids": [
+          1010,
+          1009
+        ],
+        "teams": [
+          [
+            [
+              1402
+            ],
+            [
+              1415
+            ],
+            [
+              1403
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "阿格莱雅"
+          ],
+          [
+            "昔涟"
+          ],
+          [
+            "缇宝"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ]
+      ],
+      "core_equations": [
+        "星星盗贼",
+        "彗星调教师",
+        "铁臂侠",
+        "祖宗战神"
+      ]
+    },
+    {
+      "key": "aglaea_sustain",
+      "label": "阿格莱雅·双生存",
+      "title": "阿格莱雅双生存试验",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP8cyyEWQFAQRuH7PBOsgqQIf1EcK7CACRNshM56WYFjynfTrUAB2m4XQ4g+xOLCxhBTiNXF5mJ20bwVnnxKOezPnZ7pZfAFAAD//3I2ZEZRAAAA$$UNI",
+      "candidate_team": [
+        "阿格莱雅",
+        "昔涟",
+        "缇宝",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": false,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104009,
+          3103008,
+          3103007,
+          3102009
+        ],
+        "secondary_equation_ids": [
+          3103014,
+          3103019,
+          3102011,
+          3102025,
+          3102004
+        ],
+        "weighted_curio_ids": [
+          1010,
+          1009
+        ],
+        "teams": [
+          [
+            [
+              1402
+            ],
+            [
+              1415
+            ],
+            [
+              1403
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "阿格莱雅"
+          ],
+          [
+            "昔涟"
+          ],
+          [
+            "缇宝"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ]
+      ],
+      "core_equations": [
+        "星星盗贼",
+        "彗星调教师",
+        "铁臂侠",
+        "祖宗战神"
+      ],
+      "import_key": "aglaea",
+      "selected_team_ids": [
+        1402,
+        1415,
+        1409,
+        1414
+      ],
+      "selected_team_names": [
+        "阿格莱雅",
+        "昔涟",
+        "风堇",
+        "丹恒•腾荒"
+      ],
+      "team_adaptation": "Retain the supplied Aglaea guide/code. Replace Tribbie with Hyacine to test healing plus shielding while the core is incomplete. Verify all four actual slots and the first world roster; this candidate is not yet a successful or stable strategy."
+    },
+    {
+      "key": "dot",
+      "label": "DOT队",
+      "title": "可能会有点卡",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP8ci7sNgDAQxRyO24IMgIT0Kj6LXHEFy1AwLRRsgJLGdmMDCjDaKeYUNcURwpcUU4o1xBZiDzE8Bl9/Srm86bXG2vt2+AMAAP//Cah0+FEAAAA$$UNI",
+      "candidate_team": [
+        "海瑟音",
+        "卡芙卡",
+        "知更鸟",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": false,
+      "note": "Candidate from supplied guide; actual game application and all four available members must be verified before launch.",
+      "decoded": {
+        "core_equation_ids": [
+          3104003,
+          3103017,
+          3103005,
+          3102008
+        ],
+        "secondary_equation_ids": [
+          3103020,
+          3103004,
+          3102005,
+          3102006,
+          3102007
+        ],
+        "weighted_curio_ids": [
+          1004,
+          1009
+        ],
+        "teams": [
+          [
+            [
+              1410
+            ],
+            [
+              1005
+            ],
+            [
+              1309
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "team_alternatives": [
+        [
+          [
+            "海瑟音"
+          ],
+          [
+            "卡芙卡"
+          ],
+          [
+            "知更鸟"
+          ],
+          [
+            "丹恒•腾荒"
+          ]
+        ]
+      ]
+    },
+    {
+      "key": "dot_blackswan",
+      "label": "DOT黑天鹅对照",
+      "title": "DOT第三槽位对照",
+      "code": "DIV##AQAAAB+LCAAAAAAAAP8ci7sNgDAQxRyO24IMgIT0Kj6LXHEFy1AwLRRsgJLGdmMDCjDaKeYUNcURwpcUU4o1xBZiDzE8Bl9/Srm86bXG2vt2+AMAAP//Cah0+FEAAAA$$UNI",
+      "candidate_team": [
+        "海瑟音",
+        "卡芙卡",
+        "黑天鹅",
+        "丹恒•腾荒"
+      ],
+      "availability_verified": false,
+      "note": "Unverified single-slot comparison; actual game application and all four selected members must be verified before launch. No superiority or success claim.",
+      "decoded": {
+        "core_equation_ids": [
+          3104003,
+          3103017,
+          3103005,
+          3102008
+        ],
+        "secondary_equation_ids": [
+          3103020,
+          3103004,
+          3102005,
+          3102006,
+          3102007
+        ],
+        "weighted_curio_ids": [
+          1004,
+          1009
+        ],
+        "teams": [
+          [
+            [
+              1410
+            ],
+            [
+              1005
+            ],
+            [
+              1309
+            ],
+            [
+              1414
+            ]
+          ]
+        ]
+      },
+      "import_key": "dot",
+      "selected_team_ids": [
+        1410,
+        1005,
+        1307,
+        1414
+      ],
+      "selected_team_names": [
+        "海瑟音",
+        "卡芙卡",
+        "黑天鹅",
+        "丹恒•腾荒"
+      ],
+      "team_adaptation": "Retain the existing DOT guide bytes, imported core order and weighted curios. Replace only Robin with Black Swan, as suggested by the supplied transcript's DOT lineup and current observed DoT-triggered charge/healing effects. This is a testable hypothesis, not evidence that Black Swan is stronger. The unchanged code still encodes Robin; selected_team_ids and fresh four-slot verification define this independent candidate."
+    }
+  ],
+  "verified_target_wins_per_profile": 11
+}

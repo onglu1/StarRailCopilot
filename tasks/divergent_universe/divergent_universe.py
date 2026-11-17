@@ -4,6 +4,8 @@ AGPL-3.0; see THIRD_PARTY.md. Native SRC supplies login, screenshots, OCR,
 joystick contacts, combat auto/speed controls and monthly reward handling.
 """
 import os
+import json
+from pathlib import Path
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -15,6 +17,7 @@ import numpy as np
 from filelock import FileLock, Timeout
 
 from module.base.timer import Timer
+from module.base.utils import save_image
 from module.config.config import TaskEnd
 from module.exception import RequestHumanTakeover
 from module.logger import logger, save_error_log
@@ -22,7 +25,7 @@ from tasks.currency_wars.operator import Box, normalize
 from tasks.currency_wars.paths import STATE_DIR
 from tasks.divergent_universe.operator import DivergentOperator
 from tasks.divergent_universe.progress import Progress, ROOT
-from tasks.divergent_universe.selection import read_choices, choose
+from tasks.divergent_universe.selection import read_choices, choose, next_choice_set
 from tasks.divergent_universe.assets import DU_INTERACT
 from tasks.dungeon.ui.nav import DungeonUINav
 from tasks.dungeon.keywords import KEYWORDS_DUNGEON_TAB, KEYWORDS_DUNGEON_NAV
@@ -53,7 +56,8 @@ class DivergentUniverse(DungeonUINav, MapControl):
     REWARD_TITLES = ('方程展开', '祝福强化', '获得奇物', '获得祝福',
                      '获得物品', '信标已部署', '站点卡升级', '已修复以下奇物')
     SETTLEMENT_TITLES = ('探索成功', '探索失败', '探索结束', '探索终止',
-                         '探索中断', '演算结束', '星阶提升', '智瞳点亮', '战斗失败')
+                         '探索中断', '演算结束', '星阶提升', '智瞳点亮', '智瞳熄灭', '智瞳已完全熄灭',
+                         '拓星失败', '拓星成功', '战斗失败')
     CHOICES = {
         'mask': ('选择一张面具', '选择面具'),
         'blessing': ('选择祝福', '选取祝福', '获取祝福'),
@@ -124,15 +128,28 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.progress = Progress(self.config.config_name)
                 self.progress.record('task_started', intended_mode=self.config.DivergentUniverse_Mode,
                                      intended_calculation=self.config.DivergentUniverse_Calculation)
+                self.retry_exhausted_settlement_after_update()
+                from tasks.divergent_universe.preparation_recovery import retry_preparation_environment
+                retry_preparation_environment(self)
                 completed = 0
                 while self.config.DivergentUniverse_Runs == 0 or completed < self.config.DivergentUniverse_Runs:
                     try:
                         self._initialize()
-                        if not self.go_to_lobby():
-                            break  # Explicit weekly point limit, not a completed run.
-                        self.resume_failed_position()
-                        self.active = self.progress.begin(self.config.DivergentUniverse_Mode,
-                                                          self.config.DivergentUniverse_Calculation)
+                        if self.config.DivergentUniverse_Mode == 'star' and not (self.active or {}).get('star'):
+                            from tasks.divergent_universe.star import StarPreparation
+                            # Menu setup is a new authorized campaign, not an
+                            # extension of an obsolete exploration's deadline.
+                            self.apply_star_preparation_deadline()
+                            from tasks.divergent_universe.preparation_recovery import finish_preparation_environment
+                            StarPreparation(self).begin_run()
+                            finish_preparation_environment(self)
+                            self._star_preparation_deadline = None
+                        else:
+                            if not self.go_to_lobby():
+                                break  # Explicit weekly point limit, not a completed run.
+                            self.resume_failed_position()
+                            self.active = self.progress.begin(self.config.DivergentUniverse_Mode,
+                                                              self.config.DivergentUniverse_Calculation)
                         result = self.play_run()
                         self.progress.finish(result)
                         completed += 1
@@ -163,19 +180,88 @@ class DivergentUniverse(DungeonUINav, MapControl):
         except Timeout:
             raise RequestHumanTakeover('该配置已有货币战争或差分宇宙控制进程，请先停止它')
 
+    def retry_exhausted_settlement_after_update(self):
+        """One patched-worker settlement window per retained, fault-stopped run."""
+        data=self.progress.data
+        active=data.get('active') or {}
+        recovery=data.get('recovery')
+        limit=self.config.DivergentUniverse_RecoveryRetries
+        if (limit<=0 or data.get('phase')!='error' or not data.get('error') or not recovery
+                or recovery.get('action')!='settle' or not active.get('stop_requested')
+                or active.get('settlement_observed') or active.get('post_patch_settlement_retry')
+                or (recovery.get('run_id'),recovery.get('node'))!=(active.get('id'),active.get('node'))
+                or (recovery.get('attempts',0)<limit and time.time()<recovery.get('deadline',0))):
+            return False
+        # The controller lock is already held. A bounded tail proves the
+        # previous worker exhausted this exact checkpoint, rather than the
+        # user stopping a healthy configuration or an unrelated run failing.
+        try:
+            with self.progress.events_path.open('rb') as stream:
+                stream.seek(0,2)
+                start=max(0,stream.tell()-512*1024)
+                stream.seek(start)
+                lines=stream.read().decode('utf-8',errors='replace').splitlines()
+                if start:lines=lines[1:]
+        except OSError:
+            return False
+        proof=None
+        for line in reversed(lines):
+            if 'recovery_exhausted' not in line:
+                continue
+            try:
+                event=json.loads(line)
+            except ValueError:
+                continue
+            if (event.get('event')=='recovery_exhausted'
+                    and (event.get('run_id'),event.get('node'))==(active.get('id'),active.get('node'))):
+                proof=event
+                break
+        if (not proof or proof.get('action')!='settle' or proof.get('pid')!=data.get('pid')
+                or proof.get('attempts')!=recovery.get('attempts') or not proof.get('build')
+                or proof['build']==self.progress.build):
+            return False
+        deadline=time.time()+self.RECOVERY_WINDOW_SECONDS
+        active['post_patch_settlement_retry']=dict(
+            previous_recovery=json.loads(json.dumps(recovery)),previous_error=data['error'],
+            previous_pid=data.get('pid'),from_build=proof['build'],to_build=self.progress.build,
+            exhausted_event=proof,granted_at=time.time(),deadline=deadline)
+        recovery['deadline']=deadline
+        # Preserve faults/attempts. This worker may finish the old settlement,
+        # but gains no automatic restart, continued-run, or repeat-patch credit.
+        self.progress.save('error')
+        self.progress.record('post_patch_settlement_window_granted',from_build=proof['build'],
+                             to_build=self.progress.build,deadline=deadline,
+                             faults=recovery.get('faults'),attempts=recovery.get('attempts'))
+        return True
+
     def prepare_recovery(self):
+        self.finish_recovery_combat_pause()
         active = self.progress.data.get('active') or {}
         identity = (active.get('id'), active.get('node'))
         recovery = self.progress.data.get('recovery')
-        if recovery is None or (recovery['run_id'], recovery['node']) != identity:
+        settling_same_run=bool(recovery and recovery.get('run_id')==identity[0]
+                               and recovery.get('action')=='settle' and active.get('stop_requested'))
+        if recovery is None or ((recovery['run_id'], recovery['node']) != identity and not settling_same_run):
             recovery = dict(run_id=identity[0], node=identity[1], faults=0, attempts=0,
                             action='resume', deadline=time.time() + self.RECOVERY_WINDOW_SECONDS)
             self.progress.data['recovery'] = recovery
+        elif settling_same_run and recovery['node']!=identity[1]:
+            # Completing mandatory opening choices may enter node 1 before
+            # settlement is possible. It is still the same exit attempt,
+            # including its exhausted retry count and original stage deadline.
+            self.progress.record('recovery_settlement_checkpoint_preserved',
+                                 previous_node=recovery['node'],current_node=identity[1],
+                                 attempts=recovery['attempts'],deadline=recovery['deadline'])
+        # Capture before the short recovery-action clock replaces this
+        # worker's remaining whole-run allowance.
+        self.capture_recovery_run_deadline()
         recovery['faults'] += 1
         # More battles/options in the same room are not evidence that its
         # recurring navigation/dialogue failure has been resolved.
-        abandon = (active.get('mode') == 'full' and active.get('node')
-                   and recovery['faults'] >= 2 and not active.get('settlement_observed'))
+        entered = active.get('node') or bool(active.get('star',{}).get('mask_choice_screenshot'))
+        run_expired = recovery['run_deadline'] <= time.time()
+        abandon = (active.get('mode') in ('full','star') and entered
+                   and (recovery['faults'] >= 2 or run_expired) and not active.get('settlement_observed'))
         if self.config.DivergentUniverse_RecoveryRetries > 0 and (abandon or active.get('stop_requested')):
             if recovery['action'] != 'settle':
                 recovery['action'] = 'settle'
@@ -193,11 +279,110 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return recovery
 
     def apply_recovery_deadline(self):
+        from tasks.divergent_universe.preparation_recovery import preparation_environment_deadline
+        environment_deadline = preparation_environment_deadline(self.progress.data)
+        if environment_deadline is not None:
+            self.op.deadline = min(self._run_deadline, time.monotonic()
+                                   + max(0, environment_deadline-time.time()))
+            return
         recovery = self.progress.data.get('recovery')
         deadline = self._run_deadline
         if recovery:
-            deadline = min(deadline, time.monotonic() + max(0, recovery['deadline'] - time.time()))
+            hard_deadline=self.capture_recovery_run_deadline()
+            if recovery['action']=='settle':
+                # Settlement retains its existing independent, bounded stage
+                # even when the exploration's whole-run limit has expired.
+                deadline = time.monotonic() + max(0, recovery['deadline'] - time.time())
+            elif recovery.get('combat_pause'):
+                deadline = min(deadline, time.monotonic() + max(
+                    0, min(hard_deadline,recovery['combat_pause']['hard_deadline']) - time.time()))
+            else:
+                deadline = min(deadline, time.monotonic() + max(
+                    0, min(hard_deadline,recovery['deadline']) - time.time()))
         self.op.deadline = deadline
+
+    def apply_star_preparation_deadline(self):
+        # Native login can happen inside _initialize, before the star menu
+        # branch. The same preparation window must cover both stages.
+        if getattr(self, '_star_preparation_deadline', None) is None:
+            self._star_preparation_deadline = time.monotonic() + 360
+        deadline = self._star_preparation_deadline
+        from tasks.divergent_universe.preparation_recovery import preparation_environment_deadline
+        environment_deadline = preparation_environment_deadline(self.progress.data)
+        if environment_deadline is not None:
+            deadline = min(deadline, time.monotonic() + max(0, environment_deadline-time.time()))
+        self.op.deadline = deadline
+
+    def capture_recovery_run_deadline(self):
+        """Freeze only recovery's remaining run allowance, once across reloads."""
+        recovery=self.progress.data.get('recovery')
+        if not recovery:
+            return None
+        if 'run_deadline' not in recovery:
+            recovery['run_deadline']=time.time()+max(0,self._run_deadline-time.monotonic())
+            self.progress.save()
+        return recovery['run_deadline']
+
+    def finish_recovery_combat_pause(self):
+        recovery=self.progress.data.get('recovery')
+        paused=recovery.pop('combat_pause',None) if recovery else None
+        if not paused:
+            return False
+        if recovery['action']=='resume':
+            recovery['deadline']=min(time.time()+paused['remaining'],
+                                     recovery['run_deadline'],paused['hard_deadline'])
+        self.progress.record('recovery_combat_clock_resumed',remaining=paused['remaining'],
+                             deadline=recovery['deadline'],entered_at=paused['entered_at'])
+        self.progress.save()
+        if getattr(self,'op',None) is not None:
+            self.apply_recovery_deadline()
+        return True
+
+    def reconcile_recovery_combat_pause(self):
+        recovery=self.progress.data.get('recovery')
+        if not recovery or not recovery.get('combat_pause') or self.is_combat_executing():
+            return False
+        from tasks.login.assets.assets_login import LOGIN_CONFIRM, LOGIN_LOADING, ACCOUNT_CONFIRM
+        # Missing combat HUD alone can be an animation. Only a positively
+        # identified reward/world/entry/login screen resumes the action clock.
+        if (self.world_visible() or self.selection_kind() or self.lobby_visible()
+                or self.settlement_title() or any(self.appear(button) for button in
+                    (LOGIN_CONFIRM, LOGIN_LOADING, ACCOUNT_CONFIRM))):
+            return self.finish_recovery_combat_pause()
+        return False
+
+    @contextmanager
+    def recovery_combat_window(self):
+        recovery=self.progress.data.get('recovery')
+        eligible=(recovery and recovery['action']=='resume' and self.active
+                  and recovery['run_id']==self.active['id'] and self.is_combat_executing())
+        if not eligible:
+            yield
+            return
+        hard_deadline=self.capture_recovery_run_deadline()
+        # A user's larger MaxMinutes value cannot enlarge the saved ceiling.
+        # A smaller current value still bounds this combat invocation.
+        hard_deadline=min(hard_deadline,time.time()+max(1,self.config.DivergentUniverse_MaxMinutes)*60)
+        self._run_deadline=time.monotonic()+max(0,hard_deadline-time.time())
+        if not recovery.get('combat_pause'):
+            remaining=max(0,recovery['deadline']-time.time())
+            if not remaining:
+                self.apply_recovery_deadline()
+                self.op.check()  # Do not revive an already exhausted action budget.
+                raise TimeoutError('差分宇宙恢复动作时间超过设置的上限')
+            recovery['combat_pause']=dict(remaining=remaining,entered_at=time.time(),
+                hard_deadline=hard_deadline,node=self.active.get('node'),
+                battle_index=self.active.get('battles',0))
+            self.progress.record('recovery_combat_clock_paused',**recovery['combat_pause'])
+            self.progress.save()
+        self.apply_recovery_deadline()
+        try:
+            yield
+        finally:
+            # Includes user stop and native combat watchdog exceptions. A
+            # killed worker leaves the persisted pause for live-page recovery;
+            # its fixed whole-run ceiling continues to elapse while offline.
+            self.finish_recovery_combat_pause()
 
     def recover_checkpoint(self, error):
         # A failed native login must consume the next restart attempt before
@@ -229,6 +414,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
                                      recovery_attempt=recovery['attempts'])
                 logger.warning(f'DU login recovery did not finish: {restart_error}')
                 error = restart_error
+                if (recovery['action']=='resume'
+                        and time.time()>=recovery.get('run_deadline',float('inf'))):
+                    # The whole-run allowance can expire inside login rather
+                    # than the outer play loop. Use the same settlement
+                    # transition without resetting the total restart count.
+                    recovery=self.prepare_recovery()
+                    self.progress.save('error')
             else:
                 return
         self.progress.record('recovery_exhausted', attempts=recovery['attempts'], action=recovery['action'])
@@ -251,12 +443,37 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.progress.record('recovery_reentry_begin')
             self.reenter_station()
             self.progress.record('recovery_reentry_complete')
+            if self.active.get('star'):
+                from tasks.divergent_universe.star_workshop import StarWorkshop
+                # A confirmed temporary leave changes the approach origin.
+                # Spending and the persistent recovery deadline stay intact.
+                StarWorkshop(self).resume_approach(
+                    (self.progress.data.get('recovery') or {}).get('attempts',0))
 
     def _initialize(self):
         logger.attr('DU control revision', self.progress.build[:12])
         from dev_tools.du_recovery_probe import probe_path
         self._recovery_probe_path = probe_path(ROOT, os.environ.get('DU_RECOVERY_PROBE'), self.config.config_name)
         self.active = self.progress.data.get('active')
+        self.star_loadout = None
+        if (self.active or {}).get('star',{}).get('loadout'):
+            from tasks.divergent_universe.star_policy import StarLoadout, reconcile_imported_core_order
+            saved=self.active['star']['loadout']
+            guides=json.loads((Path(__file__).parent/'star_guides.json').read_text('utf-8'))['guides']
+            guide=next((g for g in guides if g['key']==saved['candidate']),None)
+            if guide and not guide.get('core_equations'):
+                proof=ROOT/'log/divergent_universe'/self.config.config_name/f'star_guide_details_{guide["key"]}.json'
+                if proof.exists():
+                    corrected=reconcile_imported_core_order(self.active,guide,json.loads(proof.read_text('utf-8')))
+                    if corrected:
+                        self.progress.record('star_core_order_corrected',**corrected)
+                        self.progress.save('star_core_order_corrected')
+            from tasks.divergent_universe.star_policy import upgrade_effect_policy
+            changed=upgrade_effect_policy(self.active)
+            if changed:
+                self.progress.record('star_effect_policy_upgraded',**changed)
+                self.progress.save('star_effect_policy_upgraded')
+            self.star_loadout = StarLoadout(**self.active['star']['loadout'])
         if self.active and self.active.get('station') == '储蓄间':
             # Each bounded task recovery may reset the position once again.
             self.active.pop('navigation_reentry_completed', None)
@@ -266,6 +483,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         folder = ROOT / 'log/divergent_universe' / self.config.config_name
         self.op = DivergentOperator(self.device, self.config, folder if self.config.DivergentUniverse_SaveEvidence else None)
         self._run_deadline = time.monotonic() + max(1, self.config.DivergentUniverse_MaxMinutes) * 60
+        self.settle_exhausted_preparation()
         self.apply_recovery_deadline()
         self._node_done = False
         self._entry_prepared = False
@@ -274,17 +492,45 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self._du_auto_off_confirm = Timer(1, count=2).start()
         self._launch_attempts = 0
         self.combat_state_reset()
+        if self.config.DivergentUniverse_Mode == 'star' and self.active is None:
+            self.apply_star_preparation_deadline()
         if not self.device.app_is_running():
+            self.finish_recovery_combat_pause()
             self.login_from_current()
+
+    def settle_exhausted_preparation(self):
+        """An observed opening with exhausted recovery may only finish through the game."""
+        active=self.active or {}
+        recovery=self.progress.data.get('recovery')
+        limit=self.config.DivergentUniverse_RecoveryRetries
+        if (limit<=0 or self.progress.data.get('phase')!='error' or not recovery
+                or recovery.get('action')!='resume' or active.get('mode')!='star' or active.get('node')
+                or (recovery.get('run_id'),recovery.get('node'))!=(active.get('id'),active.get('node'))
+                or not active.get('star',{}).get('mask_choice_screenshot')):
+            return False
+        if recovery.get('attempts',0)<limit and time.time()<recovery['deadline']:
+            return False
+        active['exhausted_preparation_recovery']=dict(recovery,error=self.progress.data.get('error'))
+        active['stop_requested']=True
+        active.setdefault('exit_reason','recovery_preparation_exhausted')
+        old_deadline=recovery['deadline']
+        recovery.update(action='settle',deadline=time.time()+self.RECOVERY_WINDOW_SECONDS)
+        # This is the existing one-time settlement stage, not a fresh resume
+        # allowance. Fault/attempt counts remain intact across reloads.
+        self.progress.record('preparation_recovery_settlement_requested',attempts=recovery['attempts'],
+                             previous_deadline=old_deadline,settlement_deadline=recovery['deadline'])
+        self.progress.save('settling_exhausted_preparation')
+        return True
 
     def login_from_current(self, restart=False):
         from tasks.login.login import Login
         timeout = Timer(300, count=3).start()
         def resumed():
-            self.op.check()  # User stop and the recovery deadline also bound native login.
             self.op.image = self.device.image
             self.op._ocr_cache.clear()
             self.op.frame_cache.clear()
+            self.reconcile_recovery_combat_pause()
+            self.op.check()  # User stop and the recovery deadline also bound native login.
             if (self.world_visible() or self.adventure_intro_visible() or self.adventure_result_button()
                     or self.discard_confirmation_visible() or self.selection_kind()
                     or self.lobby_visible() or self.settlement_title()
@@ -353,6 +599,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
     def lobby_visible(self):
         return bool(self.op.text('开始游戏', (0.70, 0.84, 0.88, 0.94)))
 
+    def star_workshop_enabled(self):
+        return (getattr(getattr(self,'star_loadout',None),'revision','').startswith('star-workshop-')
+                and not (self.active or {}).get('stop_requested'))
+
     def go_to_lobby(self):
         from tasks.base.page import page_guide
         op = self.op
@@ -364,6 +614,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         initial_saved = False
         while not timeout.reached():
             op.snapshot()
+            self.reconcile_recovery_combat_pause()
             if op.image.mean() < 3:
                 continue
             if not initial_saved:
@@ -381,6 +632,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # Let native combat finish before returning to the common entry.
                 super().combat_execute()
                 continue
+            if (self.progress.data.get('recovery') or {}).get('combat_pause'):
+                # A reload can first see a long ultimate animation. The
+                # positive-screen reconciliation above owns leaving this
+                # pause; do not send back or restart after 8 unknown seconds.
+                # The outer 150-second wait and saved hard ceiling still run.
+                continue
             if self.lobby_visible():
                 if self.config.DivergentUniverse_StopAtWeeklyLimit:
                     points = self.weekly_points()
@@ -391,6 +648,21 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if '事件' in header and op.text('差分宇宙', (0.02, 0, 0.26, 0.065)):
                 return True
             if self.settlement_title():
+                return True
+            if self.star_workshop_enabled():
+                from tasks.divergent_universe.star_shop import StarShop
+                if StarShop(self).can_handle_page():
+                    return True
+                if self.op.text('角色重置',(.035,.035,.25,.10),exact=True):
+                    return True
+                from tasks.divergent_universe.star_workshop import StarWorkshop
+                if StarWorkshop(self).visible():
+                    return True
+                if self.op.text('攻略推荐',(.04,.035,.23,.10),exact=True):
+                    return True
+                if self.op.text(('拥有祝福','祝福/'),(.02,.03,.24,.10)):
+                    return True
+            if op.text('星阶模式', (.035,.035,.24,.095), exact=True):
                 return True
             if op.text(('结束并结算', '退出并结算', '确定要结束进程'), (0.15, 0.2, 1, 1)):
                 return True
@@ -473,6 +745,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
             return True
         if (launch and (self.active.get('node') or self.active.get('pending_settlement'))
                 and not retained):
+            if self.active.get('mode') == 'star':
+                # A missing save is not a settlement. Never drop the star
+                # proof and create an unverified run inside this play loop.
+                raise RequestHumanTakeover('拓星原局已无可继续进度且结算未确认；保留原局及证据，禁止自动替换新局')
             if self.active.get('stop_requested') and not self.active.get('settlement_observed'):
                 raise RequestHumanTakeover('请求结束的探索已无可继续进度，但未观察到真实结算；保留记录并停止')
             # The game offers a fresh start, so the old local checkpoint is
@@ -487,6 +763,13 @@ class DivergentUniverse(DungeonUINav, MapControl):
         mode_selection = '模式选择' in self.header_text()
         if self.active.get('pending_settlement') and not mode_selection:
             return False  # Continue the requested exit, not a new exploration.
+        if self.active.get('star') and launch and not retained:
+            from tasks.divergent_universe.star import StarPreparation
+            rank = StarPreparation(self).read_rank()
+            if not rank or rank['threshold'] != self.active['star']['threshold'] or rank['mode'] != '拓星模式':
+                raise RequestHumanTakeover('实际星阶入口与已核验对局不一致，停止启动')
+            op.click_box(launch, interval=3)
+            return True
         if (not self._entry_prepared and launch) or mode_selection:
             entry.prepare(self.active.get('calculation', 'periodic'))
             self._entry_prepared = True
@@ -568,6 +851,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     continue
                 if self._native_event is not None:
                     self._native_event.event_title = None
+                    self._native_event._du_confirm_context = None
                 if self.active.pop('event_pending', False):
                     self.active['event_completed'] = True
                     self.active['node_done'] = True
@@ -651,6 +935,18 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def handle_choice(self, kind):
         op = self.op
+        if (not self.active.get('stop_requested') and self.star_workshop_enabled() and self.star_loadout.revision in ('star-workshop-v4','star-workshop-v5','star-workshop-v6','star-workshop-v7','star-workshop-v8')
+                and kind=='equation' and not self.active.get('node')
+                and not self.active['star'].get('run_guide_verified')):
+            from tasks.divergent_universe.star import StarPreparation
+            StarPreparation(self).open_run_guide()
+        if (not self.active.get('stop_requested') and self.star_workshop_enabled() and self.star_loadout.revision in ('star-workshop-v5','star-workshop-v6','star-workshop-v7','star-workshop-v8')
+                and kind in ('equation','blessing')
+                and (not self.active['star'].get('inventory_observed') or
+                     self.active['star'].get('inventory_node')!=self.active.get('node',0))):
+            from tasks.divergent_universe.star import StarPreparation
+            if StarPreparation(self).inspect_run_inventory() is None:
+                return
         if (not self._node_done and self.active.get('node')
                 and any(t in self.active.get('station', '') for t in ('战斗', '精英', '首领', '转化'))
                 and op.text('你战胜了', (0.32, 0.115, 0.70, 0.17))):
@@ -662,15 +958,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.choose_station()
             return
         if kind == 'station_card':
-            # This screen uses small draw/discard tiles, not the tall blessing
-            # cards. SRA confirms the selected tile; do not await a card title
-            # in the middle of the screen where there is no card.
-            def station_card_ready():
-                button = op.text('确定', (0.64, 0.78, 1, 0.96), exact=True)
-                return button and self.confirm_enabled(button)
-            op.wait_until(station_card_ready, action=lambda: op.click_text(
-                ('战斗', '精英', '首领', '商店', '事件', '奖励', '异常', '空白', '休整', '财富'),
-                (0.03, 0.24, 0.60, 0.51)), name='站点卡选择')
+            self.select_station_card()
             self.confirm_selection(kind)
             self.device.click_record_clear()
             self.active['selections'] += 1
@@ -681,13 +969,42 @@ class DivergentUniverse(DungeonUINav, MapControl):
             # or click the blurred cards behind it.
             self.confirm_selection(kind)
         elif kind == 'mask':
+            from tasks.divergent_universe.star_policy import mask_name, mask_labels
             page_changed = object()
+            mask_conflict_names=None
+            mask_conflict_frames=0
+            star_mask = bool(self.active.get('star')) and getattr(
+                getattr(self,'star_loadout',None),'revision','').startswith('star-workshop-')
             def mask_ready():
                 current = self.selection_kind()
                 if (current and current != 'mask') or self.world_visible() or self.is_combat_executing():
                     return page_changed
-                return op.text('确定', (0.6, 0.8, 1, 1), exact=True)
+                button=op.text('确定', (0.6, 0.8, 1, 1), exact=True)
+                if star_mask:
+                    if self.active.get('stop_requested'):
+                        return button if current=='mask' and button and self.confirm_enabled(button) else None
+                    pending=self.active['star'].get('mask_candidate')
+                    if not pending or pending=='之面具':
+                        return None
+                    detail=op.text(mask_labels(pending),(.60,.15,.86,.24),exact=True)
+                    if not detail or not button or not self.confirm_enabled(button):
+                        return None
+                    star=self.active['star']
+                    if not star.get('mask_detail_screenshot'):
+                        # Keep the actual final detail after any refresh, using
+                        # this already verified frame rather than a new capture.
+                        folder=ROOT/'log/divergent_universe'/self.config.config_name/'star_runs'/self.active['id']
+                        folder.mkdir(parents=True,exist_ok=True)
+                        path=folder/f'mask_detail_{time.time_ns()}.png'
+                        save_image(op.image,path)
+                        star.update(mask_detail_screenshot=str(path),mask_detail_raw_title=detail.source)
+                        self.progress.record('star_mask_detail_observed',raw_title=detail.source,
+                                             resolved_name=mask_name(pending),path=str(path))
+                        self.progress.save('star_mask_detail_observed')
+                    return button
+                return button
             def choose_mask():
+                nonlocal mask_conflict_names,mask_conflict_frames
                 # A mask information/obtained overlay has a close footer,
                 # not another confirm button. Close only that observed page
                 # and re-check: a preview may return to the mask chooser.
@@ -697,11 +1014,63 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     if clicked:
                         logger.info('DU mask overlay closed; recheck the actual next page')
                     return clicked
+                if star_mask:
+                    labels=[b for b in op.read_region((.20,.30,.44,.88),snapshot=False)
+                            if normalize(b.source).endswith('面具') and 3<=len(normalize(b.source))<=7
+                            and normalize(b.source)!='之面具'
+                            and not normalize(b.source).startswith('选择')]
+                    if labels and not self.active['star'].get('mask_choice_screenshot'):
+                        folder=ROOT/'log/divergent_universe'/self.config.config_name/'star_runs'/self.active['id']
+                        folder.mkdir(parents=True,exist_ok=True)
+                        path=folder/'mask_choice.png'
+                        save_image(op.image,path)
+                        self.active['star']['mask_choice_screenshot']=str(path)
+                    priorities=('马之面具','囧之面具','财猫面具','镜头面具','斗士面具')
+                    if self.maybe_refresh_star_masks(labels):
+                        return False
+                    pending=None if self.active.get('stop_requested') else self.active['star'].get('mask_candidate')
+                    if pending=='之面具':
+                        pending=None  # A missing first character proves no mask identity.
+                    names=tuple(mask_name(normalize(box.source)) for box in labels)
+                    horse_detail=None
+                    if (pending=='囧之面具' and len(names)==3 and len(set(names))==3
+                            and all(len(name)>=4 for name in names)
+                            and '马之面具' in names and '囧之面具' not in names):
+                        horse_detail=op.text('马之面具',(.60,.15,.86,.24),exact=True)
+                    conflict=names if horse_detail else None
+                    mask_conflict_frames=(mask_conflict_frames+1
+                        if conflict is not None and conflict==mask_conflict_names
+                        else 1 if conflict is not None else 0)
+                    mask_conflict_names=conflict
+                    if mask_conflict_frames>=2:
+                        # Only the observed old horse-to-jiong collision can
+                        # invalidate a retained choice. A fading one-row menu
+                        # is not evidence that the chosen mask disappeared.
+                        self.progress.record('star_mask_pending_invalidated',previous=pending,
+                            reason='legacy_horse_alias_conflict',raw_detail=horse_detail.source,candidates=names)
+                        self.active['star'].pop('mask_candidate')
+                        self.progress.save('star_mask_pending_invalidated')
+                        pending=None
+                        mask_conflict_names=None;mask_conflict_frames=0
+                    if pending:
+                        target=next((b for b in labels if mask_name(normalize(b.source))==mask_name(pending)),None)
+                    else:
+                        target=next((b for name in priorities for b in labels if mask_name(normalize(b.source))==name),None)
+                        target=target or next(iter(labels),None)
+                    if target and op.click_box(target,interval=3):
+                        self.active['star']['mask_candidate']=mask_name(normalize(target.source))
+                        return True
+                    return False
                 return op.click_text('面具', (0.03, 0.65, 0.5, 0.95))
             ready = op.wait_until(mask_ready, action=choose_mask, name='面具确认页')
             if ready is page_changed:
                 return
-            self.confirm_selection(kind)
+            confirmed=self.confirm_selection(kind)
+            if confirmed is not False and self.active.get('stop_requested'):
+                self.progress.record('initial_mask_confirmed_for_settlement')
+            elif confirmed is not False and (self.active.get('star') or {}).get('mask_candidate'):
+                self.active['star']['mask']=mask_name(self.active['star'].pop('mask_candidate'))
+                self.progress.record('star_mask_selected',name=self.active['star']['mask'])
         else:
             priority_text = (self.config.DivergentUniverse_StationPriority if kind == 'area'
                              else self.config.DivergentUniverse_ChoicePriority)
@@ -724,19 +1093,139 @@ class DivergentUniverse(DungeonUINav, MapControl):
             choices = op.wait_until(choices_ready, name=kind + '卡片内容')
             if choices is page_changed:
                 return  # The reward animation has already advanced to another page.
+            if self.star_loadout and kind in ('area', 'effect'):
+                from tasks.divergent_universe.star_effects import observe_candidate_frame
+                observe_candidate_frame(self, choices, kind)
             op.save('choice_' + kind)
             if kind == 'area':
                 # The user prefers another route over adventure rooms. Keep
                 # collection/recommendation/rarity order among viable cards.
                 choices = [c for c in choices if '冒险' not in c.title] or choices
-            choice = choose(choices, self.config.DivergentUniverse_PreferUncollected, priorities, discard=kind == 'discard')
+            if self.star_loadout and kind not in ('area','effect'):
+                from tasks.divergent_universe.star_policy import rank_star_choices, observed_blessings, observe_choice_paths
+                if self.star_loadout.revision in ('star-workshop-v4','star-workshop-v5','star-workshop-v6','star-workshop-v7','star-workshop-v8'):
+                    observe_choice_paths(op,choices,kind)
+                    for candidate in choices:
+                        if candidate.requirements:
+                            self.active['star'].setdefault('observed_equation_requirements',{})[candidate.title]=dict(candidate.requirements)
+                from tasks.divergent_universe.star_effects import observe_effects, effect_features
+                observe_effects(self,choices,kind)
+                owned = (observed_blessings(self.active['star']['choices']) if self.star_loadout.revision=='star-paths-v2' or self.star_loadout.revision.startswith('star-workshop-')
+                         else [c['title'] for c in self.active['star']['choices'] if c['kind'] == kind])
+                from tasks.divergent_universe.star_policy import decision_inventory, uncertain_growth_threshold, pending_secondary_completion, visible_secondary_growth
+                inventory=decision_inventory(self.active['star']) if self.star_loadout.revision=='star-workshop-v8' and kind=='blessing' else {}
+                visit=self.active['star'].get('workshops',{}).get(str(self.active.get('node')),{})
+                secondary_completion=pending_secondary_completion(self.active,kind,getattr(self.progress,'session_id',None))
+                growth_target=visit.get('blessing_bridge_target') if visit.get('blessing_choice_pending') else None
+                if inventory and growth_target and not growth_target.get('done') and inventory.get('counts') is not None:
+                    for path,count in growth_target.get('counts',{}).items():
+                        inventory['counts'][path]=count
+                        inventory['upper_counts'][path]=count
+                if inventory and uncertain_growth_threshold(self.star_loadout,inventory,
+                        self.active['star'].get('observed_equation_requirements'),self.active['star'].get('threshold'),growth_target):
+                    self.progress.record('star_decision_inventory_refresh',reason=inventory['source'],bounds=inventory)
+                    return self.refresh_choice_inventory(kind)
+                secondary_growth=visible_secondary_growth(self.active,self.star_loadout,inventory,kind,
+                                                          getattr(self.progress,'session_id',None))
+                ranked = rank_star_choices(choices,self.star_loadout,kind,owned=owned,growth_target=growth_target,
+                                          secondary_completion=secondary_completion,secondary_growth=secondary_growth,
+                                          requirements=self.active['star'].get('observed_equation_requirements'),
+                                          path_counts=inventory.get('counts',self.active['star'].get('path_counts')),
+                                          threshold=self.active['star'].get('threshold'),
+                                          owned_effect_tags=[tag for c in self.active['star']['choices']
+                                              if c['kind']=='blessing' and c['title'] in owned for tag in effect_features(c.get('effect_text',''),self.star_loadout.candidate)])
+                if inventory and inventory['upper_counts']!=inventory['counts']:
+                    upper=rank_star_choices(choices,self.star_loadout,kind,owned=owned,growth_target=growth_target,
+                        secondary_completion=secondary_completion,secondary_growth=secondary_growth,
+                        requirements=self.active['star'].get('observed_equation_requirements'),
+                        path_counts=inventory['upper_counts'],threshold=self.active['star'].get('threshold'),
+                        owned_effect_tags=[tag for c in self.active['star']['choices']
+                            if c['kind']=='blessing' and c['title'] in owned for tag in effect_features(c.get('effect_text',''),self.star_loadout.candidate)])
+                    if upper[0][0].title!=ranked[0][0].title:
+                        self.progress.record('star_decision_inventory_refresh',reason='uncertain_counts_change_winner',bounds=inventory)
+                        return self.refresh_choice_inventory(kind)
+                choice = ranked[0][0]
+                self.progress.record('star_choice_candidates',kind=kind,policy=self.star_loadout.revision,
+                                     context=dict(growth_target=growth_target,secondary_completion=secondary_completion,
+                                                  secondary_growth=secondary_growth,
+                                                  secondary_growth_priority_used=bool(secondary_growth and len(ranked[0][1])==10 and ranked[0][1][4]),
+                                                  score_layout=('effect_v8_secondary_after_core_priority' if secondary_growth else 'unchanged'),
+                                                  decision_inventory=inventory,inventory_node=self.active['star'].get('inventory_node'),
+                                                  path_counts=inventory.get('counts',self.active['star'].get('path_counts')),
+                                                  requirements=self.active['star'].get('observed_equation_requirements'),
+                                                  owned_blessings=owned),
+                                     candidates=[dict(title=c.title,score=list(score),recommended=c.recommended,
+                                                      rarity=c.rarity,uncollected=c.uncollected,paths=list(c.paths),
+                                                      effect_text=getattr(c,'effect_text',''),effect_tags=list(getattr(c,'effect_tags',()))) for c,score in ranked])
+            else:
+                choice = choose(choices, self.config.DivergentUniverse_PreferUncollected, priorities, discard=kind == 'discard')
             logger.info(f'DU choose {kind}: uncollected={choice.uncollected}, recommended={choice.recommended}, rarity={choice.rarity}, {choice.title}, detection={time.monotonic() - detection_started:.3f}s')
             op.click_point(choice.box.center[0] / 1280, (choice.box.top + choice.box.height * 0.3) / 720,
                            tag='DU_CHOICE_' + kind)
             self.confirm_selection(kind, choice=choice)
+            if self.star_loadout:
+                self.active['star']['choices'].append(dict(kind=kind,title=choice.title,node=self.active.get('node'),
+                    effect_text=getattr(choice,'effect_text',''),effect_tags=list(getattr(choice,'effect_tags',())),paths=list(choice.paths)))
+                if self.active.get('station')=='首领' and self._node_done and kind=='equation':
+                    self.active['star']['boss_rewards_seen']=True
+                self.progress.record('star_choice',kind=kind,title=choice.title,recommended=choice.recommended)
         self.active['selections'] += 1
         self.device.click_record_clear()
         self.progress.save()
+
+    def refresh_choice_inventory(self,kind):
+        # Workshop callers expect this invocation to finish the paid choice,
+        # not return while still displaying its candidates after observation.
+        from tasks.divergent_universe.star_inventory import StarInventory
+        if getattr(self,'_star_refresh_depth',0):
+            raise RuntimeError('实际库存刷新后仍不能确定选择，保留当前候选')
+        self._star_refresh_depth=1
+        try:
+            if StarInventory(self).read(force=True) is None:
+                return
+            return self.handle_choice(kind)
+        finally:
+            self._star_refresh_depth=0
+
+    def maybe_refresh_star_masks(self,labels):
+        from tasks.divergent_universe.star_policy import mask_name
+        star=self.active['star']
+        if self.active.get('stop_requested') or star.get('mask_candidate') or not labels:
+            return False
+        names=[mask_name(normalize(box.source)) for box in labels]
+        state=star.get('mask_refresh')
+        if state and state.get('done'):
+            return False
+        if not state and any(name in ('马之面具','囧之面具','财猫面具') for name in names):
+            return False
+        button=self.op.text('刷新',(.04,.86,.15,.94))
+        if button and normalize(button.source)!='刷新':
+            # The adjacent refresh icon was read as Q. Read only the label.
+            button=self.op.read_line((.078,.875,.132,.918),snapshot=False)
+            if normalize(button.source)!='刷新':
+                button=None
+        counter=normalize(self.op.read_line((.18,.87,.225,.92),snapshot=False).source) if button else ''
+        if state:
+            if counter=='0/1' and len(names)==3:
+                state['stable']=state.get('stable',0)+1 if state.get('last_names')==names else 1
+                state['last_names']=names
+                if state['stable']>=2:
+                    state.update(done=True,outcome='counter_decreased',after=names)
+                    self.progress.record('star_mask_refreshed',before=state['before'],after=names)
+                    self.progress.save('star_mask_refreshed')
+                return True  # Re-read the menu before choosing a card.
+            if time.time()-state['requested_at']<8:
+                return True
+            state.update(done=True,outcome='unconfirmed_fallback')
+            self.progress.record('star_mask_refresh_unconfirmed',counter=counter)
+            self.progress.save('star_mask_refresh_unconfirmed')
+            return False
+        if len(names)==3 and counter=='1/1' and self.op.click_box(button,interval=3):
+            star['mask_refresh']={'before':names,'requested_at':time.time(),'done':False}
+            self.progress.record('star_mask_refresh_requested',before=names,counter=counter)
+            self.progress.save('star_mask_refresh_requested')
+            return True
+        return False
 
     def selection_names(self, region):
         labels = self.op.read_region(region, snapshot=False)
@@ -765,6 +1254,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
         select_attempts = 1
         confirm_attempts = 0
         changed_frames = 0
+        changed_names = None
+        retry_names = None
+        retry_frames = 0
         station_warning_seen = False
         station_choice_frames = 0
         station_mismatch = None
@@ -788,7 +1280,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 continue
             current = self.selection_kind()
             if current != kind:
+                retry_names=None;retry_frames=0
                 if current or self.world_visible() or self.is_combat_executing() or self.lobby_visible():
+                    return
+                if (kind in ('equation','blessing') and confirmed and self.star_workshop_enabled()
+                        and op.text('方程覆写' if kind=='equation' else '祝福覆写', (.035,.035,.30,.10), exact=True)):
+                    # Return to the owning rewrite transaction. Calling the
+                    # general workshop handler here recursively buys another
+                    # rewrite before this selection and result are recorded.
                     return
                 if self.handle_misc():
                     if kind != 'next_station':
@@ -818,6 +1317,16 @@ class DivergentUniverse(DungeonUINav, MapControl):
                                             min(1280, cx + 100) / 1280, 0.84), snapshot=False)
                     same = any(normalize(box.source) == normalize(choice.title)
                                and abs(box.center[0] - cx) < 90 for box in local)
+                    if same:
+                        nearby = next(box for box in local if normalize(box.source) == normalize(choice.title)
+                                      and abs(box.center[0] - cx) < 90)
+                expected_grade = getattr(choice, 'station_grade', None)
+                actual_grade = None
+                if same and expected_grade is not None:
+                    actual_grade = self.station_grade(nearby)
+                    if actual_grade is None:
+                        continue  # Wait for the selected card's level to become readable.
+                    same = actual_grade == expected_grade
                 # Selection enlarges the card and can briefly hide its title.
                 # An enabled selection with a missing label is not evidence
                 # that reroll replaced it. Wait for its actual label to return.
@@ -830,31 +1339,21 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 station_mismatch = mismatch
                 if station_mismatch_frames >= 2:
                     logger.warning(f'DU station cards changed before confirmation: expected={choice.title}, current={names}; select again')
-                    self.progress.record('station_choice_changed', expected=choice.title, current=names)
+                    self.progress.record('station_choice_changed', expected=choice.title, current=names,
+                                         expected_grade=expected_grade, actual_grade=actual_grade)
                     return False
                 station_choice_frames = station_choice_frames + 1 if same else 0
                 if station_choice_frames < 2:
                     continue
+            button = self.choice_confirm_button()
+            enabled = bool(confirmed and button and self.confirm_enabled(button))
+            changed_names,changed_frames,new_set = next_choice_set(
+                names,names_before,confirmed,bool(button),enabled,changed_names,changed_frames)
+            if new_set and kind != 'next_station':
+                if kind != 'mask' or op.text('面具',(0.03,0.65,0.5,0.95)):
+                    return
             if names_before is None and confirmed:
-                # The old names were obscured. Await a real page change or a
-                # stable unselected next set; don't click the old footer again.
-                button = self.choice_confirm_button()
-                ready = bool(names and button and not self.confirm_enabled(button))
-                changed_frames = changed_frames + 1 if ready else 0
-                if changed_frames >= 2:
-                    return
                 continue
-            changed_frames = changed_frames + 1 if confirmed and names and names != names_before else 0
-            if changed_frames >= 2 and kind != 'next_station':
-                if kind != 'mask':
-                    return  # Another choice set of the same type has arrived.
-                # A mask obtained/info page can change the title without
-                # presenting another choice. Require a real unselected
-                # chooser before treating it as a new set of masks.
-                button = self.choice_confirm_button()
-                if button and not self.confirm_enabled(button) and op.text(
-                        '面具', (0.03, 0.65, 0.5, 0.95)):
-                    return
             # Keep the selected station after its warning. If the game still
             # shows the same enabled confirm, retry it within the same budget;
             # never return to the outer loop and select another card here.
@@ -862,18 +1361,54 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 # Retry the selected card only while confirmation remains grey.
                 button = self.choice_confirm_button()
                 enabled = button and self.confirm_enabled(button)
-                if confirmed and names and names != names_before and button and not enabled:
-                    return  # New named cards plus a disabled confirm identify the next set.
                 if not enabled:
-                    if not confirmed and select_attempts < 3:
+                    # A failed network request can restore the same set with
+                    # no selected card. A loading dimmer also greys the footer,
+                    # so require every original title to be unobscured first.
+                    retry=(confirmed and kind in ('equation','blessing') and button
+                           and confirm_attempts<3 and select_attempts<3 and names==names_before
+                           and normalize(choice.title) in names
+                           and self.selection_titles_unobscured(names_region,names))
+                    signature=names if retry else None
+                    retry_frames=(retry_frames+1 if signature is not None and signature==retry_names
+                                  else 1 if signature is not None else 0)
+                    retry_names=signature
+                    if retry_frames>=2:
+                        if op.click_point(choice.box.center[0] / 1280,
+                                          (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind):
+                            select_attempts += 1
+                            confirmed=False
+                            retry_names=None;retry_frames=0
+                            self.progress.record('selection_same_set_reselected',kind=kind,title=choice.title,
+                                                 select_attempts=select_attempts,confirm_attempts=confirm_attempts)
+                    elif not confirmed and select_attempts < 3:
                         if op.click_point(choice.box.center[0] / 1280,
                                           (choice.box.top + choice.box.height * 0.3) / 720, tag='DU_CHOICE_' + kind):
                             select_attempts += 1
                     continue
+                retry_names=None;retry_frames=0
             if confirm_attempts < 3 and op.click_box(self.choice_confirm_button()):
                 confirmed = True
                 confirm_attempts += 1
         raise RuntimeError(f'差分宇宙{kind}选择未确认')
+
+    def selection_titles_unobscured(self, region, names):
+        """Reject the observed network dimmer using existing title OCR boxes."""
+        expected=set(names)
+        if len(expected)<2:
+            return False
+        bright=set()
+        for box in self.op.read_region(region,snapshot=False):
+            title=normalize(box.source)
+            if title not in expected:
+                continue
+            crop=self.op.image[max(0,box.top):min(720,box.top+box.height),
+                               max(0,box.left):min(1280,box.left+box.width)]
+            if crop.size:
+                luma=cv2.cvtColor(crop,cv2.COLOR_RGB2GRAY)
+                if np.count_nonzero(luma>190)>=max(8,luma.size*.02):
+                    bright.add(title)
+        return bright==expected
 
     def discard_confirmation_visible(self):
         from tasks.base.assets.assets_base_popup import POPUP_TITLE_TIP
@@ -893,9 +1428,131 @@ class DivergentUniverse(DungeonUINav, MapControl):
         region = self.op.image[max(0,y-12):y+13, max(0,x-100):max(1,x-55)]
         return region.size and float(cv2.cvtColor(region, cv2.COLOR_RGB2GRAY).mean()) > 130
 
-    def choose_station(self):
+    def station_card_candidates(self):
+        # Section headers shift caption baselines. Read their narrow left
+        # strip, then only the actual 42px caption bands, excluding card art.
+        sections=[box for box in self.op.match(('抽牌区','弃牌区'),(.025,.20,.18,.92),exact=True)
+                  if normalize(box.source) in ('抽牌区','弃牌区')]
+        sections.sort(key=lambda box:box.top)
+        bands=[]
+        for index,section in enumerate(sections):
+            end=sections[index+1].top if index+1<len(sections) else 700
+            top=section.top+150
+            while top+42<=end:
+                bands.append((top,top+42));top+=160
+        if not bands:
+            bands=[(308,350),(469,510),(629,670)]
+        rows=[]
+        for top,bottom in bands:
+            rows.extend(self.op.match(self.STATION_TYPES,(.035,top/720,.62,bottom/720),exact=True))
+        return rows
+
+    def save_station_card_frame(self):
+        folder = ROOT / 'log/divergent_universe' / self.config.config_name / 'star_runs' / self.active['id']
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f'station_card_{self.active.get("node",0)}_{self.active.get("selections",0)}.png'
+        save_image(self.op.image, path)
+        return str(path)
+
+    def select_station_card(self):
+        op = self.op
+        description = op.read_line((.075, .137, .62, .179), snapshot=False).source
+        instruction=normalize(description)
+        empty_offer = bool(re.search(r'使其变为.*空白.*区域', instruction))
+        delete_offer = bool(re.search(r'(?:删除[1-4]个指定区域|指定[1-4]个区域.*将其删除)',instruction))
+        # Deleting beacons and beacon-filtered cards have different eligibility.
+        # Their text must never inherit a whole-region deletion priority.
+        delete_offer = delete_offer and '信标' not in instruction
+        if not empty_offer and not delete_offer:
+            # Other mask operations can upgrade or replace cards. Preserve
+            # their existing behavior and the actual instruction for audit;
+            # do not apply a destructive-operation priority to an unknown one.
+            self.progress.record('station_card_operation_unclassified', description=description,
+                                 screenshot=self.save_station_card_frame())
+            op.wait_until(lambda: (button := op.text('确定', (.64, .78, 1, .96), exact=True))
+                          and self.confirm_enabled(button),
+                          action=lambda: op.click_box(next(iter(self.station_card_candidates()), None)),
+                          name='站点卡选择')
+            return
+        candidates = op.wait_until(self.station_card_candidates, timeout=12, name='移除候选区域')
+        order = ('冒险', '异常', '精英', '商店', '事件', '空白', '储蓄间', '转化',
+                 '财富', '休整', '战斗', '奖励', '铸造', '首领')
+        target = next((box for name in order for box in candidates if normalize(box.source) == name), None)
+        if target is None:
+            raise RuntimeError('移除操作没有已识别的区域')
+        stable = 0
+        def selected():
+            nonlocal stable
+            actual = op.text(target.source, (.66, .195, .82, .247), exact=True)
+            button = op.text('确定', (.64, .78, 1, .96), exact=True)
+            stable = stable + 1 if actual and button and self.confirm_enabled(button) else 0
+            return stable >= 2
+        op.wait_until(selected, action=lambda: op.click_box(target, interval=2) if not stable else False,
+                      timeout=12, name='移除目标已选中')
+        self.progress.record('station_card_operation_selected', operation='delete_region' if delete_offer else 'replace_with_empty',
+                             description=description, selected=target.source,
+                             candidates=[box.source for box in candidates], screenshot=self.save_station_card_frame())
+
+    def station_grade(self, box):
+        if box is None:
+            return None
+        right = box.left + box.width
+        text = normalize(self.op.read_line((max(0, right-65)/1280, max(0, box.top-85)/720,
+                                          min(1280, right+25)/1280, (box.top-12)/720), snapshot=False).source)
+        # This small band contains only the level label/number, above the
+        # station caption. The label can merge with the numeral in OCR.
+        value = re.search(r'(?<!\d)(\d{1,2})$', text)
+        return int(value[1]) if value and 1 <= int(value[1]) <= 99 else None
+
+    def station_target(self, candidates, order, allow_reroll=False):
+        safe = [box for box in candidates if '冒险' not in box.source]
+        target = next((box for word in order for box in safe if word in box.source), None)
+        if not self.star_workshop_enabled():
+            return target
+        if allow_reroll and target and normalize(target.source) in ('精英', '异常'):
+            # Low priority alone never caused a reroll because these types
+            # still matched the order. Spend the existing bounded rerolls
+            # looking for a safer route before accepting the fallback.
+            return None
+        star = self.active['star']
+        total = self.active.get('node_total', 0)
+        needs_first_slot = (self.active.get('node',0)>=3 and not star.get('weighted_equipment'))
+        if needs_first_slot:
+            first_forge=next((box for box in safe if normalize(box.source)=='铸造'),None)
+            if first_forge:
+                target=first_forge
+            elif allow_reroll:
+                # A higher list priority alone allowed safe battles to be
+                # accepted until node 13 with no weighted curio at all.
+                # Reuse the counter-verified three-reroll budget, then fall back.
+                return None
+        needs_second_slot = (star.get('boss_rewards_seen') and total > 0
+                             and self.active.get('node', 0) >= total-6
+                             and len(star.get('weighted_equipment', [])) < 2)
+        if not needs_second_slot and (not target or normalize(target.source) != '铸造'):
+            return target  # No number OCR when it cannot change the decision.
+        forges = [(self.station_grade(box), box) for box in safe if normalize(box.source) == '铸造']
+        known = [(level, box) for level, box in forges if level is not None]
+        best = max(known, key=lambda row: row[0], default=None)
+        if needs_second_slot:
+            if best and best[0] >= 3:
+                return best[1]
+            if allow_reroll:
+                return None  # The existing bounded, counter-verified reroll owns the action.
+        if target and normalize(target.source) == '铸造' and best:
+            return best[1]
+        return target
+
+    def choose_station(self, prefer_shop=False):
         op = self.op
         order = [t.strip() for t in self.config.DivergentUniverse_StationPriority.split('>') if t.strip()]
+        if self.star_loadout:
+            order = (['战斗','奖励','事件','财富','商店','铸造','休整','精英','异常']
+                     if self.active.get('node',0) < 5 else
+                     ['铸造','商店','奖励','财富','事件','休整','战斗','精英','异常'])
+            if self.star_workshop_enabled():
+                from tasks.divergent_universe.star_policy import star_station_order
+                order=star_station_order(self.active)
         station_types = self.STATION_TYPES
         def candidates_ready():
             if self.selection_kind() == 'next_station':
@@ -907,9 +1564,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
             count = re.search(r'(\d+)\s*$', text)
             return int(count[1]) if count else None
         candidates = op.wait_until(candidates_ready, name='站点候选')
+        def shop_target(items):
+            return next((box for box in items if normalize(box.source)=='商店'),None) if prefer_shop else None
         for attempt in range(4):
-            safe = [box for box in candidates if '冒险' not in box.source]
-            target = next((box for word in order for box in safe if word in box.source), None)
+            target = shop_target(candidates) or self.station_target(candidates, order, allow_reroll=True)
             if target or attempt == 3:
                 break
             refresh = op.text(('刷新', '重掷', '重抽'), (0.1, 0.65, 0.95, 1))
@@ -951,7 +1609,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         # Refresh can fail or exhaust its budget. Even the fallback must
         # prefer any non-adventure station over the first displayed card.
         safe = [box for box in candidates if '冒险' not in box.source]
-        target = next((box for word in order for box in safe if word in box.source), None)
+        target = shop_target(candidates) or self.station_target(candidates, order)
         target = target or (safe or candidates)[0]
         if not safe:
             # Recognition alone cannot establish that no alternative exists.
@@ -966,11 +1624,21 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.progress.record('adventure_only_recognized', candidates=[box.source for box in candidates],
                                  labels=labels, screenshot=str(path.relative_to(ROOT)) if saved else None)
             logger.warning(f'DU only adventure station recognized; candidate labels={labels}, frame_saved={saved}')
-        op.click_box(target)
         from tasks.divergent_universe.selection import Choice
-        if self.confirm_selection('next_station', choice=Choice(target, target.source)) is False:
+        choice = Choice(target, target.source)
+        grade = self.station_grade(target) if self.star_workshop_enabled() and normalize(target.source) == '铸造' else None
+        if grade is not None:
+            choice.station_grade = grade
+        op.click_box(target)
+        if self.confirm_selection('next_station', choice=choice) is False:
             return  # The cards changed; keep this room until a current choice is confirmed.
+        self.progress.record('station_selected', station=target.source, observed_grade=grade,
+                             recognized_candidates=[box.source for box in candidates], priority=order)
         self.active['station'] = next((word for word in station_types if word in target.source), target.source)
+        if grade is not None:
+            self.active['station_grade'] = grade
+        else:
+            self.active.pop('station_grade', None)
         self._node_done = False
         self.active['node_done'] = False
         self.active.pop('navigation_reentry', None)
@@ -1067,6 +1735,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
     def fight_station(self):
         op = self.op
         self.progress.save('approaching_combat')
+        if self.star_workshop_enabled():
+            from tasks.divergent_universe.star import StarPreparation
+            preparation=StarPreparation(self)
+            if preparation.restore_party_before_boss():
+                return
+            preparation.prepare_combat_opener()
         if self.config.DivergentUniverse_UseTechnique:
             self.try_map_technique()
         attempt = 0
@@ -1104,10 +1778,12 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     # A DU chest can block the direct path to a visible enemy.
                     # Keep the camera on that enemy and sidestep using SRC.
                     logger.info('DU enemy still visible after approach; sidestep the obstruction')
-                    self.move(-90, 0.8)
+                    self.move(-90, 0.8, interaction_text=())
                 else:
                     self.rotation_swipe(-40, box=self.ROTATION_BOX)
-            self.move(0, 0.65 if attempt == 0 else 0.35)
+            # Nearby revival/workshop prompts must not stop the walk toward
+            # an enemy. Combat still interrupts native movement immediately.
+            self.move(0, 0.65 if attempt == 0 else 0.35, interaction_text=())
             if self.world_visible():
                 self.handle_map_A()
             attempt += 1
@@ -1192,7 +1868,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             target = self.find_enemy_target()
             if target:
                 logger.info(f'DU enemy target: {target.center}, score={target.score:.3f}')
-                self.move(RogueExit.screen2direction(target.center), 0.5)
+                self.move(RogueExit.screen2direction(target.center), 0.5, interaction_text=())
                 if self.world_visible():
                     self.handle_map_A()
                 moves += 1
@@ -1228,6 +1904,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
         self.op.image = self.device.image
         self.op._ocr_cache.clear()
         self.op.frame_cache.clear()
+        if self.is_combat_executing() and self.active.get('star'):
+            from tasks.divergent_universe.star_combat import StarCombat
+            if StarCombat(self).observe():
+                return True
         return bool(self.selection_kind() or self.world_visible()
                     or self.op.text(('获得祝福', '获得奇物', '方程展开', '已修复以下奇物'), (0, 0, 1, 0.24))
                     # Conversion rooms end on their own reward overlay. The
@@ -1252,12 +1932,14 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def combat_execute(self, expected_end=None):
         self.progress.save('combat')
+        self._star_depleted_health = {}
         self._du_auto_off_confirm = Timer(1, count=2).start()
-        super().combat_execute(expected_end=expected_end or self.combat_expected_end)
+        with self.recovery_combat_window():
+            super().combat_execute(expected_end=expected_end or self.combat_expected_end)
         self.active['battles'] += 1
         from tasks.combat.assets.assets_combat_finish import COMBAT_AGAIN
         ending = self.settlement_title()
-        self._node_done = not (self.appear(COMBAT_AGAIN) or (ending and normalize(ending.source) == '战斗失败'))
+        self._node_done = not (self.active.get('stop_requested') or self.appear(COMBAT_AGAIN) or (ending and normalize(ending.source) == '战斗失败'))
         self.active['node_done'] = self._node_done
         self.progress.save('combat_finished')
 
@@ -1768,6 +2450,10 @@ class DivergentUniverse(DungeonUINav, MapControl):
         return found
 
     def navigate_station(self):
+        if self.star_workshop_enabled() and self.active.get('station')=='商店':
+            from tasks.divergent_universe.star_shop import StarShop
+            if StarShop(self).handle_room(self.active['id']):
+                return
         op = self.op
         self.progress.save('navigating')
         # Same operation boundary as MapControl._goto: previous combat
@@ -1821,6 +2507,18 @@ class DivergentUniverse(DungeonUINav, MapControl):
         while not timeout.reached():
             previous_event_anchor, event_anchor = event_anchor, None
             op.snapshot()
+            if self.star_workshop_enabled() and self.world_visible():
+                from tasks.divergent_universe.star_workshop import StarWorkshop
+                workshop=StarWorkshop(self)
+                scans_before=workshop.state()['scans']
+                handled=workshop.navigate()
+                # Workshop and ordinary navigation share the same native
+                # swipe watchdog and form one bounded sweep.
+                searches += max(0,workshop.state()['scans']-scans_before)
+                if handled:
+                    if not self.world_visible():
+                        return
+                    continue
             if self.config.DivergentUniverse_SaveEvidence:
                 from module.base.utils import save_image
                 folder = ROOT / 'log/divergent_universe' / self.config.config_name
@@ -2040,6 +2738,11 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 if door_anchor is None:
                     logger.info(f'DU exit target: {door.source} {door.button}, score={door.score:.3f}')
                 anchor = np.array((door.center[0], door.top, door.height))
+                if door_anchor is not None and np.max(np.abs(anchor-door_anchor))>12:
+                    # Actual approach changed the visible portal, so earlier
+                    # search swipes are no longer one stationary scan.
+                    self.device.click_record_clear()
+                    self.device.stuck_record_clear()
                 if door_anchor is not None and np.max(np.abs(anchor - door_anchor)) < 12:
                     door_stalls += 1
                 else:
@@ -2203,10 +2906,24 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 reset_view_wait(scanning=True)
         raise RuntimeError('差分宇宙未找到可交互的事件或随意门')
 
+    def temporary_leave_control(self):
+        button=self.op.text(('暂离','暂时离开'),(.55,.74,.93,.84),exact=True)
+        if not button:
+            return None
+        # The loading spinner dims the whole menu, but OCR still reads the
+        # buttons underneath. Check an empty part of the actual button fill.
+        right=button.left+button.width
+        x1,x2=max(0,right+30),min(1280,right+130)
+        y1,y2=max(0,button.center[1]-12),min(720,button.center[1]+13)
+        pixels=self.op.image[y1:y2,x1:x2]
+        return button if pixels.size and float(pixels.mean())>160 else None
+
     def reenter_station(self):
         op = self.op
         logger.info('DU exit search exhausted; leave temporarily and resume the same run')
         left = False
+        leave_requests = 0
+        confirm_requests = 0
         timeout = Timer(90, count=3).start()
         while not timeout.reached():
             op.snapshot()
@@ -2225,16 +2942,26 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.device.click_record_clear()
                 self.go_to_lobby()
                 return
-            if op.text(('暂离', '暂时离开'), (0.3, 0.3, 1, 1)):
-                if op.click_text(('暂离', '暂时离开'), (0.3, 0.3, 1, 1)):
+            # A confirmation/loading overlay can leave the menu text visible
+            # underneath. Handle the confirmation first and never spam that
+            # background footer while an accepted leave request is pending.
+            if left and confirm_requests<3:
+                confirm=op.text('确认',(.4,.4,.9,.9),exact=True)
+                if confirm and self.confirm_enabled(confirm) and op.click_box(confirm,interval=2):
+                    confirm_requests+=1
+                    continue
+            leave=self.temporary_leave_control()
+            if leave and leave_requests<3:
+                if op.click_box(leave,interval=3):
+                    leave_requests+=1
                     left = True
                     self.active['navigation_reentry'] = True
                     self.progress.save('reentering')
                 continue
+            if left:
+                continue
             if self.world_visible():
                 op.back()
-            elif left:
-                op.click_text('确认', (0.4, 0.4, 0.9, 0.9), exact=True)
         raise RuntimeError('差分宇宙暂离后未能返回入口，当前进度已保留')
 
     def forge_panel_visible(self):
@@ -2267,6 +2994,49 @@ class DivergentUniverse(DungeonUINav, MapControl):
 
     def handle_misc(self):
         op = self.op
+        from tasks.base.assets.assets_base_page import CHARACTER_CHECK
+        if (self.active and (self.appear(CHARACTER_CHECK)
+                or (op.text('角色详情', (.065, .012, .20, .052), exact=True)
+                    and op.text(('属性','技能'), (.71, .32, .98, .37), exact=True)))):
+            # A late close during a world transition can open this optional
+            # panel. Its own title and tabs distinguish it from downloading
+            # or replacing characters; returning does not alter the run.
+            from tasks.base.assets.assets_base_page import GUIDE_CLOSE
+            if self.appear_then_click(GUIDE_CLOSE, interval=2):
+                self.progress.record('incidental_character_details_closed')
+            return True
+        if self.star_loadout and self.active.get('stop_requested'):
+            from tasks.divergent_universe.star_inventory import StarInventory
+            inventory=StarInventory(self)
+            if (op.text('拥有祝福',(.02,.03,.14,.08),exact=True) or inventory.blessing_page()
+                    or op.text(('方程','奇物','加权奇物','地图','沿途站点'),(.035,.035,.20,.10),exact=True)):
+                # Settlement only needs to leave this optional panel. A bad
+                # count must not block exiting the retained run.
+                inventory.close()
+                return True
+        if self.star_workshop_enabled():
+            from tasks.divergent_universe.star_shop import StarShop
+            shop=StarShop(self)
+            if shop.can_handle_page():
+                return shop.handle_room(self.active['id'])
+            from tasks.divergent_universe.star import StarPreparation
+            preparation=StarPreparation(self)
+            if preparation.revival_page_visible():
+                return preparation.handle_revival_page()
+            if self.star_loadout.revision in ('star-workshop-v5','star-workshop-v6','star-workshop-v7','star-workshop-v8') and op.text(('拥有祝福','祝福/'),(.02,.03,.24,.10)):
+                from tasks.divergent_universe.star_inventory import StarInventory
+                StarInventory(self).read()
+                return True
+            if self.star_loadout.revision in ('star-workshop-v4','star-workshop-v5','star-workshop-v6','star-workshop-v7','star-workshop-v8'):
+                from tasks.divergent_universe.star import StarPreparation
+                preparation=StarPreparation(self)
+                if (preparation.imported_details_visible() or op.text('攻略推荐',(.04,.035,.23,.10),exact=True)
+                        or op.text('更换编队',(.16,.12,.32,.20),exact=True)):
+                    preparation.open_run_guide()
+                    return True
+            from tasks.divergent_universe.star_workshop import StarWorkshop
+            if StarWorkshop(self).handle():
+                return True
         if self.adventure_intro_visible():
             folder = ROOT / 'log/divergent_universe' / self.config.config_name
             folder.mkdir(parents=True, exist_ok=True)
@@ -2357,7 +3127,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
             from tasks.rogue.assets.assets_rogue_event import CHOOSE_OPTION_CONFIRM, CHOOSE_STORY
             from tasks.rogue.assets.assets_rogue_ui import PAGE_EVENT
             if self._native_event is None:
-                self._native_event = DivergentEvent(self.config, device=self.device)
+                self._native_event = DivergentEvent(self.config, device=self.device, du_main=self)
                 self._native_event.event_title = None
             handler = self._native_event
             if handler.appear(CHOOSE_OPTION_CONFIRM):
@@ -2479,7 +3249,7 @@ class DivergentUniverse(DungeonUINav, MapControl):
         if ending and normalize(ending.source) == '战斗失败' and not self.op.text(
                 '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True):
             return None
-        if ending and any(t in ending.source for t in ('星阶提升', '智瞳点亮')) and not self.op.text(
+        if ending and any(t in ending.source for t in ('星阶提升', '智瞳', '拓星')) and not self.op.text(
                 '确认结算', (0.25, 0.80, 0.78, 0.98), exact=True):
             return None
         return ending
@@ -2502,6 +3272,48 @@ class DivergentUniverse(DungeonUINav, MapControl):
                     return expired
         return self.op.text('结束本场战斗并重置', (0.2, 0.2, 0.9, 0.5))
 
+    def recover_saved_star_defeat(self):
+        """Recover a missed loss screen, never infer a result from the entry."""
+        active=self.active or {}
+        if (active.get('mode')!='star' or not active.get('star') or not active.get('node')
+                or not active.get('pending_settlement')
+                or active.get('result')!='loss' or active.get('settlement_observed')):
+            return None
+        if not self.op.text('进入星阶模式',(.70,.84,.98,.96),exact=True):
+            return None
+        if getattr(self,'_saved_defeat_scan_run',None)==active['id']:
+            return None
+        self._saved_defeat_scan_run=active['id']
+        import copy
+        import hashlib
+        from collections import OrderedDict
+        from PIL import Image
+        folder=ROOT/'log/divergent_universe'/self.config.config_name/'star_runs'/active['id']
+        probe=copy.copy(self.op)
+        for path in sorted(folder.glob('pending_*.png'),reverse=True)[:24]:
+            try:
+                with Image.open(path) as saved:
+                    frame=np.asarray(saved.convert('RGB'))
+            except OSError:
+                continue
+            if frame.shape!=(720,1280,3) or frame.mean()<3:
+                continue
+            probe.image=frame
+            probe._ocr_cache={};probe.frame_cache={};probe._stable_ocr=OrderedDict()
+            title=probe.text(('智瞳熄灭','智瞳已完全熄灭','拓星失败'),(.25,.03,.75,.20),exact=True)
+            if not title or not probe.text('确认结算',(.25,.80,.78,.98),exact=True):
+                continue
+            active.update(settlement_observed=True,settlement_title=title.source,
+                          settlement_screenshot=str(path),settlement_evidence_source='saved_pre_restart_frame',
+                          settlement_frame_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+            # The saved page proves the loss, but does not prove a confirm tap.
+            self.progress.record('star_settlement_recovered_from_saved_frame',title=title.source,
+                                 result='loss',screenshot=str(path),
+                                 confirmed_before_replay=active.get('settlement_confirmed',False))
+            self.progress.save('settling_saved_defeat')
+            return 'loss'
+        return None
+
     def handle_settlement(self):
         op = self.op
         if self.selection_kind():
@@ -2513,6 +3325,9 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.active.pop('result', None)
                 self.progress.save('selecting')
             return None
+        recovered=self.recover_saved_star_defeat()
+        if recovered:
+            return recovered
         if self.active.get('pending_settlement') and op.text(
                 ('当前尚未拥有存档', '是否确认退出'), (0.2, 0.3, 0.9, 0.6)):
             if op.click_text('确认', (0.52, 0.60, 0.79, 0.70), exact=True, interval=3):
@@ -2526,8 +3341,15 @@ class DivergentUniverse(DungeonUINav, MapControl):
             self.active['pending_settlement'] = True
             region = (0.5, 0.5, 0.85, 0.86)
             if '确定要结束进程' in normalize(confirmation.source):
-                region = (0.52, 0.60, 0.77, 0.72) if confirmation.top > 300 else (0.52, 0.73, 0.77, 0.83)
-            if op.click_text('确认', region, exact=True):
+                # Star mode adds an eye-retention notice below the question.
+                # Question height no longer determines footer height. Both
+                # visible buttons must share a row in this confirmed modal.
+                cancel = op.text('取消',(.25,.56,.49,.87),exact=True)
+                confirm = op.text('确认',(.52,.56,.80,.87),exact=True)
+                button = confirm if cancel and confirm and abs(cancel.center[1]-confirm.center[1])<15 else None
+            else:
+                button = op.text('确认',region,exact=True)
+            if op.click_box(button):
                 self.active['settlement_confirmed'] = True
                 self._settlement_exit_wait.reset()
                 self.progress.save('settling')
@@ -2541,6 +3363,24 @@ class DivergentUniverse(DungeonUINav, MapControl):
                 self.active.pop('settlement_observed', None)
                 if self._settlement_exit_wait.reached() and op.click_text(
                         '终止战斗并结算', (0.18, 0.80, 0.5, 0.96), exact=True, interval=3):
+                    folder = ROOT / 'log/divergent_universe' / self.config.config_name / 'star_runs' / self.active['id']
+                    folder.mkdir(parents=True,exist_ok=True)
+                    save_image(op.image,folder/'battle_defeat.png')
+                    if self.active.get('star') and not self.active.get('defeat_frame_history'):
+                        from PIL import Image
+                        from module.handler.sensitive_info import handle_sensitive_image
+                        frames=list(self.device.screenshot_deque)
+                        history=[]
+                        # Reuse native buffered frames. No extra capture or
+                        # OCR during combat; the final health/buff state helps
+                        # distinguish survival failures from missing damage.
+                        for i in sorted(set(np.linspace(0,max(0,len(frames)-1),min(8,len(frames))).astype(int))):
+                            frame=frames[i]
+                            path=folder/f'defeat_history_{i:02d}.png'
+                            Image.fromarray(handle_sensitive_image(frame['image'])).save(path,compress_level=1)
+                            history.append(dict(time=frame['time'].isoformat(),screenshot=str(path)))
+                        self.active['defeat_frame_history']=history
+                    self.progress.record('battle_defeat_observed',screenshot=str(folder/'battle_defeat.png'))
                     self.active.update(pending_settlement=True, result='loss')
                     self.progress.save('settling_defeat')
                     # A frame captured before the modal opens can still show
@@ -2560,11 +3400,29 @@ class DivergentUniverse(DungeonUINav, MapControl):
             if first_observation:
                 logger.attr('DU settlement', ending.source)
                 op.save('settlement_' + self.active['id'])
+                if self.active.get('mode') == 'star':
+                    folder = ROOT / 'log/divergent_universe' / self.config.config_name / 'star_runs' / self.active['id']
+                    folder.mkdir(parents=True,exist_ok=True)
+                    save_image(op.image,folder/'settlement.png')
+                    self.active.update(settlement_title=ending.source,settlement_screenshot=str(folder/'settlement.png'))
+                    self.progress.save('settling')
+                    self.progress.record('star_settlement_observed',title=ending.source,result=self.active['result'],
+                                         screenshot=str(folder/'settlement.png'))
             if self._settlement_exit_wait.reached():
                 op.click_text(('确认结算', '返回', '返回主界面', '确认', '完成'), (0.1, 0.65, 1, 1),
                               exact=True, interval=5)
             return True
         if self.active.get('pending_settlement'):
+            if self.active.get('mode') == 'star' and not self.active.get('settlement_observed'):
+                # Persist unfamiliar star result screens before generic
+                # recovery can leave them. Never promote these to results.
+                folder = ROOT / 'log/divergent_universe' / self.config.config_name / 'star_runs' / self.active['id']
+                folder.mkdir(parents=True,exist_ok=True)
+                if not hasattr(self,'_star_pending_capture'):
+                    self._star_pending_capture = Timer(3)
+                if self._star_pending_capture.reached():
+                    save_image(op.image,folder/f'pending_{time.time_ns()}.png')
+                    self._star_pending_capture.reset()
             if self.lobby_visible():
                 if self.active.get('settlement_observed'):
                     return self.active.get('result', 'farm')

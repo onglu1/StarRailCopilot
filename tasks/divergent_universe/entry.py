@@ -25,6 +25,21 @@ class EntrySettings:
                 or self.op.text(self.LAUNCH, (0.30, 0.84, 0.72, 0.96))
                 or self.op.text('继续进度', (0.25, 0.70, 0.55, 0.81)))
 
+    def detected_calculation(self):
+        header = self.main.header_text()
+        if '模式选择' in header:
+            return None
+        # Current periodic V puts its identifying label in the description
+        # panel, below the shared DU header. The header alone cannot decide
+        # whether to return to the mode picker.
+        if '周期演算' in header or self.op.text('周期演算', (0.46, 0.26, 0.99, 0.49)):
+            return 'periodic'
+        if '常规演算' in header or '星阶模式' in header:
+            return 'standard'
+        if self.op.text(('常规演算', '难度'), (0.45, 0.08, 0.98, 0.25)):
+            return 'standard'
+        return None
+
     def prepare(self, calculation):
         op = self.op
         label = '常规演算' if calculation == 'standard' else '周期演算'
@@ -40,22 +55,14 @@ class EntrySettings:
             header = self.main.header_text()
             if '模式选择' in header or not self.launch_button():
                 return False
-            if '周期演算' in header:
-                return calculation == 'periodic'
-            if '常规演算' in header or '星阶模式' in header:
-                return calculation == 'standard'
-            periodic = op.text('周期演算', (0.48, 0.15, 1, 0.68))
-            return bool(periodic) if calculation == 'periodic' else bool(
-                not periodic and op.text(('常规演算', '难度'), (0.45, 0, 1, 0.68)))
+            return self.detected_calculation() == calculation
 
         def select_mode():
             if '模式选择' in self.main.header_text():
                 op.click_text(label, (0.32, 0.12, 0.46, 0.55))
             elif self.launch_button():
-                header = self.main.header_text()
-                wrong_mode = ('周期演算' in header if calculation == 'standard' else
-                              any(title in header for title in ('常规演算', '星阶模式')))
-                if wrong_mode:
+                observed = self.detected_calculation()
+                if observed is not None and observed != calculation:
                     op.back()
             elif self.main.lobby_visible():
                 op.click_text('开始游戏', (0.70, 0.84, 0.88, 0.94))

@@ -81,6 +81,63 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(t.progress.data['history'][-1]['result'], 'win')
         self.assertNotIn('recovery', t.progress.data)
 
+    def test_star_same_node_faults_share_bounded_settlement_policy(self):
+        t = self.task()
+        t.active['mode'] = 'star'
+        first = t.prepare_recovery().copy()
+        second = t.prepare_recovery()
+        self.assertEqual(first['action'],'resume')
+        self.assertEqual(second['action'],'settle')
+        self.assertTrue(t.active['stop_requested'])
+        self.assertEqual(t.active['id'],self.original)
+        self.assertFalse(t.active.get('settlement_observed'))
+
+    def test_star_missing_save_cannot_create_unverified_successor(self):
+        t = self.task()
+        t.active.update(mode='star',pending_settlement=True)
+        t.header_text = lambda: '常规演算'
+        launch = Box(940,610,220,60,'进入星阶模式')
+        with patch('tasks.divergent_universe.entry.EntrySettings',
+                   lambda *_:SimpleNamespace(launch_button=lambda:launch)):
+            with self.assertRaises(du.RequestHumanTakeover):
+                t.start_or_resume()
+        self.assertEqual(t.active['id'],self.original)
+        self.assertFalse(t.progress.data.get('unconfirmed'))
+
+    def test_exhausted_observed_opening_gets_only_one_settlement_window(self):
+        t = self.task()
+        t.active.update(mode='star',node=None,star={'mask_choice_screenshot':'observed.png'})
+        recovery=t.prepare_recovery()
+        recovery.update(attempts=3,faults=4,deadline=time.time()-60)
+        t.progress.save('error')
+        self.assertTrue(t.settle_exhausted_preparation())
+        self.assertEqual((recovery['attempts'],recovery['faults']),(3,4))
+        self.assertEqual(recovery['action'],'settle')
+        self.assertEqual(t.active['exit_reason'],'recovery_preparation_exhausted')
+        self.assertFalse(t.active.get('settlement_observed'))
+        self.assertEqual(t.progress.data['history'],[])
+        deadline=recovery['deadline']
+        t.progress.save('error')
+        self.assertFalse(t.settle_exhausted_preparation())
+        self.assertEqual(recovery['deadline'],deadline)
+
+    def test_unlaunched_or_disabled_opening_never_requests_settlement(self):
+        for proof,retries in ((False,3),(True,0)):
+            t=self.task(retries=retries)
+            t.active.update(mode='star',node=None,star={'mask_choice_screenshot':'observed.png'} if proof else {})
+            recovery=t.prepare_recovery()
+            recovery.update(attempts=3,deadline=time.time()-60)
+            t.progress.save('error')
+            self.assertFalse(t.settle_exhausted_preparation())
+            self.assertFalse(t.active.get('stop_requested'))
+
+    def test_repeated_observed_opening_faults_choose_settlement(self):
+        t=self.task()
+        t.active.update(mode='star',node=None,star={'mask_choice_screenshot':'observed.png'})
+        self.assertEqual(t.prepare_recovery()['action'],'resume')
+        self.assertEqual(t.prepare_recovery()['action'],'settle')
+        self.assertTrue(t.active['stop_requested'])
+
     def test_same_room_more_battles_abandons_then_really_starts_new_run(self):
         t = self.task(runs=2)
         calls = []
