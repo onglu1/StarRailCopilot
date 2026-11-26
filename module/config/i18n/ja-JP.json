@@ -214,6 +214,10 @@
     "OnePushConfig": {
       "name": "Error.OnePushConfig.name",
       "help": "Error.OnePushConfig.help"
+    },
+    "NotifyDailyCompleted": {
+      "name": "デイリー完了通知",
+      "help": "デイリーアクティブ度が500に達した時、上記のOnepush設定でダッシュボードのデータを含むメッセージを送信します"
     }
   },
   "Optimization": {

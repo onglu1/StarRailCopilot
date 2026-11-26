@@ -214,6 +214,10 @@
     "OnePushConfig": {
       "name": "錯誤推送設定",
       "help": "發生無法處理的異常後，使用 Onepush 推送错误消息。設定參考文檔：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
+    },
+    "NotifyDailyCompleted": {
+      "name": "每日完成推送",
+      "help": "每日活躍度達到 500 後，使用上方的 Onepush 設定推送一則包含儀表板資料的訊息"
     }
   },
   "Optimization": {

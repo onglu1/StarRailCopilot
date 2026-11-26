@@ -6,8 +6,10 @@ import numpy as np
 
 from module.base.timer import Timer
 from module.base.utils import crop
-from module.config.utils import DEFAULT_TIME, get_server_next_update
+from module.config.deep import deep_get
+from module.config.utils import DEFAULT_TIME, filepath_args, get_server_next_update, read_file
 from module.logger import logger
+from module.notify import handle_notify
 from module.ocr.ocr import Ocr, OcrResultButton
 from module.ocr.utils import split_and_pair_buttons
 from tasks.base.page import page_guide
@@ -235,12 +237,40 @@ class DailyQuestUI(DungeonUI, RouteLoader):
             if self.appear(button):
                 point = progress
         logger.attr('Daily activity', point)
+        activity = self.config.stored.DailyActivity
+        # Notify once per day, stored value is still the one before this check
+        completed = point == 500 and (activity.value != 500 or activity.is_expired())
         with self.config.multi_set():
-            self.config.stored.DailyActivity.set(point)
+            activity.set(point)
             if point == 500:
                 self.config.stored.DailyQuest.write_quests([])
+        if completed:
+            self.notify_daily_completed()
 
         return self.claimed_point_reward
+
+    def notify_daily_completed(self):
+        """
+        Push dashboard data when daily activity reaches 500
+        """
+        if not self.config.Error_NotifyDailyCompleted:
+            return
+        content = []
+        for name, stored in read_file(filepath_args('stored')).items():
+            if not stored.get('order'):
+                continue
+            data = deep_get(self.config.data, keys=stored['path'], default={})
+            line = f'{name}: {data.get("value", "")}'
+            if 'total' in stored['attrs']:
+                line += f' / {data.get("total", "")}'
+            elif 'comment' in stored['attrs']:
+                line += f' {data.get("comment", "")}'
+            content.append(line)
+        handle_notify(
+            self.config.Error_OnePushConfig,
+            title=f"Src <{self.config.config_name}> daily quests completed",
+            content='\n'.join(content),
+        )
 
     def get_daily_rewards(self):
         """

@@ -83,6 +83,7 @@ Error:
     type: textarea
     mode: yaml
     value: 'provider: null'
+  NotifyDailyCompleted: false
 Optimization:
   ScreenshotInterval: 0.3
   CombatScreenshotInterval: 1.0

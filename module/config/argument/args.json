@@ -124,6 +124,10 @@
         "type": "textarea",
         "value": "provider: null",
         "mode": "yaml"
+      },
+      "NotifyDailyCompleted": {
+        "type": "checkbox",
+        "value": false
       }
     },
     "Optimization": {

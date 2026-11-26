@@ -214,6 +214,10 @@
     "OnePushConfig": {
       "name": "Error notify config",
       "help": "When Alas cannot handle exception, send a message through Onepush. Configuration document: \nhttps://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BEN%5D"
+    },
+    "NotifyDailyCompleted": {
+      "name": "Notify when daily completed",
+      "help": "When daily activity reaches 500, send a message with dashboard data through the Onepush config above"
     }
   },
   "Optimization": {

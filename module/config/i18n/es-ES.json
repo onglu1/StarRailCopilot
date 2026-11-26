@@ -214,6 +214,10 @@
     "OnePushConfig": {
       "name": "Configuración para notificar errores",
       "help": "Cuando SRC no puede manejar un error, envía un mensaje automáticamente. Puedes leer más información sobre este ajuste aquí:\nhttps://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BEN%5D"
+    },
+    "NotifyDailyCompleted": {
+      "name": "Notificar al completar las diarias",
+      "help": "Cuando la actividad diaria llegue a 500, envía un mensaje con los datos del panel mediante la configuración de Onepush de arriba"
     }
   },
   "Optimization": {

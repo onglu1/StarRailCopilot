@@ -19,7 +19,8 @@
       "Restart": "game",
       "SaveError": true,
       "ScreenshotLength": 1,
-      "OnePushConfig": "provider: null"
+      "OnePushConfig": "provider: null",
+      "NotifyDailyCompleted": false
     },
     "Optimization": {
       "ScreenshotInterval": 0.2,
